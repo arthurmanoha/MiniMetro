@@ -12,7 +12,7 @@ import javax.swing.JPanel;
  */
 public class GUI extends JFrame {
 
-    JPanel panel;
+    WorldPanel panel;
     JPanel toolbar;
 
     public GUI(World w) {
@@ -24,9 +24,40 @@ public class GUI extends JFrame {
         toolbar = new JPanel();
 
         JButton playPauseButton = new JButton("PlayPause");
+        playPauseButton.addActionListener((e) -> {
+            w.togglePlayPause();
+        });
         toolbar.add(playPauseButton);
+
         JButton trackButton = new JButton("Track");
+        trackButton.addActionListener((e) -> {
+            System.out.println("Pressed track button");
+            panel.setTool(GuiTool.TRACK);
+        });
         toolbar.add(trackButton);
+
+        JButton stationButton = new JButton("Station");
+        stationButton.addActionListener((e) -> {
+            System.out.println("Pressed station button");
+            panel.setTool(GuiTool.STATION);
+        });
+        toolbar.add(stationButton);
+
+        JButton zoomInButton = new JButton("Zoom in");
+        zoomInButton.addActionListener((e) -> {
+            System.out.println("Pressed zoom in button");
+            panel.zoomIn();
+            panel.repaint();
+        });
+        toolbar.add(zoomInButton);
+
+        JButton zoomOutButton = new JButton("Zoom out");
+        zoomOutButton.addActionListener((e) -> {
+            System.out.println("Pressed zoom out button");
+            panel.zoomOut();
+            panel.repaint();
+        });
+        toolbar.add(zoomOutButton);
 
         this.add(toolbar, BorderLayout.SOUTH);
 
