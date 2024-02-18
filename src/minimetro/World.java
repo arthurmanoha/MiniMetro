@@ -36,4 +36,8 @@ public class World {
     public Cell getCell(int row, int col) {
         return cells.get(row).get(col);
     }
+
+    public void togglePlayPause() {
+        System.out.println("World.togglePlayPause()");
+    }
 }
