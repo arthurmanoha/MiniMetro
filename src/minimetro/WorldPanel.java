@@ -22,18 +22,21 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
     private int x0, y0;
     GuiTool currentTool;
     private int prevMouseX, prevMouseY;
+    private int prevCol, prevRow;
 
     public WorldPanel(World w) {
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = 40;
+        zoomLevel = 60;
         zoomLevelFactor = 1.1;
         x0 = 0;
         y0 = 0;
         currentTool = GuiTool.NO_TOOL;
         prevMouseX = 0;
         prevMouseY = 0;
+        prevRow = 0;
+        prevCol = 0;
 
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
@@ -110,7 +113,21 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
             prevMouseY = e.getY();
             repaint();
         } else if (currentTool.equals(GuiTool.STATION)) {
-            Cell c = this.getCell(e.getX(), e.getY());
+            int col = getCol(e.getX());
+            int row = getRow(e.getY());
+            world.setCell(row, col, new StationCell());
+            repaint();
+        } else if (currentTool.equals(GuiTool.TRACK)) {
+            int col = getCol(e.getX());
+            int row = getRow(e.getY());
+            if (prevCol != col || prevRow != row) {
+                // We have dragged the mouse from one cell to another,
+                // They need to be linked with a track.
+                world.setTrack(row, col, prevRow, prevCol);
+                repaint();
+            }
+            prevCol = col;
+            prevRow = row;
         }
     }
 
@@ -137,15 +154,22 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
     }
 
     /**
-     * find and return the cell that contains the pixel at coordinates (x, y);
+     * Compute the column number for the given on-screen x-coordinate
      *
-     * @param x x-coordinate of the target pixel
-     * @param y y-coordinate of the target pixel
-     * @return the cell that contains tha pixel, null if the pixel is outside
-     * all cells.
+     * @param x the on-screen x-coorrdinate
+     * @return the column that contains the given pixel
      */
-    private Cell getCell(int x, int y) {
+    private int getCol(int x) {
+        return (int) ((x - x0) / zoomLevel);
+    }
 
-        return null;
+    /**
+     * Compute the row number for the given on-screen y-coordinate
+     *
+     * @param y the on-screen y-coorrdinate
+     * @return the row that contains the given pixel
+     */
+    private int getRow(int y) {
+        return (int) ((y - y0) / zoomLevel);
     }
 }

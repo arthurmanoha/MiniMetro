@@ -14,8 +14,8 @@ public class World {
     private ArrayList<ArrayList<Cell>> cells;
 
     public World() {
-        nbRows = 10;
-        nbCols = 15;
+        nbRows = 15;
+        nbCols = 24;
         cells = new ArrayList<>();
         for (int row = 0; row < nbRows; row++) {
             cells.add(new ArrayList<>());
@@ -34,10 +34,28 @@ public class World {
     }
 
     public Cell getCell(int row, int col) {
-        return cells.get(row).get(col);
+        try {
+            return cells.get(row).get(col);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
     }
 
     public void togglePlayPause() {
         System.out.println("World.togglePlayPause()");
+    }
+
+    void setCell(int row, int col, StationCell newCell) {
+        try {
+            cells.get(row).set(col, newCell);
+        } catch (IndexOutOfBoundsException e) {
+        }
+    }
+
+    void setTrack(int row, int col, int prevRow, int prevCol) {
+        Cell origin = getCell(prevRow, prevCol);
+        Cell dest = getCell(row, col);
+        origin.setTrack(row - prevRow, col - prevCol);
+        dest.setTrack(prevRow - row, prevCol - col);
     }
 }
