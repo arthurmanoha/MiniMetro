@@ -15,6 +15,9 @@ public class GUI extends JFrame {
     WorldPanel panel;
     JPanel toolbar;
 
+    int windowWidth = 1100;
+    int windowHeight = 1000;
+
     public GUI(World w) {
         super();
 
@@ -65,7 +68,7 @@ public class GUI extends JFrame {
         this.add(panel, BorderLayout.CENTER);
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setSize(new Dimension(800, 600));
+        this.setSize(new Dimension(windowWidth, windowHeight));
         this.setVisible(true);
     }
 }

@@ -23,17 +23,26 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
     GuiTool currentTool;
     private int prevMouseX, prevMouseY;
 
+    // Memorize the current cell and the last two, necessary to create rails.
+    private int prevPrevCol, prevPrevRow;
+    private int prevCol, prevRow;
+    private int currentCol, currentRow;
+
     public WorldPanel(World w) {
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = 40;
+        zoomLevel = 60;
         zoomLevelFactor = 1.1;
         x0 = 0;
         y0 = 0;
         currentTool = GuiTool.NO_TOOL;
         prevMouseX = 0;
         prevMouseY = 0;
+        prevPrevRow = Integer.MAX_VALUE;
+        prevPrevCol = Integer.MAX_VALUE;
+        prevRow = Integer.MAX_VALUE;
+        prevCol = Integer.MAX_VALUE;
 
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
@@ -80,6 +89,40 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
 
     @Override
     public void mousePressed(MouseEvent e) {
+        int b1 = MouseEvent.BUTTON1_DOWN_MASK;
+        if ((e.getModifiersEx() & b1) == b1) {
+            // Clicked first mouse button
+            switch (currentTool) {
+            case LOCO -> {
+                currentCol = getCol(e.getX());
+                currentRow = getRow(e.getY());
+                world.addLoco(currentRow, currentCol);
+            }
+            case WAGON -> {
+                currentCol = getCol(e.getX());
+                currentRow = getRow(e.getY());
+                world.addWagon(currentRow, currentCol);
+            }
+            case TRACK -> {
+                prevPrevCol = Integer.MAX_VALUE;
+                prevPrevRow = Integer.MAX_VALUE;
+                prevCol = Integer.MAX_VALUE;
+                prevRow = Integer.MAX_VALUE;
+                currentCol = getCol(e.getX());
+                currentRow = getRow(e.getY());
+            }
+            case STATION -> {
+                System.out.println("New station created");
+                int col = getCol(e.getX());
+                int row = getRow(e.getY());
+                world.toggleStation(row, col);
+                repaint();
+            }
+            default -> {
+            }
+            }
+        }
+        repaint();
     }
 
     @Override
@@ -109,8 +152,29 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
             prevMouseX = e.getX();
             prevMouseY = e.getY();
             repaint();
-        } else if (currentTool.equals(GuiTool.STATION)) {
-            Cell c = this.getCell(e.getX(), e.getY());
+        } else if (currentTool.equals(GuiTool.TRACK)) {
+            int col = getCol(e.getX());
+            int row = getRow(e.getY());
+
+            // Detect a change in cell
+            if (col != currentCol || row != currentRow) {
+                if (prevCol != Integer.MAX_VALUE) {
+                    prevPrevCol = prevCol;
+                }
+                prevCol = currentCol;
+                currentCol = col;
+
+                if (prevRow != Integer.MAX_VALUE) {
+                    prevPrevRow = prevRow;
+                }
+                prevRow = currentRow;
+                currentRow = row;
+
+                if (draggedAcrossThreeCells()) {
+                    world.setNewTrack(prevPrevCol, prevPrevRow, prevCol, prevRow, currentCol, currentRow);
+                    repaint();
+                }
+            }
         }
     }
 
@@ -137,15 +201,53 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
     }
 
     /**
-     * find and return the cell that contains the pixel at coordinates (x, y);
+     * Compute the column number for the given on-screen x-coordinate
      *
-     * @param x x-coordinate of the target pixel
-     * @param y y-coordinate of the target pixel
-     * @return the cell that contains tha pixel, null if the pixel is outside
-     * all cells.
+     * @param x the on-screen x-coorrdinate
+     * @return the column that contains the given pixel
      */
-    private Cell getCell(int x, int y) {
-
-        return null;
+    private int getCol(int x) {
+        return (int) ((x - x0) / zoomLevel);
     }
+
+    /**
+     * Compute the row number for the given on-screen y-coordinate
+     *
+     * @param y the on-screen y-coorrdinate
+     * @return the row that contains the given pixel
+     */
+    private int getRow(int y) {
+        return (int) ((y - y0) / zoomLevel);
+    }
+
+    /**
+     * Compare prevPrev, prev and current rows and columns,
+     * to check if we have dragges the mouse across three successive neighbor
+     * cells.
+     *
+     * @return true if three neighbor cells have been dragged across.
+     */
+    private boolean draggedAcrossThreeCells() {
+
+        if (prevPrevCol == Integer.MAX_VALUE || prevPrevRow == Integer.MAX_VALUE) {
+            // We only have dragged across two cells.
+            return false;
+        }
+
+        // If any of these 3 conditions is met, we have either not moved or returned to the starting cell.
+        boolean prevEqualsPrevPrev = (prevPrevCol == prevCol && prevPrevRow == prevRow);
+        boolean prevEqualsCurrent = (prevCol == currentCol && prevRow == currentRow);
+        boolean prevPrevEqualsCurrent = (prevPrevCol == currentCol && prevPrevRow == currentRow);
+
+        if (prevEqualsPrevPrev) {
+            return false;
+        } else if (prevEqualsCurrent) {
+            return false;
+        } else if (prevPrevEqualsCurrent) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
 }
