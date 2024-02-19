@@ -15,7 +15,7 @@ public class GUI extends JFrame {
     WorldPanel panel;
     JPanel toolbar;
 
-    int windowWidth = 1500;
+    int windowWidth = 1100;
     int windowHeight = 1000;
 
     public GUI(World w) {

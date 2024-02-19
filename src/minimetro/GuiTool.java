@@ -9,4 +9,6 @@ enum GuiTool {
     NO_TOOL, // Default uninitialized tool
     TRACK,
     STATION,
+    LOCO,
+    WAGON,
 }

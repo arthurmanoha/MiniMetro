@@ -22,7 +22,11 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
     private int x0, y0;
     GuiTool currentTool;
     private int prevMouseX, prevMouseY;
+
+    // Memorize the current cell and the last two, necessary to create rails.
+    private int prevPrevCol, prevPrevRow;
     private int prevCol, prevRow;
+    private int currentCol, currentRow;
 
     public WorldPanel(World w) {
         super();
@@ -35,8 +39,10 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
         currentTool = GuiTool.NO_TOOL;
         prevMouseX = 0;
         prevMouseY = 0;
-        prevRow = 0;
-        prevCol = 0;
+        prevPrevRow = Integer.MAX_VALUE;
+        prevPrevCol = Integer.MAX_VALUE;
+        prevRow = Integer.MAX_VALUE;
+        prevCol = Integer.MAX_VALUE;
 
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
@@ -83,6 +89,40 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
 
     @Override
     public void mousePressed(MouseEvent e) {
+        int b1 = MouseEvent.BUTTON1_DOWN_MASK;
+        if ((e.getModifiersEx() & b1) == b1) {
+            // Clicked first mouse button
+            switch (currentTool) {
+            case LOCO -> {
+                currentCol = getCol(e.getX());
+                currentRow = getRow(e.getY());
+                world.addLoco(currentRow, currentCol);
+            }
+            case WAGON -> {
+                currentCol = getCol(e.getX());
+                currentRow = getRow(e.getY());
+                world.addWagon(currentRow, currentCol);
+            }
+            case TRACK -> {
+                prevPrevCol = Integer.MAX_VALUE;
+                prevPrevRow = Integer.MAX_VALUE;
+                prevCol = Integer.MAX_VALUE;
+                prevRow = Integer.MAX_VALUE;
+                currentCol = getCol(e.getX());
+                currentRow = getRow(e.getY());
+            }
+            case STATION -> {
+                System.out.println("New station created");
+                int col = getCol(e.getX());
+                int row = getRow(e.getY());
+                world.toggleStation(row, col);
+                repaint();
+            }
+            default -> {
+            }
+            }
+        }
+        repaint();
     }
 
     @Override
@@ -112,22 +152,29 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
             prevMouseX = e.getX();
             prevMouseY = e.getY();
             repaint();
-        } else if (currentTool.equals(GuiTool.STATION)) {
-            int col = getCol(e.getX());
-            int row = getRow(e.getY());
-            world.setCell(row, col, new StationCell());
-            repaint();
         } else if (currentTool.equals(GuiTool.TRACK)) {
             int col = getCol(e.getX());
             int row = getRow(e.getY());
-            if (prevCol != col || prevRow != row) {
-                // We have dragged the mouse from one cell to another,
-                // They need to be linked with a track.
-                world.setTrack(row, col, prevRow, prevCol);
-                repaint();
+
+            // Detect a change in cell
+            if (col != currentCol || row != currentRow) {
+                if (prevCol != Integer.MAX_VALUE) {
+                    prevPrevCol = prevCol;
+                }
+                prevCol = currentCol;
+                currentCol = col;
+
+                if (prevRow != Integer.MAX_VALUE) {
+                    prevPrevRow = prevRow;
+                }
+                prevRow = currentRow;
+                currentRow = row;
+
+                if (draggedAcrossThreeCells()) {
+                    world.setNewTrack(prevPrevCol, prevPrevRow, prevCol, prevRow, currentCol, currentRow);
+                    repaint();
+                }
             }
-            prevCol = col;
-            prevRow = row;
         }
     }
 
@@ -172,4 +219,35 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
     private int getRow(int y) {
         return (int) ((y - y0) / zoomLevel);
     }
+
+    /**
+     * Compare prevPrev, prev and current rows and columns,
+     * to check if we have dragges the mouse across three successive neighbor
+     * cells.
+     *
+     * @return true if three neighbor cells have been dragged across.
+     */
+    private boolean draggedAcrossThreeCells() {
+
+        if (prevPrevCol == Integer.MAX_VALUE || prevPrevRow == Integer.MAX_VALUE) {
+            // We only have dragged across two cells.
+            return false;
+        }
+
+        // If any of these 3 conditions is met, we have either not moved or returned to the starting cell.
+        boolean prevEqualsPrevPrev = (prevPrevCol == prevCol && prevPrevRow == prevRow);
+        boolean prevEqualsCurrent = (prevCol == currentCol && prevRow == currentRow);
+        boolean prevPrevEqualsCurrent = (prevPrevCol == currentCol && prevPrevRow == currentRow);
+
+        if (prevEqualsPrevPrev) {
+            return false;
+        } else if (prevEqualsCurrent) {
+            return false;
+        } else if (prevPrevEqualsCurrent) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
 }
