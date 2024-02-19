@@ -19,7 +19,7 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
     World world;
     private double zoomLevel;
     private double zoomLevelFactor;
-    private int x0, y0;
+    private double x0, y0;
     GuiTool currentTool;
     private int prevMouseX, prevMouseY;
 
@@ -61,6 +61,10 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
                 c.paint(g, row, col, x0, y0, zoomLevel);
             }
         }
+
+        // Draw outer border
+        g.setColor(Color.black);
+        g.drawRect((int) x0, (int) y0, (int) (world.getNbCols() * zoomLevel), (int) (world.getNbRows() * zoomLevel));
     }
 
     void setTool(GuiTool newTool) {
@@ -207,7 +211,7 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
      * @return the column that contains the given pixel
      */
     private int getCol(int x) {
-        return (int) ((x - x0) / zoomLevel);
+        return (int) ((double) (x - x0) / zoomLevel);
     }
 
     /**
@@ -217,7 +221,7 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
      * @return the row that contains the given pixel
      */
     private int getRow(int y) {
-        return (int) ((y - y0) / zoomLevel);
+        return (int) ((double) (y - y0) / zoomLevel);
     }
 
     /**

@@ -14,8 +14,8 @@ public class World {
     private ArrayList<ArrayList<Cell>> cells;
 
     public World() {
-        nbRows = 15;
-        nbCols = 24;
+        nbRows = 150;
+        nbCols = 240;
         cells = new ArrayList<>();
         for (int row = 0; row < nbRows; row++) {
             cells.add(new ArrayList<>());

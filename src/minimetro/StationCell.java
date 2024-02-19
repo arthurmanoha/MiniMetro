@@ -29,7 +29,7 @@ public class StationCell extends Cell {
     }
 
     @Override
-    protected void paint(Graphics g, int row, int col, int x0, int y0, double zoom) {
+    protected void paint(Graphics g, int row, int col, double x0, double y0, double zoom) {
         super.paint(g, row, col, x0, y0, zoom);
     }
 }

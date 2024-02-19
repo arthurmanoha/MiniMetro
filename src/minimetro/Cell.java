@@ -48,15 +48,18 @@ public class Cell {
     /**
      * Paint the cell with its background and foreground.
      */
-    protected void paint(Graphics g, int row, int col, int x0, int y0, double zoom) {
-        int size = (int) zoom;
-        final int xApp = col * size + x0;
-        final int yApp = row * size + y0;
+    protected void paint(Graphics g, int row, int col, double x0, double y0, double zoom) {
+        final int xApp = (int) (col * zoom + x0);
+        final int yApp = (int) (row * zoom + y0);
 
+        // Draw background
         g.setColor(this.color);
-        g.fillRect(xApp, yApp, size, size);
+        g.fillRect(xApp, yApp, (int) zoom + 1, (int) zoom + 1);
+
+        // Draw borders
         g.setColor(Color.black);
-        g.drawRect(xApp, yApp, size, size);
+        g.drawLine(xApp, yApp, (int) (xApp + zoom), yApp);
+        g.drawLine(xApp, yApp, xApp, (int) (yApp + zoom));
 
         int i = 0;
         if (rails != null) {
