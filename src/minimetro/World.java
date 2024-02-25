@@ -1,6 +1,10 @@
 package minimetro;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * This class represents the terrain that contains the tracks, trains,
@@ -12,6 +16,17 @@ public class World {
 
     private int nbRows, nbCols;
     private ArrayList<ArrayList<Cell>> cells;
+    private double dt; // Evolution step
+
+    private ArrayList<TrainElement> trainsInTransition;
+
+    private Timer timer;
+    private boolean isRunning;
+    private int periodMillisec;
+    private int step;
+
+    // Tell observers that our state has changed.
+    private final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
     public World() {
         nbRows = 150;
@@ -23,6 +38,12 @@ public class World {
                 cells.get(row).add(new Cell());
             }
         }
+        dt = 0.1;
+        trainsInTransition = new ArrayList<>();
+        step = 0;
+        isRunning = false;
+        periodMillisec = 50;
+        startTimer();
     }
 
     public int getNbRows() {
@@ -42,7 +63,52 @@ public class World {
     }
 
     public void togglePlayPause() {
-        System.out.println("World.togglePlayPause()");
+        isRunning = !isRunning;
+
+        if (isRunning) {
+            System.out.println("World: play");
+        } else {
+            System.out.println("World: pause");
+        }
+    }
+
+    public void step() {
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                c.evolve(dt);
+            }
+        }
+
+        // Transfert trains between cells when necessary
+        int rowIndex = 0;
+        for (ArrayList<Cell> row : cells) {
+            int colIndex = 0;
+            for (Cell c : row) {
+                if (c.isTrainElementSwitchingCells) {
+                    TrainElement movingTrain = c.removeTrain();
+                    reinsertTrain(movingTrain, rowIndex, colIndex);
+                    c.isTrainElementSwitchingCells = false;
+                }
+                colIndex++;
+            }
+            rowIndex++;
+        }
+
+        step++;
+
+        updateListeners();
+    }
+
+    public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
+        support.addPropertyChangeListener(propertyName, listener);
+    }
+
+    /**
+     * Notify the listeners that the world's state has changed.
+     *
+     */
+    protected void updateListeners() {
+        support.firePropertyChange("currentStep", step - 1, step);
     }
 
     protected void setCell(int row, int col, Cell newCell) {
@@ -101,6 +167,72 @@ public class World {
         } catch (NullPointerException e) {
             System.out.println("Cannot place track outside world");
         }
+    }
+
+    /**
+     * When a train has left its previous cell, it needs to be placed into the
+     * next cell.
+     *
+     */
+    private void reinsertTrain(TrainElement movingTrain, int rowIndex, int colIndex) {
+        double currentHeading = movingTrain.headingDegrees;
+        int newRow = rowIndex;
+        int newCol = colIndex;
+        if (headingIsCloseTo(currentHeading, 0)) {
+            // North
+            newRow--;
+            movingTrain.setHeadingDegrees(0);
+        } else if (headingIsCloseTo(currentHeading, 90)) {
+            // East
+            newCol++;
+            movingTrain.setHeadingDegrees(90);
+        } else if (headingIsCloseTo(currentHeading, 180)) {
+            // South
+            newRow++;
+            movingTrain.setHeadingDegrees(180);
+        } else if (headingIsCloseTo(currentHeading, 270)) {
+            // West
+            newCol--;
+            movingTrain.setHeadingDegrees(270);
+        } else {
+            System.out.println("World: direction unknown.");
+        }
+
+        // Add the train to the new cell.
+        Cell newCell = this.getCell(newRow, newCol);
+        if (newCell == null) {
+            System.out.println("next cell is null");
+        } else {
+            movingTrain.increasePosition(-1); // Adapt the train's current position to the new cell.
+            TrainElement insertionCheck = newCell.addTrainElement(movingTrain);
+            if (insertionCheck != null) {
+                // Error in train reinsertion.
+                System.out.println("World: error in train reinsertion.");
+            }
+        }
+    }
+
+    /**
+     * Compare a heading to another with a 10 degrees margin
+     *
+     * @return
+     */
+    private boolean headingIsCloseTo(double h0, int h1) {
+        double limit = 11;
+        double dh = (h0 - h1) % 360;
+        return dh < limit || dh > 360 - limit;
+    }
+
+    private void startTimer() {
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (isRunning) {
+                    step();
+                }
+            }
+        }, 0, periodMillisec);
     }
 
 }

@@ -1,16 +1,27 @@
 2D train game
 
 ---------------------------------------------------------------------------------------------------
+KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
+---------------------------------------------------------------------------------------------------
+1- When two locos are placed in adjacent cells, they collide, disappear, and destroy all locos in the same straight line one cell at each simulation step.
+
+---------------------------------------------------------------------------------------------------
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
-Locomotives and carriages are about 5 to 10 times smaller than a cell.
-A train is made of one locomotive and any number of carriages; it may span over several cells.
-A loco stores its position and speed, and the ID of its current cell.
+A Cell may be a junction and contain two possible layouts, one being active and the other one greyed out.
+Locomotives and carriages are just a little smaller than a cell, one element per cell.
+A train is made of one locomotive and any number of carriages.
+A loco stores its position and speed, relative to its current cell.
+A train element (loco or wagon) stores a reference to its following element.
 A carriage stores its passenger max and current capacity.
-An IntersectionCell is a special cell without a station, where one track splits into several tracks.
+An IntersectionCell is a special cell, where one track splits into several tracks.
+A station cell shall not be crossed by a railway.
 A station cell may host passengers.
+A passenger may transfer between a station cell and a neighboring wagon.
 A passenger has a station ID target.
+A passenger shall find a path from its current position to its target: which line to use, which station to walk to.
+A passenger may walk from one station to another if the stations have one side in common.
 
 Tools:
 
@@ -37,3 +48,5 @@ A cell may host one railway, which is made of several RailSegments.
 Loco and carriage are subclasses of TrainElement.
 Create stations.
 Create tracks with the mouse.
+Rails in turns shall be bent.
+A loco moves along the track and visits successive cells.

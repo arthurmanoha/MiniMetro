@@ -2,7 +2,7 @@ package minimetro;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.util.ArrayList;
+import static java.lang.Math.PI;
 
 /**
  * This is one part of the rails in one given cell.
@@ -29,5 +29,36 @@ public class RailSegment {
 
         g.setColor(c);
         g.drawLine(xStartApp, yStartApp, xEndApp, yEndApp);
+    }
+
+    public double getXStart() {
+        return xStart;
+    }
+
+    public double getYStart() {
+        return yStart;
+    }
+
+    public double getXEnd() {
+        return xEnd;
+    }
+
+    public double getYEnd() {
+        return yEnd;
+    }
+
+    /**
+     * Compute the rail segment heading in degrees East from North
+     * 0 <-> North
+     * 90<-> East
+     */
+    double getHeadingInDegrees() {
+        // N:0, E:90, S:180, W:270
+        double hNorthToEast = Math.atan2(yEnd - yStart, xEnd - xStart) + PI / 2;
+        double headingInDegrees = hNorthToEast * 360 / (2 * Math.PI);
+        if (headingInDegrees < 0) {
+            headingInDegrees += 360;
+        }
+        return headingInDegrees;
     }
 }
