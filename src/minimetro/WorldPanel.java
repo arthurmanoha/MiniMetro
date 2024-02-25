@@ -8,13 +8,16 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import javax.swing.JPanel;
 
 /**
  *
  * @author arthu
  */
-public class WorldPanel extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener {
+public class WorldPanel extends JPanel implements MouseListener,
+        MouseMotionListener, MouseWheelListener, PropertyChangeListener {
 
     World world;
     private double zoomLevel;
@@ -32,7 +35,7 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = 60;
+        zoomLevel = 150;
         zoomLevelFactor = 1.1;
         x0 = 0;
         y0 = 0;
@@ -55,10 +58,19 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
         g.setColor(Color.gray);
         g.fillRect(0, 0, g.getClipBounds().width, g.getClipBounds().height);
 
+        // Paint the background
         for (int row = 0; row < world.getNbRows(); row++) {
             for (int col = 0; col < world.getNbCols(); col++) {
                 Cell c = world.getCell(row, col);
                 c.paint(g, row, col, x0, y0, zoomLevel);
+            }
+        }
+
+        // Paint the trains
+        for (int row = 0; row < world.getNbRows(); row++) {
+            for (int col = 0; col < world.getNbCols(); col++) {
+                Cell c = world.getCell(row, col);
+                c.paintTrains(g, row, col, x0, y0, zoomLevel);
             }
         }
 
@@ -98,6 +110,7 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
             // Clicked first mouse button
             switch (currentTool) {
             case LOCO -> {
+                System.out.println("WorldPanel mousePressed loco");
                 currentCol = getCol(e.getX());
                 currentRow = getRow(e.getY());
                 world.addLoco(currentRow, currentCol);
@@ -254,4 +267,10 @@ public class WorldPanel extends JPanel implements MouseListener, MouseMotionList
         }
     }
 
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        /* Récupère l'objet source */
+//        World w = (World) evt.getSource();
+        repaint();
+    }
 }

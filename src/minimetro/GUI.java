@@ -32,6 +32,13 @@ public class GUI extends JFrame {
         });
         toolbar.add(playPauseButton);
 
+        JButton stepButton = new JButton("Step");
+        stepButton.addActionListener((e) -> {
+            w.step();
+            repaint();
+        });
+        toolbar.add(stepButton);
+
         JButton trackButton = new JButton("Track");
         trackButton.addActionListener((e) -> {
             System.out.println("Pressed track button");
@@ -45,6 +52,13 @@ public class GUI extends JFrame {
             panel.setTool(GuiTool.STATION);
         });
         toolbar.add(stationButton);
+
+        JButton locoButton = new JButton("Loco");
+        locoButton.addActionListener((e) -> {
+            System.out.println("Pressed loco button");
+            panel.setTool(GuiTool.LOCO);
+        });
+        toolbar.add(locoButton);
 
         JButton zoomInButton = new JButton("Zoom in");
         zoomInButton.addActionListener((e) -> {
@@ -66,6 +80,8 @@ public class GUI extends JFrame {
 
         panel = new WorldPanel(w);
         this.add(panel, BorderLayout.CENTER);
+
+        w.addPropertyChangeListener("currentStep", panel);
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(new Dimension(windowWidth, windowHeight));
