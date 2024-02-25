@@ -270,7 +270,6 @@ public class WorldPanel extends JPanel implements MouseListener,
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         /* Récupère l'objet source */
-//        World w = (World) evt.getSource();
         repaint();
     }
 }

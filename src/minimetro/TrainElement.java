@@ -27,7 +27,6 @@ public abstract class TrainElement {
     }
 
     protected void setTravellingPositive(boolean isNowTravellingPositive) {
-        System.out.println("setTravellingPositive(" + isNowTravellingPositive + ");");
         if (isNowTravellingPositive) {
             currentSpeed = maxSpeed;
         } else {
@@ -44,7 +43,6 @@ public abstract class TrainElement {
     }
 
     void setHeadingDegrees(double newHeading) {
-        System.out.println("TrainElement.setHeadingDeg(" + newHeading + ");");
         if (newHeading > 360) {
             newHeading -= 360;
         }

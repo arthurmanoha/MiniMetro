@@ -73,13 +73,11 @@ public class World {
     }
 
     public void step() {
-        System.out.println("Start step");
         for (ArrayList<Cell> row : cells) {
             for (Cell c : row) {
                 c.evolve(dt);
             }
         }
-        System.out.println("after all cells evolve");
 
         // Transfert trains between cells when necessary
         int rowIndex = 0;
@@ -88,7 +86,6 @@ public class World {
             for (Cell c : row) {
                 if (c.isTrainElementSwitchingCells) {
                     TrainElement movingTrain = c.removeTrain();
-                    System.out.println("Moving train with heading " + movingTrain.getHeading());
                     reinsertTrain(movingTrain, rowIndex, colIndex);
                     c.isTrainElementSwitchingCells = false;
                 }
@@ -100,7 +97,6 @@ public class World {
         step++;
 
         updateListeners();
-        System.out.println("End step");
     }
 
     public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
@@ -180,7 +176,6 @@ public class World {
      */
     private void reinsertTrain(TrainElement movingTrain, int rowIndex, int colIndex) {
         double currentHeading = movingTrain.headingDegrees;
-        System.out.println("reinsert train heading " + currentHeading);
         int newRow = rowIndex;
         int newCol = colIndex;
         if (headingIsCloseTo(currentHeading, 0)) {
@@ -204,14 +199,11 @@ public class World {
         }
 
         // Add the train to the new cell.
-        System.out.println("current cell: " + rowIndex + ", " + colIndex + ", next: " + newRow + ", " + newCol);
         Cell newCell = this.getCell(newRow, newCol);
         if (newCell == null) {
             System.out.println("next cell is null");
         } else {
-            System.out.println("World.reinsertTrain before cell, speed is " + movingTrain.currentSpeed);
             TrainElement insertionCheck = newCell.addTrainElement(movingTrain);
-            System.out.println("World.reinsertTrain after cell, speed is " + movingTrain.currentSpeed);
             if (insertionCheck != null) {
                 // Error in train reinsertion.
                 System.out.println("World: error in train reinsertion.");
@@ -225,12 +217,12 @@ public class World {
      * @return
      */
     private boolean headingIsCloseTo(double h0, int h1) {
-        double limit = 10;
-        return (Math.abs(h0 - h1) < limit);
+        double limit = 11;
+        double dh = (h0 - h1) % 360;
+        return dh < limit || dh > 360 - limit;
     }
 
     private void startTimer() {
-        System.out.println("Starting timer.");
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override

@@ -229,13 +229,11 @@ public class Cell {
             trainElement = newTrain;
             newTrain.setPosition(0.05);
             newTrain.setTravellingPositive(true);
-            System.out.println("add train travelling positive");
         } else if (this.compareLastInputHeading(newTrain.headingDegrees)) {
             // Insert train in last rail segment.
             trainElement = newTrain;
             newTrain.setPosition(0.95);
             newTrain.setTravellingPositive(false);
-            System.out.println("add train travelling negative");
         }
         this.trainElement = newTrain;
         return null;
@@ -335,7 +333,6 @@ public class Cell {
             railIndex = (int) (trainPosition * nbRails / totalRailLength);
             RailSegment segment = rails.get(railIndex);
             double heading = segment.getHeadingInDegrees();
-            System.out.println("Train speed: " + trainElement.currentSpeed);
             if (trainElement.currentSpeed > 0) {
                 trainElement.setHeadingDegrees(heading);
             } else {
@@ -353,7 +350,6 @@ public class Cell {
         double entryRailHeading = rails.get(0).getHeadingInDegrees(); // The direction of the "start" of the rails.
         double headingDifference = entryRailHeading - heading;
         boolean result = Math.abs(headingDifference) <= maxHeadingDiff;
-        System.out.println("compareFirstInputHeading(" + heading + " and " + rails.get(0).getHeadingInDegrees() + "): " + headingDifference + ", max: " + maxHeadingDiff + ", decision: " + result);
         return result;
     }
 
@@ -363,8 +359,6 @@ public class Cell {
 
         // Need to be close to 0 (or 360) degrees difference.
         boolean result = Math.abs(headingDifference) <= 0 + maxHeadingDiff || Math.abs(headingDifference) >= 360 - maxHeadingDiff;
-        System.out.println("compareLastInputHeading(" + heading + " and " + rails.get(nbRails - 1).getHeadingInDegrees() + "): "
-                + headingDifference + ", max: " + maxHeadingDiff + ", decision: " + result);
         return result;
     }
 

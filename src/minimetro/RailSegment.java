@@ -3,7 +3,6 @@ package minimetro;
 import java.awt.Color;
 import java.awt.Graphics;
 import static java.lang.Math.PI;
-import java.util.ArrayList;
 
 /**
  * This is one part of the rails in one given cell.
