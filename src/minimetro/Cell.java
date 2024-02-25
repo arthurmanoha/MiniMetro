@@ -27,13 +27,14 @@ public class Cell {
     private double totalRailLength;
     private double singleRailLength;
     ArrayList<Color> colorList;
+    private boolean trainIsPrograde;
 
     public Cell(ArrayList<RailSegment> oldRails) {
         color = Color.gray;
         trainElement = null;
         if (oldRails == null) {
             rails = new ArrayList<>();
-            nbRails = 9;
+            nbRails = 10;
         } else {
             rails = oldRails;
             nbRails = rails.size();
@@ -206,6 +207,7 @@ public class Cell {
     protected void setLoco() {
         if (hasRails()) {
             this.trainElement = new Locomotive();
+            this.trainIsPrograde = true;
         }
     }
 
@@ -227,15 +229,14 @@ public class Cell {
         if (this.compareFirstInputHeading(newTrain.headingDegrees)) {
             // Insert train in first rail segment.
             trainElement = newTrain;
-            newTrain.setPosition(0.05);
-            newTrain.setTravellingPositive(true);
+            this.trainIsPrograde = true;
         } else if (this.compareLastInputHeading(newTrain.headingDegrees)) {
             // Insert train in last rail segment.
             trainElement = newTrain;
-            newTrain.setPosition(0.95);
-            newTrain.setTravellingPositive(false);
+            this.trainIsPrograde = false;
+        } else {
+            return newTrain;
         }
-        this.trainElement = newTrain;
         return null;
     }
 
@@ -274,9 +275,9 @@ public class Cell {
 
     protected void evolve(double dt) {
         if (hasLoco() || hasRails()) {
-//            System.out.println("cell.evolve(" + dt + ")");
             if (hasLoco()) {
-                trainElement.evolve(dt);
+                double dPos = trainElement.currentSpeed * dt; // The absolute distance the train will move in this step.
+                trainElement.increasePosition(dPos);
                 if (trainElement.getPosition() > 1 || trainElement.getPosition() < 0) {
                     // The element has travelled to the next cell.
                     isTrainElementSwitchingCells = true;
@@ -295,14 +296,17 @@ public class Cell {
      */
     private Point2D.Double getTrainPosition() {
 
-        double trainPosition = trainElement.position;
-        int railIndex = (int) (trainPosition * nbRails / totalRailLength);
-//        System.out.println("rail index: " + railIndex);
-        // Percentage along the rail segment:
-        double lengthBeforeCurrentSegment = (railIndex - 1) * singleRailLength;
-//        System.out.println("length before: " + lengthBeforeCurrentSegment);
-        double p = (trainPosition - lengthBeforeCurrentSegment) / singleRailLength;
-//        System.out.println("p = " + p);
+        double cellPos; // Train position in the cell's reference (swapped if train drives retrograde)
+        if (trainIsPrograde) {
+            cellPos = trainElement.position;
+        } else {
+            cellPos = 1 - trainElement.position;
+        }
+        int railIndex = (int) (cellPos / totalRailLength * nbRails);
+        double lengthBeforeCurrentSegment;
+        lengthBeforeCurrentSegment = railIndex * singleRailLength;
+        double p = (cellPos - lengthBeforeCurrentSegment) / singleRailLength;
+
         if (railIndex >= nbRails || railIndex < 0) {
             // The train has reached the border of the cell.
             return null;
@@ -330,22 +334,43 @@ public class Cell {
         int railIndex = -1;
         try {
             double trainPosition = trainElement.position;
-            railIndex = (int) (trainPosition * nbRails / totalRailLength);
-            RailSegment segment = rails.get(railIndex);
-            double heading = segment.getHeadingInDegrees();
-            if (trainElement.currentSpeed > 0) {
-                trainElement.setHeadingDegrees(heading);
+
+            if (trainIsPrograde) {
+                railIndex = (int) (trainPosition * nbRails / totalRailLength);
             } else {
-                trainElement.setHeadingDegrees(heading + 180);
+                railIndex = (int) ((1 - trainPosition) * nbRails / totalRailLength);
             }
+
+            RailSegment segment = rails.get(railIndex);
+            double segmentHeading = segment.getHeadingInDegrees();
+            double newHeading = segmentHeading;
+
+            // Negative speed: other direction
+            if (trainElement.currentSpeed < 0) {
+                newHeading += 180;
+            }
+
+            // Train going to the negative direction in the cell's perspective:
+            if (!trainIsPrograde) {
+                newHeading += 180;
+            }
+
+            newHeading = newHeading % 360;
+
+            trainElement.setHeadingDegrees(newHeading);
+
         } catch (IndexOutOfBoundsException e) {
             System.out.println("no rail numbered " + railIndex);
         }
     }
 
-    // Allow for a pi/4 difference when rails are always straight within a cell.
-    // When the rails are bent, the max difference shall be smaller (i.e. the first segment
-    // will be more aligned)
+    /**
+     * Compare the heading of an incoming train to the first side of the tracks,
+     * with margin.
+     *
+     * @param heading
+     * @return
+     */
     private boolean compareFirstInputHeading(double heading) {
         double entryRailHeading = rails.get(0).getHeadingInDegrees(); // The direction of the "start" of the rails.
         double headingDifference = entryRailHeading - heading;
@@ -353,6 +378,13 @@ public class Cell {
         return result;
     }
 
+    /**
+     * Compare the heading of an incoming train to the second side of the
+     * tracks, with margin.
+     *
+     * @param heading
+     * @return
+     */
     private boolean compareLastInputHeading(double heading) {
         double entryRailHeading = (rails.get(nbRails - 1).getHeadingInDegrees() + 180) % 360; // The opposite direction of the "end" of the rails.
         double headingDifference = entryRailHeading - heading;

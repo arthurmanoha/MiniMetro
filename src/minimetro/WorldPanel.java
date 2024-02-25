@@ -35,7 +35,7 @@ public class WorldPanel extends JPanel implements MouseListener,
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = 150;
+        zoomLevel = 200;
         zoomLevelFactor = 1.1;
         x0 = 0;
         y0 = 0;

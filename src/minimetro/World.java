@@ -42,7 +42,7 @@ public class World {
         trainsInTransition = new ArrayList<>();
         step = 0;
         isRunning = false;
-        periodMillisec = 100;
+        periodMillisec = 50;
         startTimer();
     }
 
@@ -203,6 +203,7 @@ public class World {
         if (newCell == null) {
             System.out.println("next cell is null");
         } else {
+            movingTrain.increasePosition(-1); // Adapt the train's current position to the new cell.
             TrainElement insertionCheck = newCell.addTrainElement(movingTrain);
             if (insertionCheck != null) {
                 // Error in train reinsertion.

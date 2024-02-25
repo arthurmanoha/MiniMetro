@@ -26,6 +26,5 @@ public class Locomotive extends TrainElement {
         g.fillOval((int) (xCenter - radius), (int) (yCenter - radius), 2 * radius, 2 * radius);
         g.setColor(Color.black);
         g.drawOval((int) (xCenter - radius), (int) (yCenter - radius), 2 * radius, 2 * radius);
-        g.drawString("" + this.headingDegrees + ", " + position, xCenter, yCenter);
     }
 }

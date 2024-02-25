@@ -17,21 +17,12 @@ public abstract class TrainElement {
 
     public abstract void paint(Graphics g, int xApp, int yApp, int size, Point2D.Double elementPosition, double heading);
 
-    public void evolve(double dt) {
-        position += currentSpeed * dt;
-//        System.out.println("TrainElement moved to " + position);
+    public void increasePosition(double dPos) {
+        this.position += dPos;
     }
 
     protected double getPosition() {
         return position;
-    }
-
-    protected void setTravellingPositive(boolean isNowTravellingPositive) {
-        if (isNowTravellingPositive) {
-            currentSpeed = maxSpeed;
-        } else {
-            currentSpeed = -maxSpeed;
-        }
     }
 
     protected void setPosition(double newPosition) {
