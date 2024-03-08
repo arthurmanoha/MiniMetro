@@ -90,7 +90,7 @@ public class Cell {
      * (to be used after all cells were drawn).
      */
     protected void paintTrains(Graphics g, int row, int col, double x0, double y0, double zoom) {
-        if (hasLoco()) {
+        if (hasTrain()) {
             final int xApp = (int) (col * zoom + x0);
             final int yApp = (int) (row * zoom + y0);
 
@@ -98,7 +98,7 @@ public class Cell {
             Point2D.Double elementPosition = getTrainPosition();
             double heading = getTrainHeading();
             if (elementPosition != null) {
-                ((Locomotive) trainElement).paint(g, xApp, yApp, (int) zoom, elementPosition, heading);
+                trainElement.paint(g, xApp, yApp, (int) zoom, elementPosition, heading);
             }
         }
     }
@@ -208,6 +208,15 @@ public class Cell {
         if (hasRails()) {
             this.trainElement = new Locomotive();
             this.trainIsPrograde = true;
+            this.trainElement.headingDegrees = this.getCenterHeading();
+        }
+    }
+
+    protected void setWagon() {
+        if (hasRails()) {
+            this.trainElement = new Wagon();
+            this.trainIsPrograde = true;
+            this.trainElement.headingDegrees = this.getCenterHeading();
         }
     }
 
@@ -244,6 +253,14 @@ public class Cell {
         return this.trainElement != null && (this.trainElement instanceof Locomotive);
     }
 
+    protected boolean hasWagon() {
+        return this.trainElement != null && (this.trainElement instanceof Wagon);
+    }
+
+    protected boolean hasTrain() {
+        return hasLoco() || hasWagon();
+    }
+
     protected Locomotive getLoco() {
         if (hasLoco()) {
             return (Locomotive) this.trainElement;
@@ -258,34 +275,27 @@ public class Cell {
      * @return the trainElement if it exists, null otherwise.
      */
     protected TrainElement removeTrain() {
-        if (this.hasLoco()) {
-            Locomotive loco = this.getLoco();
+        if (this.hasTrain()) {
+            TrainElement removedTrainElement = this.trainElement;
             this.trainElement = null;
-            return loco;
+            return removedTrainElement;
         } else {
             return null;
         }
     }
 
-    protected void setWagon() {
-        if (hasRails()) {
-            this.trainElement = new Wagon();
-        }
-    }
-
     protected void evolve(double dt) {
-        if (hasLoco() || hasRails()) {
-            if (hasLoco()) {
-                double dPos = trainElement.currentSpeed * dt; // The absolute distance the train will move in this step.
-                trainElement.increasePosition(dPos);
-                if (trainElement.getPosition() > 1 || trainElement.getPosition() < 0) {
-                    // The element has travelled to the next cell.
-                    isTrainElementSwitchingCells = true;
-                } else {
-                    setTrainHeading();
-                }
+        if (hasTrain()) {
+            double dPos = trainElement.currentSpeed * dt; // The absolute distance the train will move in this step.
+            trainElement.increasePosition(dPos);
+            if (trainElement.getPosition() > 1 || trainElement.getPosition() < 0) {
+                // The element has travelled to the next cell.
+                isTrainElementSwitchingCells = true;
+            } else {
+                setTrainHeading();
             }
         }
+
     }
 
     /**
@@ -365,33 +375,92 @@ public class Cell {
     }
 
     /**
+     * Get the heading of the first end of the track, from the outside to the
+     * inside of the cell.
+     *
+     * @return the first track heading
+     */
+    private double getFirstRailHeading() {
+        return rails.get(0).getHeadingInDegrees();
+    }
+
+    /**
+     * Get the heading of the center of the track.
+     *
+     * @return the heading of the center of the track
+     */
+    protected double getCenterHeading() {
+        return rails.get(nbRails / 2).getHeadingInDegrees();
+    }
+
+    /**
+     * Get the heading of the last end of the track, from the outside to the
+     * inside of the cell.
+     *
+     * @return the last track heading
+     */
+    private double getLastRailHeading() {
+        return (rails.get(nbRails - 1).getHeadingInDegrees() + 180) % 360;
+    }
+
+    /**
      * Compare the heading of an incoming train to the first side of the tracks,
      * with margin.
-     *
-     * @param heading
-     * @return
      */
     private boolean compareFirstInputHeading(double heading) {
-        double entryRailHeading = rails.get(0).getHeadingInDegrees(); // The direction of the "start" of the rails.
-        double headingDifference = entryRailHeading - heading;
-        boolean result = Math.abs(headingDifference) <= maxHeadingDiff;
-        return result;
+        return compareHeadings(heading, getFirstRailHeading());
     }
 
     /**
      * Compare the heading of an incoming train to the second side of the
      * tracks, with margin.
-     *
-     * @param heading
-     * @return
      */
     private boolean compareLastInputHeading(double heading) {
-        double entryRailHeading = (rails.get(nbRails - 1).getHeadingInDegrees() + 180) % 360; // The opposite direction of the "end" of the rails.
-        double headingDifference = entryRailHeading - heading;
+        return compareHeadings(heading, getLastRailHeading());
+    }
+
+    /**
+     * Compare two directions and see if they are closer than a margin.
+     */
+    private boolean compareHeadings(double h0, double h1) {
+        double headingDifference = h0 - h1;
 
         // Need to be close to 0 (or 360) degrees difference.
         boolean result = Math.abs(headingDifference) <= 0 + maxHeadingDiff || Math.abs(headingDifference) >= 360 - maxHeadingDiff;
         return result;
     }
 
+    protected boolean hasLinkTowardNeighbor(double headingTowardNeighbor) {
+        if (hasRails()) {
+            // Heading of a train leaving this cell via the first end of the tracks.
+            double exitFirstHeading = (getFirstRailHeading() + 180) % 360;
+            // Heading of a train leaving this cell via the last end of the tracks.
+            double exitLastHeading = (getLastRailHeading() + 180) % 360;
+
+            // This cell is headed towards given heading if one of its track ends follows that direction.
+            return compareHeadings(exitFirstHeading, headingTowardNeighbor) || compareHeadings(exitLastHeading, headingTowardNeighbor);
+        } else {
+            return false;
+        }
+    }
+
+    protected TrainElement getTrainElement() {
+        return this.trainElement;
+    }
+
+    /**
+     * If the trainElement has the given trainNumber, that number must be
+     * replaced.
+     *
+     * @param toBeReplaced
+     * @param newTrainNumber
+     */
+    protected void renumberTrainElement(int toBeReplaced, int newTrainNumber) {
+        if (hasTrain() && trainElement.trainNumber == toBeReplaced) {
+            System.out.println("renumbering train element: from " + toBeReplaced + " to " + newTrainNumber);
+            System.out.println("Renamed element " + trainElement.trainNumber
+                    + " into " + newTrainNumber);
+            trainElement.trainNumber = newTrainNumber;
+        }
+    }
 }

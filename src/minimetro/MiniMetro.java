@@ -11,6 +11,7 @@ public class MiniMetro {
         World w = new World();
         GUI gui = new GUI(w);
 
+        w.addTestTracks();
     }
 
 }
