@@ -35,7 +35,7 @@ public class WorldPanel extends JPanel implements MouseListener,
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = 200;
+        zoomLevel = 140;
         zoomLevelFactor = 1.1;
         x0 = 0;
         y0 = 0;
@@ -116,6 +116,7 @@ public class WorldPanel extends JPanel implements MouseListener,
                 world.addLoco(currentRow, currentCol);
             }
             case WAGON -> {
+                System.out.println("WorldPanel mousePressed wagon");
                 currentCol = getCol(e.getX());
                 currentRow = getRow(e.getY());
                 world.addWagon(currentRow, currentCol);

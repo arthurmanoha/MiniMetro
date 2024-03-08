@@ -11,13 +11,16 @@ import java.awt.geom.Point2D;
 public class Wagon extends TrainElement {
 
     public Wagon() {
+        super();
+        position = 0.5;
+        currentSpeed = 0;
+        maxSpeed = 10;
+        color = Color.blue;
     }
 
     @Override
     public void paint(Graphics g, int xApp, int yApp, int size, Point2D.Double elementPosition, double heading) {
-        g.setColor(Color.blue);
-        g.fillOval(xApp, yApp, size, size);
-        g.setColor(Color.black);
-        g.drawOval(xApp, yApp, size, size);
+        System.out.println("Wagon paint");
+        super.paint(g, xApp, yApp, size, elementPosition, heading);
     }
 }

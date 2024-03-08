@@ -60,6 +60,13 @@ public class GUI extends JFrame {
         });
         toolbar.add(locoButton);
 
+        JButton wagonButton = new JButton("Wagon");
+        wagonButton.addActionListener((e) -> {
+            System.out.println("Pressed wagon button");
+            panel.setTool(GuiTool.WAGON);
+        });
+        toolbar.add(wagonButton);
+
         JButton zoomInButton = new JButton("Zoom in");
         zoomInButton.addActionListener((e) -> {
             System.out.println("Pressed zoom in button");
