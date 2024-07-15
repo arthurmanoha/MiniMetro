@@ -15,10 +15,9 @@ import java.util.TimerTask;
 public class World {
 
     private int nbRows, nbCols;
+    private double cellWidth = 1;
     private ArrayList<ArrayList<Cell>> cells;
     private double dt; // Evolution step
-
-    private ArrayList<TrainElement> trainsInTransition;
 
     private Timer timer;
     private boolean isRunning;
@@ -29,17 +28,19 @@ public class World {
     private final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
     public World() {
-        nbRows = 150;
-        nbCols = 240;
+        nbRows = 5;
+        nbCols = 9;
         cells = new ArrayList<>();
+        double xCell, yCell;
         for (int row = 0; row < nbRows; row++) {
+            yCell = cellWidth * row;
             cells.add(new ArrayList<>());
             for (int col = 0; col < nbCols; col++) {
-                cells.get(row).add(new Cell());
+                xCell = cellWidth * col;
+                cells.get(row).add(new Cell(xCell, yCell, cellWidth));
             }
         }
         dt = 0.1;
-        trainsInTransition = new ArrayList<>();
         step = 0;
         isRunning = false;
         periodMillisec = 50;
@@ -79,19 +80,19 @@ public class World {
             }
         }
 
-        // Transfert trains between cells when necessary
-        int rowIndex = 0;
+        // Transmit trains in transition from the Cells other Cells.
+        int rowNumber = 0;
         for (ArrayList<Cell> row : cells) {
-            int colIndex = 0;
+            int colNumber = 0;
             for (Cell c : row) {
-                if (c.isTrainElementSwitchingCells) {
-                    TrainElement movingTrain = c.removeTrain();
-                    reinsertTrain(movingTrain, rowIndex, colIndex);
-                    c.isTrainElementSwitchingCells = false;
+                for (TrainElement te : c.trainsInTransition) {
+                    // Reinserting element in next cell now.
+                    reinsertTrain(te, rowNumber, colNumber);
                 }
-                colIndex++;
+                c.clearTrainsInTransition();
+                colNumber++;
             }
-            rowIndex++;
+            rowNumber++;
         }
 
         step++;
@@ -122,9 +123,9 @@ public class World {
     protected void toggleStation(int row, int col) {
         Cell oldCell = this.getCell(row, col);
         if (oldCell instanceof StationCell) {
-            this.setCell(row, col, new Cell());
+            this.setCell(row, col, new Cell(oldCell.xTop, oldCell.yTop, oldCell.width));
         } else {
-            this.setCell(row, col, new StationCell());
+            this.setCell(row, col, new StationCell(oldCell.xTop, oldCell.yTop, oldCell.width));
         }
     }
 
@@ -136,7 +137,7 @@ public class World {
      */
     protected void addLoco(int row, int col) {
         Cell c = getCell(row, col);
-        c.setLoco();
+        c.createNewLoco();
         updateTrainLinks(row, col);
     }
 
@@ -148,7 +149,7 @@ public class World {
      */
     protected void addWagon(int row, int col) {
         Cell c = getCell(row, col);
-        c.setWagon();
+        c.createNewWagon();
         updateTrainLinks(row, col);
     }
 
@@ -157,37 +158,7 @@ public class World {
      *
      */
     private void updateTrainLinks(int row, int col) {
-
-        Cell currentCell = getCell(row, col);
-        Cell neighbor;
-        if (currentCell.hasLinkTowardNeighbor(0)) {
-            // Test the North cell
-            neighbor = getCell(row - 1, col);
-            if (neighbor.hasLinkTowardNeighbor(180)) {
-                addTrainLink(currentCell, neighbor);
-            }
-        }
-        if (currentCell.hasLinkTowardNeighbor(90)) {
-            // Test the East cell
-            neighbor = getCell(row, col + 1);
-            if (neighbor.hasLinkTowardNeighbor(270)) {
-                addTrainLink(currentCell, neighbor);
-            }
-        }
-        if (currentCell.hasLinkTowardNeighbor(180)) {
-            // Test the East cell
-            neighbor = getCell(row + 1, col);
-            if (neighbor.hasLinkTowardNeighbor(0)) {
-                addTrainLink(currentCell, neighbor);
-            }
-        }
-        if (currentCell.hasLinkTowardNeighbor(270)) {
-            // Test the East cell
-            neighbor = getCell(row, col - 1);
-            if (neighbor.hasLinkTowardNeighbor(90)) {
-                addTrainLink(currentCell, neighbor);
-            }
-        }
+        // TODO
     }
 
     /**
@@ -214,42 +185,24 @@ public class World {
      * next cell.
      *
      */
-    private void reinsertTrain(TrainElement movingTrain, int rowIndex, int colIndex) {
-        double currentHeading = movingTrain.headingDegrees;
-        int newRow = rowIndex;
-        int newCol = colIndex;
-        if (headingIsCloseTo(currentHeading, 0)) {
-            // North
-            newRow--;
-            movingTrain.setHeadingDegrees(0);
-        } else if (headingIsCloseTo(currentHeading, 90)) {
-            // East
-            newCol++;
-            movingTrain.setHeadingDegrees(90);
-        } else if (headingIsCloseTo(currentHeading, 180)) {
-            // South
-            newRow++;
-            movingTrain.setHeadingDegrees(180);
-        } else if (headingIsCloseTo(currentHeading, 270)) {
-            // West
-            newCol--;
-            movingTrain.setHeadingDegrees(270);
+    private void reinsertTrain(TrainElement movingTrain, int oldRow, int oldCol) {
+        int newRow = oldRow;
+        int newCol = oldCol;
+        if (movingTrain.vx > 0) {
+            newCol = oldCol + 1;
+            movingTrain.x -= cellWidth;
+        } else if (movingTrain.vx < 0) {
+            newCol = oldCol - 1;
+            movingTrain.x += cellWidth;
+        } else if (movingTrain.vy > 0) {
+            newRow = oldRow + 1;
+            movingTrain.y -= cellWidth;
         } else {
-            System.out.println("World: direction unknown.");
+            newRow = oldRow - 1;
+            movingTrain.y += cellWidth;
         }
-
-        // Add the train to the new cell.
-        Cell newCell = this.getCell(newRow, newCol);
-        if (newCell == null) {
-            System.out.println("next cell is null");
-        } else {
-            movingTrain.increasePosition(-1); // Adapt the train's current position to the new cell.
-            TrainElement insertionCheck = newCell.addTrainElement(movingTrain);
-            if (insertionCheck != null) {
-                // Error in train reinsertion.
-                System.out.println("World: error in train reinsertion.");
-            }
-        }
+        Cell newCell = cells.get(newRow).get(newCol);
+        newCell.addTrainElement(movingTrain);
     }
 
     /**
@@ -277,10 +230,10 @@ public class World {
 
     // Add a rectangular track loop.
     void addTestTracks() {
-        int minRow = 2;
-        int maxRow = 5;
-        int minCol = 2;
-        int maxCol = 6;
+        int minRow = 1;
+        int maxRow = 3;
+        int minCol = 1;
+        int maxCol = 5;
 
         // West-East tracks
         for (int col = minCol + 1; col < maxCol; col++) {
@@ -293,51 +246,17 @@ public class World {
             setNewTrack(minCol, row - 1, minCol, row, minCol, row + 1);
             setNewTrack(maxCol, row - 1, maxCol, row, maxCol, row + 1);
         }
-
         // Corners
-        setNewTrack(minCol, minRow + 1, minCol, minRow, minCol + 1, maxRow); // NW
-        setNewTrack(maxCol, minRow + 1, maxCol, minRow, maxCol - 1, maxRow); // NE
+        setNewTrack(minCol, minRow + 1, minCol, minRow, minCol + 1, minRow); // NW
+        setNewTrack(maxCol - 1, minRow, maxCol, minRow, maxCol, minRow + 1); // NE
         setNewTrack(minCol, maxRow - 1, minCol, maxRow, minCol + 1, maxRow); // SW
-        setNewTrack(maxCol, maxRow - 1, maxCol, maxRow, maxCol - 1, maxRow); // SE
+        setNewTrack(maxCol - 1, maxRow, maxCol, maxRow, maxCol, maxRow - 1); // SE
     }
 
     /**
      * Mark the train in cell0 and that in cell1 as the same train.
      */
     private void addTrainLink(Cell cell0, Cell cell1) {
-        System.out.println("adding train link between cell with heading " + cell0.getCenterHeading()
-                + " and cell with heading " + cell1.getCenterHeading());
-
-        TrainElement elem0 = cell0.getTrainElement();
-        TrainElement elem1 = cell1.getTrainElement();
-
-        if (elem0 != null && elem1 != null) {
-            int trainNumber0 = elem0.trainNumber;
-            int trainNumber1 = elem1.trainNumber;
-
-            // All elements from these two trains must be marked as the same one.
-            int newTrainNumber = Math.min(trainNumber0, trainNumber1);
-            renumberTrains(trainNumber0, trainNumber1, newTrainNumber);
-
-            double angleDiff = (elem1.headingDegrees - elem0.headingDegrees) % 360;
-            double newHeading;
-            // When the headings are mode than 45 degrees apart:
-            if (angleDiff > 46 && angleDiff < 314) {
-                System.out.println("Too large angle diff");
-                if (trainNumber0 < trainNumber1) {
-                    // elem1 adapts its direction to elem0
-                    newHeading = (elem1.headingDegrees + 180) % 360;
-                    System.out.println("    Switching elem0 from " + elem1.headingDegrees + " to " + newHeading);
-                    elem1.headingDegrees = newHeading;
-                } else {
-                    // elem0 adapts its direction to elem1
-                    newHeading = (elem0.headingDegrees + 180) % 360;
-                    System.out.println("    Switching elem0 from " + elem0.headingDegrees + " to " + newHeading);
-                    elem0.headingDegrees = newHeading;
-                }
-            }
-        }
-        System.out.println("End link.");
     }
 
     /**
@@ -349,14 +268,6 @@ public class World {
      * @param newTrainNumber
      */
     private void renumberTrains(int old1, int old2, int newTrainNumber) {
-
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-
-                c.renumberTrainElement(old1, newTrainNumber);
-                c.renumberTrainElement(old2, newTrainNumber);
-            }
-        }
     }
 
 }

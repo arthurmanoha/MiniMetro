@@ -2,7 +2,6 @@ package minimetro;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.geom.Point2D;
 
 /**
  *
@@ -10,17 +9,18 @@ import java.awt.geom.Point2D;
  */
 public class Wagon extends TrainElement {
 
-    public Wagon() {
-        super();
-        position = 0.5;
-        currentSpeed = 0;
+    public Wagon(double x, double y, double vx, double vy) {
+        super(x, y, vx, vy);
         maxSpeed = 10;
         color = Color.blue;
     }
 
+    public Wagon(double x, double y) {
+        this(x, y, 0, 0);
+    }
+
     @Override
-    public void paint(Graphics g, int xApp, int yApp, int size, Point2D.Double elementPosition, double heading) {
-        System.out.println("Wagon paint");
-        super.paint(g, xApp, yApp, size, elementPosition, heading);
+    public void paint(Graphics g, int xApp, int yApp, int size) {
+        super.paint(g, xApp, yApp, size);
     }
 }
