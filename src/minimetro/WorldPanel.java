@@ -62,7 +62,7 @@ public class WorldPanel extends JPanel implements MouseListener,
         for (int row = 0; row < world.getNbRows(); row++) {
             for (int col = 0; col < world.getNbCols(); col++) {
                 Cell c = world.getCell(row, col);
-                c.paint(g, row, col, x0, y0, zoomLevel);
+                c.paint(g, x0, y0, zoomLevel);
             }
         }
 
