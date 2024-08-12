@@ -10,16 +10,18 @@ import java.util.ArrayList;
 
 /**
  * This is a single 1x1 element of the grid.
- * It may contain one piece of track, one carriage.
+ * It may contain one piece of track, one or several carriages.
  *
  * @author arthu
  */
 public class Cell {
 
+    protected static double cellSize = 1;
+
     protected Color color;
 
-    private TrainElement trainElement;
-    protected boolean isTrainElementSwitchingCells;
+    private ArrayList<TrainElement> trainElements;
+    public ArrayList<TransferringTrain> trainsLeavingCell;
     double maxHeadingDiff = 10;
 
     private ArrayList<RailSegment> rails;
@@ -27,23 +29,19 @@ public class Cell {
     private double totalRailLength;
     private double singleRailLength;
     ArrayList<Color> colorList;
-    private boolean trainIsPrograde;
 
-    public Cell(ArrayList<RailSegment> oldRails) {
+    private Point2D.Double absolutePosition; // This point is the center of the cell.
+
+    private ArrayList<CardinalPoint> links;
+
+    public Cell() {
         color = Color.gray;
-        trainElement = null;
-        if (oldRails == null) {
-            rails = new ArrayList<>();
-            nbRails = 10;
-        } else {
-            rails = oldRails;
-            nbRails = rails.size();
-        }
-
-        totalRailLength = 1.0;
-
+        trainElements = new ArrayList<>();
+        trainsLeavingCell = new ArrayList<>();
+        rails = new ArrayList<>();
+        totalRailLength = cellSize;
+        nbRails = 10;
         singleRailLength = totalRailLength / nbRails;
-
         colorList = new ArrayList<>();
         colorList.add(Color.red);
         colorList.add(Color.green);
@@ -53,149 +51,74 @@ public class Cell {
         colorList.add(Color.orange);
         colorList.add(Color.MAGENTA);
         colorList.add(Color.CYAN);
-        isTrainElementSwitchingCells = false;
+        absolutePosition = new Point2D.Double();
+        links = new ArrayList<>();
+        links.add(CardinalPoint.CENTER);
+        links.add(CardinalPoint.CENTER);
     }
 
-    public Cell() {
-        this(null);
+    public Cell(Point2D.Double newAbsPos) {
+        this();
+        this.absolutePosition = newAbsPos;
+    }
+
+    public Cell(ArrayList<RailSegment> oldRails) {
+
+        this();
+
+        if (oldRails == null) {
+            rails = new ArrayList<>();
+            nbRails = 10;
+        } else {
+            rails = oldRails;
+            nbRails = rails.size();
+        }
+
     }
 
     /**
      * Paint the cell with its background and foreground.
      */
-    protected void paint(Graphics g, int row, int col, double x0, double y0, double zoom) {
-        final int xApp = (int) (col * zoom + x0);
-        final int yApp = (int) (row * zoom + y0);
+    protected void paint(Graphics g, double x0, double y0, double zoom) {
+
+        // On-screen coordinates of the center of the cell:
+        final double xApp = absolutePosition.x * zoom + x0;
+        final double yApp = g.getClipBounds().height - (absolutePosition.y * zoom + y0);
+        final double appSize = zoom * cellSize;
 
         // Draw background
         g.setColor(this.color);
-        g.fillRect(xApp, yApp, (int) zoom + 1, (int) zoom + 1);
+        g.fillRect((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) (appSize), (int) (appSize));
 
         // Draw borders
         g.setColor(Color.black);
-        g.drawLine(xApp, yApp, (int) (xApp + zoom), yApp);
-        g.drawLine(xApp, yApp, xApp, (int) (yApp + zoom));
+        g.drawLine((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) (xApp + appSize / 2), (int) (yApp - appSize / 2));
+        g.drawLine((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) (xApp - appSize / 2), (int) (yApp + appSize / 2));
 
         int i = 0;
-        if (rails != null) {
+        if (rails != null && !rails.isEmpty()) {
             for (RailSegment railSegment : rails) {
-                railSegment.paint(g, xApp, yApp, zoom, colorList.get(i % 6));
+                if (railSegment != null) {
+                    railSegment.paint(g, x0, y0, zoom, colorList.get(i % 6));
+                }
                 i++;
             }
         }
+        g.setColor(Color.black);
+        String message = "";
+        g.drawString(message, (int) (xApp), (int) (yApp));
+
     }
 
     /**
      * Paint the trainElements alone.
      * (to be used after all cells were drawn).
      */
-    protected void paintTrains(Graphics g, int row, int col, double x0, double y0, double zoom) {
+    protected void paintTrains(Graphics g, double x0, double y0, double zoom) {
         if (hasTrain()) {
-            final int xApp = (int) (col * zoom + x0);
-            final int yApp = (int) (row * zoom + y0);
-
-            // Compute the position based on the rails.
-            Point2D.Double elementPosition = getTrainPosition();
-            double heading = getTrainHeading();
-            if (elementPosition != null) {
-                trainElement.paint(g, xApp, yApp, (int) zoom, elementPosition, heading);
+            for (TrainElement te : trainElements) {
+                te.paint(g, x0, y0, zoom);
             }
-        }
-    }
-
-    /**
-     * Set a track section that goes through this cell.
-     *
-     */
-    protected void setTrack(int dxBefore, int dyBefore, int dxAfter, int dyAfter) {
-        double xStart = defineBorderCoordinates(dxBefore);
-        double xEnd = defineBorderCoordinates(dxAfter);
-        double yStart = defineBorderCoordinates(dyBefore);
-        double yEnd = defineBorderCoordinates(dyAfter);
-
-        rails.clear();
-
-        // Create rail sections
-        if (dxBefore != dxAfter && dyBefore != dyAfter) {
-            // This is a turn.
-            double xCenter, yCenter;
-            double angleStart, angleEnd;
-            double radius = 0.5;
-            if (dxBefore > 0 && dyAfter > 0 || dxAfter > 0 && dyBefore > 0) {
-                // Link between North and East.
-                xCenter = 1;
-                yCenter = 1;
-                // 0<->east, pi/2<->south, pi<->west, 3pi/2<->north.
-                angleStart = PI;
-                angleEnd = 3 * PI / 2;
-            } else if (dxBefore > 0 && dyAfter < 0 || dxAfter > 0 && dyBefore < 0) {
-                // Link between East and South.
-                xCenter = 1;
-                yCenter = 0;
-                // 0<->east, pi/2<->south, pi<->west, 3pi/2<->north.
-                angleStart = PI / 2;
-                angleEnd = PI;
-            } else if (dxBefore < 0 && dyAfter < 0 || dxAfter < 0 && dyBefore < 0) {
-                // Link between South and West.
-                xCenter = 0;
-                yCenter = 0;
-                // 0<->east, pi/2<->south, pi<->west, 3pi/2<->north.
-                angleStart = 0;
-                angleEnd = PI / 2;
-            } else if (dxBefore < 0 && dyAfter > 0 || dxAfter < 0 && dyBefore > 0) {
-                // Link between West and North.
-                xCenter = 0;
-                yCenter = 1;
-                // 0<->east, pi/2<->south, pi<->west, 3pi/2<->north.
-                angleStart = 3 * PI / 2;
-                angleEnd = 2 * PI;
-            } else {
-                System.out.println("Cell.setTrack: Error in quadrant selection.");
-                angleStart = 0;
-                angleEnd = 0;
-                xCenter = 0;
-                yCenter = 0;
-            }
-            for (int i = 0; i < nbRails; i++) {
-
-                double percentageInit = (double) i / nbRails;
-                double currentAngle = angleStart * (1 - percentageInit) + angleEnd * percentageInit;
-                double xSectionStart = xCenter + radius * cos(currentAngle);
-                double ySectionStart = yCenter + radius * sin(currentAngle);
-                double percentageEnd = (double) (i + 1) / nbRails;
-                double nextAngle = angleStart * (1 - percentageEnd) + angleEnd * percentageEnd;
-                double xSectionEnd = xCenter + radius * cos(nextAngle);
-                double ySectionEnd = yCenter + radius * sin(nextAngle);
-                rails.add(new RailSegment(xSectionStart, ySectionStart, xSectionEnd, ySectionEnd));
-            }
-        } else {
-            // This is a straight line.
-            for (int i = 0; i < nbRails; i++) {
-                double percentageStart = (double) i / nbRails;
-                double xSectionStart = xStart * (1 - percentageStart) + xEnd * percentageStart;
-                double ySectionStart = yStart * (1 - percentageStart) + yEnd * percentageStart;
-                double percentageEnd = ((double) (i + 1)) / nbRails;
-                double xSectionEnd = xStart * (1 - percentageEnd) + xEnd * percentageEnd;
-                double ySectionEnd = yStart * (1 - percentageEnd) + yEnd * percentageEnd;
-                rails.add(new RailSegment(xSectionStart, ySectionStart, xSectionEnd, ySectionEnd));
-            }
-        }
-    }
-
-    /**
-     * return a value of 0, 0.5 or 1 depending on where the neighbor cell is
-     * located.
-     *
-     * @param dxy
-     * @return
-     */
-    private double defineBorderCoordinates(double dxy) {
-        if (dxy == -1) {
-            return 0;
-        } else if (dxy == 0) {
-            return 0.5;
-        } else {
-            return 1;
         }
     }
 
@@ -206,18 +129,22 @@ public class Cell {
 
     protected void setLoco() {
         if (hasRails()) {
-            this.trainElement = new Locomotive();
-            this.trainIsPrograde = true;
-            this.trainElement.headingDegrees = this.getCenterHeading();
+            Point2D.Double locoPosition = new Point2D.Double(absolutePosition.x,
+                    absolutePosition.y);
+            this.trainElements.add(0, new Locomotive(locoPosition));
+            this.trainElements.get(0).headingDegrees = this.getCenterHeading();
         }
+        snapToRail();
     }
 
     protected void setWagon() {
         if (hasRails()) {
-            this.trainElement = new Wagon();
-            this.trainIsPrograde = true;
-            this.trainElement.headingDegrees = this.getCenterHeading();
+            Point2D.Double wagonPosition = new Point2D.Double(absolutePosition.x,
+                    absolutePosition.y);
+            this.trainElements.add(0, new Wagon(wagonPosition));
+            this.trainElements.get(0).headingDegrees = this.getCenterHeading();
         }
+        snapToRail();
     }
 
     /**
@@ -229,32 +156,31 @@ public class Cell {
      * reinserted.
      */
     protected TrainElement addTrainElement(TrainElement newTrain) {
-
-        if (!hasRails()) {
-            System.out.println("No rails, cannot add train.");
-            return newTrain;
-        }
-
-        if (this.compareFirstInputHeading(newTrain.headingDegrees)) {
-            // Insert train in first rail segment.
-            trainElement = newTrain;
-            this.trainIsPrograde = true;
-        } else if (this.compareLastInputHeading(newTrain.headingDegrees)) {
-            // Insert train in last rail segment.
-            trainElement = newTrain;
-            this.trainIsPrograde = false;
-        } else {
-            return newTrain;
-        }
+        this.trainElements.add(newTrain);
+        snapToRail();
         return null;
     }
 
     protected boolean hasLoco() {
-        return this.trainElement != null && (this.trainElement instanceof Locomotive);
+        if (trainElements != null) {
+            for (TrainElement te : trainElements) {
+                if (te instanceof Locomotive) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     protected boolean hasWagon() {
-        return this.trainElement != null && (this.trainElement instanceof Wagon);
+        if (trainElements != null) {
+            for (TrainElement te : trainElements) {
+                if (te instanceof Wagon) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     protected boolean hasTrain() {
@@ -262,11 +188,14 @@ public class Cell {
     }
 
     protected Locomotive getLoco() {
-        if (hasLoco()) {
-            return (Locomotive) this.trainElement;
-        } else {
-            return null;
+        if (trainElements != null) {
+            for (TrainElement te : trainElements) {
+                if (te instanceof Locomotive) {
+                    return (Locomotive) te;
+                }
+            }
         }
+        return null;
     }
 
     /**
@@ -275,24 +204,53 @@ public class Cell {
      * @return the trainElement if it exists, null otherwise.
      */
     protected TrainElement removeTrain() {
-        if (this.hasTrain()) {
-            TrainElement removedTrainElement = this.trainElement;
-            this.trainElement = null;
-            return removedTrainElement;
-        } else {
-            return null;
+        TrainElement result = null;
+        if (trainElements != null) {
+            for (TrainElement te : trainElements) {
+                if (te instanceof Locomotive) {
+                    result = te;
+                }
+            }
+        }
+        if (result != null) {
+            int index = trainElements.lastIndexOf(result);
+            trainElements.remove(index);
+            return result;
+        }
+        return null;
+    }
+
+    public void resetForces() {
+        for (TrainElement te : trainElements) {
+            te.resetForces();
         }
     }
 
-    protected void evolve(double dt) {
-        if (hasTrain()) {
-            double dPos = trainElement.currentSpeed * dt; // The absolute distance the train will move in this step.
-            trainElement.increasePosition(dPos);
-            if (trainElement.getPosition() > 1 || trainElement.getPosition() < 0) {
+    /**
+     * Compute new speed based on engine power
+     *
+     * @param dt
+     */
+    protected void computeMotorForces(double dt) {
+        for (TrainElement te : trainElements) {
+            te.computeMotorForce(dt);
+        }
+    }
+
+    /**
+     * Compute new position based on current speed.
+     *
+     * @param dt
+     */
+    protected void moveTrains(double dt) {
+        for (TrainElement trainElement : trainElements) {
+
+            trainElement.move(dt);
+
+            CardinalPoint leavingDirection = isTrainElementLeaving(trainElement);
+            if (leavingDirection != CardinalPoint.CENTER) {
                 // The element has travelled to the next cell.
-                isTrainElementSwitchingCells = true;
-            } else {
-                setTrainHeading();
+                trainsLeavingCell.add(new TransferringTrain(trainElement, leavingDirection));
             }
         }
 
@@ -304,74 +262,8 @@ public class Cell {
      *
      * @return the 2d position relative to the current cell.
      */
-    private Point2D.Double getTrainPosition() {
-
-        double cellPos; // Train position in the cell's reference (swapped if train drives retrograde)
-        if (trainIsPrograde) {
-            cellPos = trainElement.position;
-        } else {
-            cellPos = 1 - trainElement.position;
-        }
-        int railIndex = (int) (cellPos / totalRailLength * nbRails);
-        double lengthBeforeCurrentSegment;
-        lengthBeforeCurrentSegment = railIndex * singleRailLength;
-        double p = (cellPos - lengthBeforeCurrentSegment) / singleRailLength;
-
-        if (railIndex >= nbRails || railIndex < 0) {
-            // The train has reached the border of the cell.
-            return null;
-        }
-        double xStart = rails.get(railIndex).getXStart();
-        double yStart = rails.get(railIndex).getYStart();
-        double xEnd = rails.get(railIndex).getXEnd();
-        double yEnd = rails.get(railIndex).getYEnd();
-        return new Point2D.Double(xStart * (1 - p) + xEnd * p, yStart * (1 - p) + yEnd * p);
-    }
-
-    /**
-     * Compute the heading of the train from its linear position and the
-     * tracks details.
-     *
-     * @return the train heading in radians, 0<->east, pi/2<->south, pi<->west,
-     * 3pi/2<->north.
-     */
-    private double getTrainHeading() {
-        return trainElement.getHeading();
-    }
-
-    private void setTrainHeading() {
-
-        int railIndex = -1;
-        try {
-            double trainPosition = trainElement.position;
-
-            if (trainIsPrograde) {
-                railIndex = (int) (trainPosition * nbRails / totalRailLength);
-            } else {
-                railIndex = (int) ((1 - trainPosition) * nbRails / totalRailLength);
-            }
-
-            RailSegment segment = rails.get(railIndex);
-            double segmentHeading = segment.getHeadingInDegrees();
-            double newHeading = segmentHeading;
-
-            // Negative speed: other direction
-            if (trainElement.currentSpeed < 0) {
-                newHeading += 180;
-            }
-
-            // Train going to the negative direction in the cell's perspective:
-            if (!trainIsPrograde) {
-                newHeading += 180;
-            }
-
-            newHeading = newHeading % 360;
-
-            trainElement.setHeadingDegrees(newHeading);
-
-        } catch (IndexOutOfBoundsException e) {
-            System.out.println("no rail numbered " + railIndex);
-        }
+    Point2D.Double getTrainPosition(TrainElement te) {
+        return te.absolutePosition;
     }
 
     /**
@@ -404,22 +296,6 @@ public class Cell {
     }
 
     /**
-     * Compare the heading of an incoming train to the first side of the tracks,
-     * with margin.
-     */
-    private boolean compareFirstInputHeading(double heading) {
-        return compareHeadings(heading, getFirstRailHeading());
-    }
-
-    /**
-     * Compare the heading of an incoming train to the second side of the
-     * tracks, with margin.
-     */
-    private boolean compareLastInputHeading(double heading) {
-        return compareHeadings(heading, getLastRailHeading());
-    }
-
-    /**
      * Compare two directions and see if they are closer than a margin.
      */
     private boolean compareHeadings(double h0, double h1) {
@@ -445,22 +321,276 @@ public class Cell {
     }
 
     protected TrainElement getTrainElement() {
-        return this.trainElement;
+        return this.trainElements.get(0);
     }
 
     /**
      * If the trainElement has the given trainNumber, that number must be
      * replaced.
      *
-     * @param toBeReplaced
+     * @param toBeReplaced the old train number; we only renumber trains, not
+     * un-linked elements, so we ignore -1
      * @param newTrainNumber
      */
     protected void renumberTrainElement(int toBeReplaced, int newTrainNumber) {
-        if (hasTrain() && trainElement.trainNumber == toBeReplaced) {
-            System.out.println("renumbering train element: from " + toBeReplaced + " to " + newTrainNumber);
-            System.out.println("Renamed element " + trainElement.trainNumber
-                    + " into " + newTrainNumber);
-            trainElement.trainNumber = newTrainNumber;
+        if (toBeReplaced != -1) {
+            for (TrainElement te : trainElements) {
+                if (hasTrain() && te.trainNumber == toBeReplaced) {
+                    System.out.println("renumbering train element: from " + toBeReplaced + " to " + newTrainNumber);
+                    System.out.println("Renamed element " + te.id + " from train " + te.trainNumber
+                            + " into " + newTrainNumber);
+                    te.trainNumber = newTrainNumber;
+                }
+            }
         }
     }
+
+    void flushMovingTrains() {
+        for (TransferringTrain te : trainsLeavingCell) {
+            int index = trainElements.lastIndexOf(te.getTrainElement());
+            trainElements.remove(index);
+        }
+        trainsLeavingCell.clear();
+    }
+
+    boolean containsTrainElement(TrainElement requestedElement) {
+        for (TrainElement te : trainElements) {
+            if (te.equals(requestedElement)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void computeNewSpeeds(double dt) {
+        for (TrainElement te : trainElements) {
+            te.computeNewSpeed(dt);
+        }
+    }
+
+    void setAbsoluteCoordinates(Point2D.Double cellPosition) {
+        absolutePosition = cellPosition;
+    }
+
+    /**
+     * Check whether a train is leaving a cell
+     *
+     * @param trainElement
+     * @return the direction in which it is leaving.
+     */
+    private CardinalPoint isTrainElementLeaving(TrainElement trainElement) {
+
+        if (trainElement.getX() < this.absolutePosition.x - cellSize / 2) {
+            if (trainElement.getY() < this.absolutePosition.y - cellSize / 2) {
+                return CardinalPoint.SOUTHWEST;
+            } else if (trainElement.getY() > this.absolutePosition.y + cellSize / 2) {
+                return CardinalPoint.NORTHWEST;
+            } else {
+                return CardinalPoint.WEST;
+            }
+        } else if (trainElement.getX() > this.absolutePosition.x + cellSize / 2) {
+            if (trainElement.getY() < this.absolutePosition.y - cellSize / 2) {
+                return CardinalPoint.SOUTHEAST;
+            } else if (trainElement.getY() > this.absolutePosition.y + cellSize / 2) {
+                return CardinalPoint.NORTHEAST;
+            } else {
+                return CardinalPoint.EAST;
+            }
+        } else {
+            if (trainElement.getY() < this.absolutePosition.y - cellSize / 2) {
+                return CardinalPoint.SOUTH;
+            } else if (trainElement.getY() > this.absolutePosition.y + cellSize / 2) {
+                return CardinalPoint.NORTH;
+            } else {
+                return CardinalPoint.CENTER;
+            }
+        }
+    }
+
+    /**
+     * Reposition all TrainElements to the closest rail available.
+     */
+    void snapToRail() {
+        for (TrainElement te : trainElements) {
+            // Find the rail that is closest to the TrainElement
+            double minDistance = Double.MAX_VALUE;
+            RailSegment closestSegment = null;
+            for (RailSegment r : rails) {
+                double distance = r.getDistance(te);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestSegment = r;
+                }
+            }
+            if (closestSegment != null) {
+                // snap the TrainElement to the rail
+                closestSegment.snapTrain(te);
+            }
+        }
+    }
+
+    private String getLinks() {
+        String result = "";
+        for (CardinalPoint link : links) {
+            result += link + " ";
+        }
+        return result;
+    }
+
+    /**
+     * Add a link from this cell to the specified direction.
+     * A cell may have 0, 1 or 2 links (TODO: a switch shall behave differently)
+     *
+     * @param newLinkDirection
+     */
+    void addLink(CardinalPoint newLinkDirection) {
+        if (!links.contains(newLinkDirection)) {
+            links.add(newLinkDirection);
+            if (links.size() > 2) {
+                links.remove(0);
+            }
+        }
+        updateTracks();
+    }
+
+    private boolean isTrackTurning() {
+
+        return (isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.EAST)
+                || isLinked(CardinalPoint.EAST) && isLinked(CardinalPoint.SOUTH)
+                || isLinked(CardinalPoint.SOUTH) && isLinked(CardinalPoint.WEST)
+                || isLinked(CardinalPoint.WEST) && isLinked(CardinalPoint.NORTH));
+    }
+
+    /**
+     * Set the rail segments in accordance with the cardinal points specified by
+     * the link list.
+     *
+     */
+    private void updateTracks() {
+
+        if (isTrackTurning()) {
+            updateTurningTracks();
+        } else {
+            updateHorizontalOrVerticalTracks();
+        }
+    }
+
+    /**
+     * Create the rails when the tracks go N-S or E-W, without turns.
+     */
+    private void updateHorizontalOrVerticalTracks() {
+        double xCell = absolutePosition.x, yCell = absolutePosition.y;
+        double xStart = xCell, xEnd = xCell, yStart = yCell, yEnd = yCell;
+        if (links.size() >= 1) {
+            CardinalPoint firstLink = links.get(0);
+            switch (firstLink) {
+            case WEST:
+                xStart = xCell - cellSize / 2;
+                yStart = yCell;
+                break;
+            case NORTH:
+                xStart = xCell;
+                yStart = yCell + cellSize / 2;
+                break;
+            case EAST:
+                xStart = xCell + cellSize / 2;
+                yStart = yCell;
+                break;
+            case SOUTH:
+                xStart = xCell;
+                yStart = yCell - cellSize / 2;
+                break;
+            default:
+                xStart = xCell;
+                yStart = yCell;
+            }
+        }
+        if (links.size() >= 2) {
+            CardinalPoint secondLink = links.get(1);
+            switch (secondLink) {
+            case WEST:
+                xEnd = xCell - cellSize / 2;
+                yEnd = yCell;
+                break;
+            case NORTH:
+                xEnd = xCell;
+                yEnd = yCell + cellSize / 2;
+                break;
+            case EAST:
+                xEnd = xCell + cellSize / 2;
+                yEnd = yCell;
+                break;
+            case SOUTH:
+                xEnd = xCell;
+                yEnd = yCell - cellSize / 2;
+                break;
+            default:
+                xEnd = xCell;
+                yEnd = yCell;
+            }
+        }
+        rails.clear();
+        for (int i = 0; i < nbRails; i++) {
+            double x0 = xStart + i * (xEnd - xStart) / nbRails;
+            double y0 = yStart + i * (yEnd - yStart) / nbRails;
+            double x1 = xStart + (i + 1) * (xEnd - xStart) / nbRails;
+            double y1 = yStart + (i + 1) * (yEnd - yStart) / nbRails;
+            rails.add(new RailSegment(x0, y0, x1, y1));
+        }
+    }
+
+    /**
+     * Create the rails when the tracks go from N-S to E-W, with a turn.
+     */
+    private void updateTurningTracks() {
+        double xCenter, yCenter;
+        double radius = cellSize / 2;
+        double angleStart, angleEnd;
+
+        if (isLinked(CardinalPoint.SOUTH) && isLinked(CardinalPoint.EAST)) {
+            xCenter = absolutePosition.x + cellSize / 2;
+            yCenter = absolutePosition.y - cellSize / 2;
+            angleStart = PI;
+            angleEnd = PI / 2;
+        } else if (isLinked(CardinalPoint.EAST) && isLinked(CardinalPoint.NORTH)) {
+            xCenter = absolutePosition.x + cellSize / 2;
+            yCenter = absolutePosition.y + cellSize / 2;
+            angleStart = 3 * PI / 2;
+            angleEnd = PI;
+        } else if (isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.WEST)) {
+            xCenter = absolutePosition.x - cellSize / 2;
+            yCenter = absolutePosition.y + cellSize / 2;
+            angleStart = 4 * PI / 2;
+            angleEnd = 3 * PI / 2;
+        } else { // linked WEST and SOUTH
+            xCenter = absolutePosition.x - cellSize / 2;
+            yCenter = absolutePosition.y - cellSize / 2;
+            angleStart = PI / 2;
+            angleEnd = 0;
+        }
+
+        rails.clear();
+        for (int i = 0; i < nbRails; i++) {
+            double x0 = xCenter + radius * cos(angleStart + i * (angleEnd - angleStart) / nbRails);
+            double y0 = yCenter + radius * sin(angleStart + i * (angleEnd - angleStart) / nbRails);
+            double x1 = xCenter + radius * cos(angleStart + (i + 1) * (angleEnd - angleStart) / nbRails);
+            double y1 = yCenter + radius * sin(angleStart + (i + 1) * (angleEnd - angleStart) / nbRails);
+            rails.add(new RailSegment(x0, y0, x1, y1));
+        }
+    }
+
+    /**
+     * Return true when the cell has a link in the specified direction.
+     *
+     * @param cardinalPoint
+     * @return
+     */
+    private boolean isLinked(CardinalPoint cardinalPoint) {
+        try {
+            return links.get(0) == cardinalPoint || links.get(1) == cardinalPoint;
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return false;
+        }
+    }
+
 }

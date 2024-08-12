@@ -10,16 +10,38 @@ import java.awt.geom.Point2D;
  */
 public class Locomotive extends TrainElement {
 
+    protected double motorPower;
+
     public Locomotive() {
         super();
-        position = 0.5;
-        currentSpeed = 1;
         maxSpeed = 1;
+        motorPower = 1;
         color = Color.red;
     }
 
+    public Locomotive(Point2D.Double newAbsolutePosition) {
+        this();
+        this.absolutePosition = newAbsolutePosition;
+    }
+
     @Override
-    public void paint(Graphics g, int xApp, int yApp, int size, Point2D.Double elementPosition, double heading) {
-        super.paint(g, xApp, yApp, size, elementPosition, heading);
+    public void paint(Graphics g, double x0, double y0, double zoom) {
+        super.paint(g, x0, y0, zoom);
+    }
+
+    @Override
+    public void increaseSpeed(double dSpeed) {
+
+    }
+
+    @Override
+    public void computeMotorForce(double dt) {
+
+        double dx = Math.cos(getHeadingRad());
+        double dy = Math.sin(getHeadingRad());
+
+        double fx = motorPower * dx;
+        double fy = motorPower * dy;
+        currentForce = new Point2D.Double(fx, fy);
     }
 }

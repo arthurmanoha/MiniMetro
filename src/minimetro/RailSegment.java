@@ -11,7 +11,8 @@ import static java.lang.Math.PI;
  */
 public class RailSegment {
 
-    private double xStart, yStart, xEnd, yEnd;
+    // Absolute coordinates of the start and end of this segment.
+    private final double xStart, yStart, xEnd, yEnd;
 
     public RailSegment(double x0, double y0, double x1, double y1) {
         xStart = x0;
@@ -20,12 +21,14 @@ public class RailSegment {
         yEnd = y1;
     }
 
-    void paint(Graphics g, int xApp, int yApp, double zoom, Color c) {
+    void paint(Graphics g, double x0, double y0, double zoom, Color c) {
 
-        int xStartApp = (int) (xApp + xStart * zoom);
-        int yStartApp = (int) (yApp + yStart * zoom);
-        int xEndApp = (int) (xApp + xEnd * zoom);
-        int yEndApp = (int) (yApp + yEnd * zoom);
+        int panelHeight = g.getClipBounds().height;
+
+        int xStartApp = (int) (x0 + xStart * zoom);
+        int yStartApp = panelHeight - (int) (y0 + yStart * zoom);
+        int xEndApp = (int) (x0 + xEnd * zoom);
+        int yEndApp = panelHeight - (int) (y0 + yEnd * zoom);
 
         g.setColor(c);
         g.drawLine(xStartApp, yStartApp, xEndApp, yEndApp);
@@ -60,5 +63,56 @@ public class RailSegment {
             headingInDegrees += 360;
         }
         return headingInDegrees;
+    }
+
+    /**
+     * Get the distance from this rail segment to a givent TrainElement
+     *
+     * @param te
+     * @return the distance from the start of this rail to the TrainElement, or
+     * the distance from the end of this rail to the TrainElement, whichever is
+     * smaller.
+     */
+    double getDistance(TrainElement te) {
+        double dxStart = te.getX() - this.xStart;
+        double dyStart = te.getY() - this.yStart;
+        double dxEnd = te.getX() - this.xEnd;
+        double dyEnd = te.getY() - this.yEnd;
+        double dStart = Math.sqrt(dxStart * dxStart + dyStart * dyStart);
+        double dEnd = Math.sqrt(dxEnd * dxEnd + dyEnd * dyEnd);
+        return Math.min(dStart, dEnd);
+    }
+
+    /**
+     * Project the TE ont this rail.
+     *
+     * @param te
+     */
+    void snapTrain(TrainElement te) {
+
+        double length = Math.sqrt((xEnd - xStart) * (xEnd - xStart) + (yEnd - yStart) * (yEnd - yStart));
+        double ux = (xEnd - xStart) / length;
+        double uy = (yEnd - yStart) / length;
+
+        // A is the start of this segment, B is the end.
+        // M denotes the position of the TrainElement.
+        // P is the projection of M on AB.
+        // Scalar product between vectors AM> and u>
+        double am_u = (te.getX() - xStart) * ux + (te.getY() - yStart) * uy;
+        double xP = xStart + am_u * ux;
+        double yP = yStart + am_u * uy;
+        te.setPosition(xP, yP);
+
+        // Align train speed along rail direction
+        // u_v is the scalar product between unit vector u> and current speed.
+        double u_v = ux * te.currentSpeed.x + uy * te.currentSpeed.y;
+        te.currentSpeed.x = u_v * ux;
+        te.currentSpeed.y = u_v * uy;
+
+        // HeadingRad is 0 for east, pi/2 for north.
+        double headingRad = Math.atan2(te.currentSpeed.y, te.currentSpeed.x);
+        // HedingDeg is 0 for north, 90 for east.
+        double headingDeg = (Math.PI / 2 - headingRad) * 360 / (2 * PI);
+        te.setHeadingDegrees(headingDeg);
     }
 }

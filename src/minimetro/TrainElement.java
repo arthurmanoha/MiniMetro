@@ -3,6 +3,7 @@ package minimetro;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.geom.Point2D;
+import static java.lang.Math.PI;
 
 /**
  * This class represents either a locomotive or a passenger carriage.
@@ -11,53 +12,68 @@ import java.awt.geom.Point2D;
  */
 public abstract class TrainElement {
 
-    protected double position;
-    protected double currentSpeed; // sign depends on train direction on local track.
+    protected Point2D.Double absolutePosition;
+    protected Point2D.Double currentSpeed;
     protected double maxSpeed;
+    protected Point2D.Double currentForce;
     protected double headingDegrees; // 0:N, 90:E, 180:S, 270:W
+
+    protected double size; // Physical size of the object
+
+    // Only the first element of a given train is responsible of speed computation;
+    protected boolean isLeading;
 
     protected Color color;
 
     protected int id; // Single value for each element
-    protected int trainNumber; // This value is the same for elements linked together.
+    protected int trainNumber; // This value is the same for elements linked together; -1 for non-linked elements.
     protected static int NB_TRAIN_ELEMENTS_CREATED = 0;
 
     public TrainElement() {
         id = NB_TRAIN_ELEMENTS_CREATED;
         NB_TRAIN_ELEMENTS_CREATED++;
-        trainNumber = id;
+        trainNumber = -1;
+        isLeading = false;
+        currentForce = new Point2D.Double();
+        absolutePosition = new Point2D.Double();
+        currentSpeed = new Point2D.Double();
+        size = 0.1;
     }
 
-    public void paint(Graphics g, int xApp, int yApp, int size, Point2D.Double elementPosition, double heading) {
-        int xCenter = (int) (xApp + size * elementPosition.x);
-        int yCenter = (int) (yApp + size * elementPosition.y);
-        int radius = (int) (size * 0.10);
+    public void paint(Graphics g, double x0, double y0, double zoom) {
+        int xCenter = (int) (x0 + zoom * this.absolutePosition.x);
+        int yCenter = g.getClipBounds().height - (int) (y0 + zoom * this.absolutePosition.y);
+        int radiusApp = (int) (zoom * size);
         g.setColor(this.color);
-        g.fillOval((int) (xCenter - radius), (int) (yCenter - radius), 2 * radius, 2 * radius);
+        g.fillOval((int) (xCenter - radiusApp), (int) (yCenter - radiusApp), 2 * radiusApp, 2 * radiusApp);
         g.setColor(Color.black);
-        g.drawOval((int) (xCenter - radius), (int) (yCenter - radius), 2 * radius, 2 * radius);
+        g.drawOval((int) (xCenter - radiusApp), (int) (yCenter - radiusApp), 2 * radiusApp, 2 * radiusApp);
 
-        // Paint id and trainNumber
+        // Paint id, trainNumber and heading
         g.setColor(Color.black);
-        g.drawString("id " + id + ", tn " + trainNumber + ", h " + headingDegrees,
-                 xCenter - 2 * radius, yCenter - 2 * radius
+        String headingSubstring = (int) headingDegrees + "";
+        String linearVelocity = currentSpeed + "";
+        g.drawString("id " + id
+                + ", h " + headingSubstring
+                + ", v " + linearVelocity,
+                xCenter - 2 * radiusApp, yCenter - 2 * radiusApp
         );
     }
 
-    public void increasePosition(double dPos) {
-        this.position += dPos;
+    public void increaseSpeed(double dSpeed) {
     }
 
-    protected double getPosition() {
-        return position;
-    }
-
-    protected void setPosition(double newPosition) {
-        position = newPosition;
+    public void increaseForce(Point2D.Double forceIncrement) {
+        currentForce.x += forceIncrement.x;
+        currentForce.y += forceIncrement.y;
     }
 
     double getHeading() {
         return headingDegrees;
+    }
+
+    double getHeadingRad() {
+        return (2 * PI * (90 - headingDegrees)) / 360;
     }
 
     void setHeadingDegrees(double newHeading) {
@@ -65,5 +81,51 @@ public abstract class TrainElement {
             newHeading -= 360;
         }
         headingDegrees = newHeading;
+    }
+
+    private void paintSpeed(Graphics g, int xCenter, int yCenter, int size) {
+        g.setColor(Color.white);
+        double vx = this.currentSpeed.x;
+        double vy = this.currentSpeed.y;
+        int scale = 100;
+        g.drawLine(xCenter, yCenter, (int) (xCenter + scale * vx), (int) (yCenter - scale * vy));
+    }
+
+    void resetForces() {
+        currentForce = new Point2D.Double();
+    }
+
+    void computeMotorForce(double dt) {
+        currentForce = new Point2D.Double();
+    }
+
+    void computeNewSpeed(double dt) {
+
+        currentSpeed.x += currentForce.x * dt;
+        currentSpeed.y += currentForce.y * dt;
+
+        double speed = Math.sqrt(currentSpeed.x * currentSpeed.x + currentSpeed.y * currentSpeed.y);
+        if (speed > maxSpeed) {
+            double ratio = speed / maxSpeed;
+            currentSpeed.x = currentSpeed.x / ratio;
+            currentSpeed.y = currentSpeed.y / ratio;
+        }
+    }
+
+    void move(double dt) {
+        Point2D.Double movement = new Point2D.Double(currentSpeed.x * dt, currentSpeed.y * dt);
+        absolutePosition = new Point2D.Double(absolutePosition.x + movement.x, absolutePosition.y + movement.y);
+    }
+
+    double getX() {
+        return absolutePosition.x;
+    }
+
+    double getY() {
+        return absolutePosition.y;
+    }
+
+    protected void setPosition(double newX, double newY) {
+        this.absolutePosition = new Point2D.Double(newX, newY);
     }
 }

@@ -12,15 +12,22 @@ public class Wagon extends TrainElement {
 
     public Wagon() {
         super();
-        position = 0.5;
-        currentSpeed = 0;
         maxSpeed = 10;
         color = Color.blue;
     }
 
+    public Wagon(Point2D.Double newAbsolutePosition) {
+        this();
+        this.absolutePosition = newAbsolutePosition;
+    }
+
     @Override
-    public void paint(Graphics g, int xApp, int yApp, int size, Point2D.Double elementPosition, double heading) {
-        System.out.println("Wagon paint");
-        super.paint(g, xApp, yApp, size, elementPosition, heading);
+    public void paint(Graphics g, double x0, double y0, double zoom) {
+        super.paint(g, x0, y0, zoom);
+    }
+
+    @Override
+    public void increaseSpeed(double dSpeed) {
+        // A Wagon does not increase its speed by itself.
     }
 }

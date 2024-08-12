@@ -27,25 +27,26 @@ public class WorldPanel extends JPanel implements MouseListener,
     private int prevMouseX, prevMouseY;
 
     // Memorize the current cell and the last two, necessary to create rails.
-    private int prevPrevCol, prevPrevRow;
     private int prevCol, prevRow;
     private int currentCol, currentRow;
+
+    private int graphicsCurrentHeight;
 
     public WorldPanel(World w) {
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = 140;
+        zoomLevel = 100;
         zoomLevelFactor = 1.1;
         x0 = 0;
         y0 = 0;
         currentTool = GuiTool.NO_TOOL;
         prevMouseX = 0;
         prevMouseY = 0;
-        prevPrevRow = Integer.MAX_VALUE;
-        prevPrevCol = Integer.MAX_VALUE;
         prevRow = Integer.MAX_VALUE;
         prevCol = Integer.MAX_VALUE;
+
+        graphicsCurrentHeight = 0;
 
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
@@ -55,14 +56,18 @@ public class WorldPanel extends JPanel implements MouseListener,
     @Override
     public void paintComponent(Graphics g) {
 
+        int gWidth = g.getClipBounds().width;
+        graphicsCurrentHeight = g.getClipBounds().height;
+
+        // Erase the whole panel
         g.setColor(Color.gray);
-        g.fillRect(0, 0, g.getClipBounds().width, g.getClipBounds().height);
+        g.fillRect(0, 0, gWidth, graphicsCurrentHeight);
 
         // Paint the background
         for (int row = 0; row < world.getNbRows(); row++) {
             for (int col = 0; col < world.getNbCols(); col++) {
                 Cell c = world.getCell(row, col);
-                c.paint(g, row, col, x0, y0, zoomLevel);
+                c.paint(g, x0, y0, zoomLevel);
             }
         }
 
@@ -70,13 +75,18 @@ public class WorldPanel extends JPanel implements MouseListener,
         for (int row = 0; row < world.getNbRows(); row++) {
             for (int col = 0; col < world.getNbCols(); col++) {
                 Cell c = world.getCell(row, col);
-                c.paintTrains(g, row, col, x0, y0, zoomLevel);
+                c.paintTrains(g, x0, y0, zoomLevel);
             }
         }
 
         // Draw outer border
-        g.setColor(Color.black);
-        g.drawRect((int) x0, (int) y0, (int) (world.getNbCols() * zoomLevel), (int) (world.getNbRows() * zoomLevel));
+        g.setColor(Color.orange);
+        double appCellSize = Cell.cellSize * zoomLevel;
+        g.drawRect(
+                (int) (x0 - appCellSize / 2),
+                (int) (graphicsCurrentHeight - (y0 + world.getNbRows() * appCellSize - appCellSize / 2)),
+                (int) (world.getNbCols() * zoomLevel),
+                (int) (world.getNbRows() * zoomLevel));
     }
 
     void setTool(GuiTool newTool) {
@@ -122,15 +132,14 @@ public class WorldPanel extends JPanel implements MouseListener,
                 world.addWagon(currentRow, currentCol);
             }
             case TRACK -> {
-                prevPrevCol = Integer.MAX_VALUE;
-                prevPrevRow = Integer.MAX_VALUE;
+                System.out.println("WorldPanel mousePressed track");
                 prevCol = Integer.MAX_VALUE;
                 prevRow = Integer.MAX_VALUE;
                 currentCol = getCol(e.getX());
                 currentRow = getRow(e.getY());
             }
             case STATION -> {
-                System.out.println("New station created");
+                System.out.println("WorldPanel mousePressed station");
                 int col = getCol(e.getX());
                 int row = getRow(e.getY());
                 world.toggleStation(row, col);
@@ -162,50 +171,47 @@ public class WorldPanel extends JPanel implements MouseListener,
         if ((e.getModifiersEx() & b2) == b2) {
             // Mouse wheel drag
             int dx = e.getX() - prevMouseX;
-            int dy = e.getY() - prevMouseY;
+            int dy = -(e.getY() - prevMouseY);
             // compute movement
             x0 += dx;
             y0 += dy;
 
-            prevMouseX = e.getX();
-            prevMouseY = e.getY();
             repaint();
         } else if (currentTool.equals(GuiTool.TRACK)) {
-            int col = getCol(e.getX());
-            int row = getRow(e.getY());
+            currentCol = getCol(e.getX());
+            currentRow = getRow(e.getY());
 
             // Detect a change in cell
-            if (col != currentCol || row != currentRow) {
-                if (prevCol != Integer.MAX_VALUE) {
-                    prevPrevCol = prevCol;
-                }
-                prevCol = currentCol;
-                currentCol = col;
+            if (prevRow != Integer.MAX_VALUE && prevCol != Integer.MAX_VALUE
+                    && (prevCol != currentCol || prevRow != currentRow)) {
 
-                if (prevRow != Integer.MAX_VALUE) {
-                    prevPrevRow = prevRow;
-                }
-                prevRow = currentRow;
-                currentRow = row;
+                // Each cell develops a link to the other one.
+                world.setNewTrack(prevRow, prevCol, currentRow, currentCol);
+                world.setNewTrack(currentRow, currentCol, prevRow, prevCol);
 
-                if (draggedAcrossThreeCells()) {
-                    world.setNewTrack(prevPrevCol, prevPrevRow, prevCol, prevRow, currentCol, currentRow);
-                    repaint();
-                }
+                repaint();
             }
+
+            prevCol = currentCol;
+            prevRow = currentRow;
         }
+
+        prevMouseX = e.getX();
+        prevMouseY = e.getY();
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
         prevMouseX = e.getX();
         prevMouseY = e.getY();
+        currentCol = getCol(e.getX());
+        currentRow = getRow(e.getY());
     }
 
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
         int x = e.getX();
-        int y = e.getY();
+        int y = graphicsCurrentHeight - e.getY();
         double currentZoomLevelFactor;
         if (e.getPreciseWheelRotation() < 0) {
             currentZoomLevelFactor = zoomLevelFactor;
@@ -225,7 +231,9 @@ public class WorldPanel extends JPanel implements MouseListener,
      * @return the column that contains the given pixel
      */
     private int getCol(int x) {
-        return (int) ((double) (x - x0) / zoomLevel);
+        double appCellSize = Cell.cellSize * zoomLevel;
+        int result = (int) ((double) (x + appCellSize / 2 - x0) / zoomLevel);
+        return result;
     }
 
     /**
@@ -235,37 +243,9 @@ public class WorldPanel extends JPanel implements MouseListener,
      * @return the row that contains the given pixel
      */
     private int getRow(int y) {
-        return (int) ((double) (y - y0) / zoomLevel);
-    }
-
-    /**
-     * Compare prevPrev, prev and current rows and columns,
-     * to check if we have dragges the mouse across three successive neighbor
-     * cells.
-     *
-     * @return true if three neighbor cells have been dragged across.
-     */
-    private boolean draggedAcrossThreeCells() {
-
-        if (prevPrevCol == Integer.MAX_VALUE || prevPrevRow == Integer.MAX_VALUE) {
-            // We only have dragged across two cells.
-            return false;
-        }
-
-        // If any of these 3 conditions is met, we have either not moved or returned to the starting cell.
-        boolean prevEqualsPrevPrev = (prevPrevCol == prevCol && prevPrevRow == prevRow);
-        boolean prevEqualsCurrent = (prevCol == currentCol && prevRow == currentRow);
-        boolean prevPrevEqualsCurrent = (prevPrevCol == currentCol && prevPrevRow == currentRow);
-
-        if (prevEqualsPrevPrev) {
-            return false;
-        } else if (prevEqualsCurrent) {
-            return false;
-        } else if (prevPrevEqualsCurrent) {
-            return false;
-        } else {
-            return true;
-        }
+        double appCellSize = Cell.cellSize * zoomLevel;
+        int result = world.getNbRows() - (int) ((double) ((graphicsCurrentHeight - y) + appCellSize / 2 - y0) / zoomLevel) - 1;
+        return result;
     }
 
     @Override
