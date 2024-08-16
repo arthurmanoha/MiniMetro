@@ -15,7 +15,7 @@ public class Locomotive extends TrainElement {
     public Locomotive() {
         super();
         maxSpeed = 1;
-        motorPower = 1;
+        motorPower = .2;
         color = Color.red;
     }
 
@@ -34,6 +34,11 @@ public class Locomotive extends TrainElement {
 
     }
 
+    /**
+     * When the loco is pulling, its force is non-zero.
+     *
+     * @param dt
+     */
     @Override
     public void computeMotorForce(double dt) {
 
@@ -43,5 +48,19 @@ public class Locomotive extends TrainElement {
         double fx = motorPower * dx;
         double fy = motorPower * dy;
         currentForce = new Point2D.Double(fx, fy);
+    }
+
+    @Override
+    void computeNewSpeed(double dt) {
+
+        super.computeNewSpeed(dt);
+
+        // Limit the speed.
+        double speed = Math.sqrt(currentSpeed.x * currentSpeed.x + currentSpeed.y * currentSpeed.y);
+        if (speed > maxSpeed) {
+            double ratio = speed / maxSpeed;
+            currentSpeed.x = currentSpeed.x / ratio;
+            currentSpeed.y = currentSpeed.y / ratio;
+        }
     }
 }

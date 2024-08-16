@@ -71,6 +71,9 @@ public class WorldPanel extends JPanel implements MouseListener,
             }
         }
 
+        // Paint the train links
+        paintTrainLinks(g, x0, y0, zoomLevel);
+
         // Paint the trains
         for (int row = 0; row < world.getNbRows(); row++) {
             for (int col = 0; col < world.getNbCols(); col++) {
@@ -87,6 +90,12 @@ public class WorldPanel extends JPanel implements MouseListener,
                 (int) (graphicsCurrentHeight - (y0 + world.getNbRows() * appCellSize - appCellSize / 2)),
                 (int) (world.getNbCols() * zoomLevel),
                 (int) (world.getNbRows() * zoomLevel));
+    }
+
+    void paintTrainLinks(Graphics g, double x0, double y0, double zoom) {
+        for (TrainLink link : world.links) {
+            link.paint(g, x0, y0, zoom);
+        }
     }
 
     void setTool(GuiTool newTool) {

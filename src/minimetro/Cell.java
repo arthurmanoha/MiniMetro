@@ -585,12 +585,11 @@ public class Cell {
      * @param cardinalPoint
      * @return
      */
-    private boolean isLinked(CardinalPoint cardinalPoint) {
+    protected boolean isLinked(CardinalPoint cardinalPoint) {
         try {
             return links.get(0) == cardinalPoint || links.get(1) == cardinalPoint;
         } catch (ArrayIndexOutOfBoundsException e) {
             return false;
         }
     }
-
 }

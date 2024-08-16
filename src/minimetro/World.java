@@ -22,7 +22,7 @@ public class World implements PropertyChangeListener {
 
     private ArrayList<TrainElement> trainsInTransition;
 
-    private ArrayList<TrainLink> links;
+    protected ArrayList<TrainLink> links;
 
     private Timer timer;
     private boolean isRunning;
@@ -35,8 +35,8 @@ public class World implements PropertyChangeListener {
     private final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
     public World() {
-        nbRows = 15;
-        nbCols = 24;
+        nbRows = 40;
+        nbCols = 100;
         cells = new ArrayList<>();
         for (int row = 0; row < nbRows; row++) {
             double yCell = (nbRows - row - 1) * Cell.cellSize;
@@ -52,7 +52,7 @@ public class World implements PropertyChangeListener {
         links = new ArrayList<>();
         step = 0;
         isRunning = false;
-        periodMillisec = 50;
+        periodMillisec = 30;
         startTimer();
     }
 
@@ -83,17 +83,20 @@ public class World implements PropertyChangeListener {
     }
 
     public void step() {
-        // Change speed for locos
+
         for (ArrayList<Cell> row : cells) {
             for (Cell c : row) {
                 c.resetForces();
             }
         }
+
         for (ArrayList<Cell> row : cells) {
             for (Cell c : row) {
-                c.computeMotorForces(dt);
+                c.computeMotorForces(dt); // Set the force applied on each loco
             }
         }
+
+        applyLinkForces();
 
         for (ArrayList<Cell> row : cells) {
             for (Cell c : row) {
@@ -216,31 +219,31 @@ public class World implements PropertyChangeListener {
 
         Cell currentCell = getCell(row, col);
         Cell neighbor;
-        if (currentCell.hasLinkTowardNeighbor(0)) {
+        if (currentCell.isLinked(CardinalPoint.NORTH)) {
             // Test the North cell
             neighbor = getCell(row - 1, col);
-            if (neighbor.hasLinkTowardNeighbor(180)) {
+            if (neighbor.isLinked(CardinalPoint.SOUTH)) {
                 addTrainLink(currentCell, neighbor);
             }
         }
-        if (currentCell.hasLinkTowardNeighbor(90)) {
+        if (currentCell.isLinked(CardinalPoint.EAST)) {
             // Test the East cell
             neighbor = getCell(row, col + 1);
-            if (neighbor.hasLinkTowardNeighbor(270)) {
+            if (neighbor.isLinked(CardinalPoint.WEST)) {
                 addTrainLink(currentCell, neighbor);
             }
         }
-        if (currentCell.hasLinkTowardNeighbor(180)) {
+        if (currentCell.isLinked(CardinalPoint.SOUTH)) {
             // Test the East cell
             neighbor = getCell(row + 1, col);
-            if (neighbor.hasLinkTowardNeighbor(0)) {
+            if (neighbor.isLinked(CardinalPoint.NORTH)) {
                 addTrainLink(currentCell, neighbor);
             }
         }
-        if (currentCell.hasLinkTowardNeighbor(270)) {
+        if (currentCell.isLinked(CardinalPoint.WEST)) {
             // Test the East cell
             neighbor = getCell(row, col - 1);
-            if (neighbor.hasLinkTowardNeighbor(90)) {
+            if (neighbor.isLinked(CardinalPoint.EAST)) {
                 addTrainLink(currentCell, neighbor);
             }
         }
@@ -348,10 +351,10 @@ public class World implements PropertyChangeListener {
 
     // Add a rectangular track loop.
     void addTestTracks() {
-        int minRow = 7;
-        int maxRow = 10;
-        int minCol = 2;
-        int maxCol = 6;
+        int minRow = 31;
+        int maxRow = 38;
+        int minCol = 1;
+        int maxCol = 50;
 
         // West-East tracks
         for (int col = minCol; col < maxCol; col++) {
@@ -374,8 +377,6 @@ public class World implements PropertyChangeListener {
      * Mark the train in cell0 and that in cell1 as the same train.
      */
     private void addTrainLink(Cell cell0, Cell cell1) {
-        System.out.println("adding train link between cell with heading " + (int) cell0.getCenterHeading()
-                + " and cell with heading " + (int) cell1.getCenterHeading());
 
         if (cell0.hasTrain() && cell1.hasTrain()) {
 
@@ -383,68 +384,14 @@ public class World implements PropertyChangeListener {
             TrainElement elem1 = cell1.getTrainElement();
 
             if (elem0 != null && elem1 != null) {
-                int trainNumber0 = elem0.trainNumber;
-                int trainNumber1 = elem1.trainNumber;
-
-                // All elements from these two trains must be marked as the same one.
-                int newTrainNumber = NB_TRAINS_CREATED;
-                NB_TRAINS_CREATED++;
-                // Update the two elements that are being linked
-                elem0.trainNumber = newTrainNumber;
-                elem1.trainNumber = newTrainNumber;
-                System.out.println("            new train number: " + elem0.trainNumber);
-                // Update all the other elements of the same train
-                renumberTrains(trainNumber0, trainNumber1, newTrainNumber);
-
-                double angleDiff = (elem1.headingDegrees - elem0.headingDegrees) % 360;
-                double newHeading;
-                // When the headings are mode than 45 degrees apart:
-                if (angleDiff > 46 && angleDiff < 314) {
-                    System.out.println("Too large angle diff");
-                    if (trainNumber0 < trainNumber1) {
-                        // elem1 adapts its direction to elem0
-                        newHeading = (elem1.headingDegrees + 180) % 360;
-                        System.out.println("    Switching elem0 from " + (int) elem1.headingDegrees + " to " + (int) newHeading);
-                        elem1.headingDegrees = newHeading;
-                    } else {
-                        // elem0 adapts its direction to elem1
-                        newHeading = (elem0.headingDegrees + 180) % 360;
-                        System.out.println("    Switching elem0 from " + (int) elem0.headingDegrees + " to " + (int) newHeading);
-                        elem0.headingDegrees = newHeading;
-                    }
-                }
-                double distance = computeDistance(elem0, cell0, elem1, cell1);
-                System.out.println("    new link, distance = " + distance);
+                double distance = computeDistance(elem0, elem1);
                 links.add(new TrainLink(elem0, elem1, distance));
-                System.out.println("End link.");
-            }
-        } else {
-            System.out.println("No link to be created.");
-        }
-    }
-
-    /**
-     * All TrainElements with current train numbers @old1 or @old2 must be
-     * renumbered into @newTrainNumber.
-     *
-     * @param old1
-     * @param old2
-     * @param newTrainNumber
-     */
-    private void renumberTrains(int old1, int old2, int newTrainNumber) {
-        System.out.println("    renumbering trains " + old1 + " and " + old2 + " into " + newTrainNumber);
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-
-                c.renumberTrainElement(old1, newTrainNumber);
-                c.renumberTrainElement(old2, newTrainNumber);
             }
         }
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-//        System.out.println("World received event: " + evt);
     }
 
     /**
@@ -456,28 +403,19 @@ public class World implements PropertyChangeListener {
      * @param cell1
      * @return
      */
-    private double computeDistance(TrainElement elem0, Cell cell0, TrainElement elem1, Cell cell1) {
+    private double computeDistance(TrainElement elem0, TrainElement elem1) {
 
-        int col0 = getColumn(cell0);
-        int row0 = getLine(cell0);
-        int col1 = getColumn(cell1);
-        int row1 = getLine(cell1);
+        Point2D.Double pos0 = elem0.absolutePosition;
+        Point2D.Double pos1 = elem1.absolutePosition;
 
-        System.out.println("Computing distance: col " + col0 + ", line " + row0
-                + " and col " + col1 + ", line " + row1);
-
-        Point2D.Double pos0 = cell0.getTrainPosition(elem0);
-        Point2D.Double pos1 = cell1.getTrainPosition(elem1);
-
-        double x0 = col0 + pos0.x;
-        double y0 = row0 + pos0.y;
-        double x1 = col1 + pos1.x;
-        double y1 = row1 + pos1.y;
+        double x0 = pos0.x;
+        double y0 = pos0.y;
+        double x1 = pos1.x;
+        double y1 = pos1.y;
         double dx = x0 - x1;
         double dy = y0 - y1;
 
         double distance = Math.sqrt(dx * dx + dy * dy);
-        System.out.println("distance : " + distance);
         return distance;
     }
 
@@ -503,47 +441,52 @@ public class World implements PropertyChangeListener {
         return -1;
     }
 
-//    /**
-//     * Apply an acceleration to both elements that share this link.
-//     *
-//     * @param link
-//     */
-//    private void applyLinkForce(TrainLink link) {
-//        TrainElement e0 = link.getElement(0);
-//        TrainElement e1 = link.getElement(1);
-//
-//        if (e0 != null && e1 != null) {
-//
-//            Cell c0 = getCell(e0);
-//            Cell c1 = getCell(e1);
-//
-//            System.out.println("Applying link force between cells " + getLine(c0) + ", " + getColumn(c0)
-//                    + " and " + getLine(c1) + ", " + getColumn(c1));
-//
-//            Point2D.Double posC0 = getCellPosition(c0);
-//            if (posC0 == null) {
-//                System.out.println("pos c0 is null");
-//            }
-//            Point2D.Double posC1 = getCellPosition(c1);
-//            if (posC1 == null) {
-//                System.out.println("pos c1 is null");
-//            }
-//
-//            Point2D.Double posElem0 = c0.getTrainPosition(e0);
-//            if (posElem0 == null) {
-//                System.out.println("pos elem0 is null");
-//            }
-//            Point2D.Double posElem1 = c1.getTrainPosition(e1);
-//            if (posElem1 == null) {
-//                System.out.println("pos elem1 is null");
-//            }
-//
-//            Point2D.Double force = link.computeForce(posC0, posC1, posElem0, posElem1);
-//
-//            c0.applyForce(force, true, e0);
-//            c1.applyForce(force, false, e1);
-//        }
-//    }
+    private void applyLinkForces() {
+        for (TrainLink link : links) {
+            applyLinkForce(link);
+        }
+    }
+
+    /**
+     * Apply an acceleration to both elements that share this link.
+     *
+     * @param link
+     */
+    private void applyLinkForce(TrainLink link) {
+        TrainElement e0 = link.getElement(0);
+        TrainElement e1 = link.getElement(1);
+
+        if (e0 != null && e1 != null) {
+
+            Cell c0 = getCell(e0);
+            Cell c1 = getCell(e1);
+
+            Point2D.Double posC0 = getCellPosition(c0);
+            if (posC0 == null) {
+                System.out.println("pos c0 is null");
+            }
+            Point2D.Double posC1 = getCellPosition(c1);
+            if (posC1 == null) {
+                System.out.println("pos c1 is null");
+            }
+
+            Point2D.Double posElem0 = c0.getTrainPosition(e0);
+            if (posElem0 == null) {
+                System.out.println("pos elem0 is null");
+            }
+            Point2D.Double posElem1 = c1.getTrainPosition(e1);
+            if (posElem1 == null) {
+                System.out.println("pos elem1 is null");
+            }
+
+            Point2D.Double force = link.computeForce(posElem0, posElem1);
+            Point2D.Double forceOpposite = new Point2D.Double(-force.x, -force.y);
+
+            e0.increaseEfficientForce(force);
+            e1.increaseEfficientForce(forceOpposite);
+        }
+    }
+
     /**
      * Find and return the cell that contains the given element, or null if no
      * cell contains it.

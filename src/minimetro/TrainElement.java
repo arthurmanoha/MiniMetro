@@ -48,24 +48,42 @@ public abstract class TrainElement {
         g.fillOval((int) (xCenter - radiusApp), (int) (yCenter - radiusApp), 2 * radiusApp, 2 * radiusApp);
         g.setColor(Color.black);
         g.drawOval((int) (xCenter - radiusApp), (int) (yCenter - radiusApp), 2 * radiusApp, 2 * radiusApp);
-
-        // Paint id, trainNumber and heading
-        g.setColor(Color.black);
-        String headingSubstring = (int) headingDegrees + "";
-        String linearVelocity = currentSpeed + "";
-        g.drawString("id " + id
-                + ", h " + headingSubstring
-                + ", v " + linearVelocity,
-                xCenter - 2 * radiusApp, yCenter - 2 * radiusApp
-        );
     }
 
     public void increaseSpeed(double dSpeed) {
     }
 
+    /**
+     * Add the specified force to the total force applied on to this element.
+     *
+     * @param forceIncrement
+     */
     public void increaseForce(Point2D.Double forceIncrement) {
         currentForce.x += forceIncrement.x;
         currentForce.y += forceIncrement.y;
+    }
+
+    /**
+     * Apply to this element the component of the specified force that is in the
+     * same direction as the movement. Only the part of the force that actually
+     * changes the speed of the element shall be taken into account.
+     *
+     * @param forceIncrement
+     */
+    public void increaseEfficientForce(Point2D.Double forceIncrement) {
+        Point2D.Double efficientForce = computeEfficientForce(forceIncrement);
+        currentForce.x += efficientForce.x;
+        currentForce.y += efficientForce.y;
+    }
+
+    private Point2D.Double computeEfficientForce(Point2D.Double f) {
+        // unit is the unit vector aligned with the speed of the element.
+        double headingRad = (PI / 2) * (90 - headingDegrees) / 90;
+
+        Point2D.Double unit = new Point2D.Double(Math.cos(headingRad), Math.sin(headingRad));
+        double fDotU = f.x * unit.x + f.y * unit.y;
+        Point2D.Double efficientForce = new Point2D.Double(fDotU * unit.x, fDotU * unit.y);
+        return efficientForce;
     }
 
     double getHeading() {
@@ -91,6 +109,14 @@ public abstract class TrainElement {
         g.drawLine(xCenter, yCenter, (int) (xCenter + scale * vx), (int) (yCenter - scale * vy));
     }
 
+    protected void paintForce(Graphics g, int xCenter, int yCenter, double zoom) {
+        g.setColor(Color.red);
+        double fx = this.currentForce.x;
+        double fy = this.currentForce.y;
+        double scale = zoom;
+        g.drawLine(xCenter, yCenter, (int) (xCenter + scale * fx), (int) (yCenter - scale * fy));
+    }
+
     void resetForces() {
         currentForce = new Point2D.Double();
     }
@@ -103,13 +129,6 @@ public abstract class TrainElement {
 
         currentSpeed.x += currentForce.x * dt;
         currentSpeed.y += currentForce.y * dt;
-
-        double speed = Math.sqrt(currentSpeed.x * currentSpeed.x + currentSpeed.y * currentSpeed.y);
-        if (speed > maxSpeed) {
-            double ratio = speed / maxSpeed;
-            currentSpeed.x = currentSpeed.x / ratio;
-            currentSpeed.y = currentSpeed.y / ratio;
-        }
     }
 
     void move(double dt) {
