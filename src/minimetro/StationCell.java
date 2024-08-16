@@ -2,7 +2,6 @@ package minimetro;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.util.ArrayList;
 
 /**
  *
@@ -10,22 +9,9 @@ import java.util.ArrayList;
  */
 public class StationCell extends Cell {
 
-    /**
-     * Main constructor, with list of rails
-     *
-     * @param oldRails rails used by another cell (located at the same spot)
-     */
-    public StationCell(ArrayList<RailSegment> oldRails) {
-        super(oldRails);
+    public StationCell(double newX, double newY, double newWidth) {
+        super(newX, newY, newWidth);
         this.color = Color.black;
-    }
-
-    /**
-     * Default constructor for a new cell.
-     *
-     */
-    public StationCell() {
-        this(null);
     }
 
     @Override
