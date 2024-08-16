@@ -3,7 +3,8 @@
 ---------------------------------------------------------------------------------------------------
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
-1- When two locos are placed in adjacent cells, they collide, disappear, and destroy all locos in the same straight line one cell at each simulation step.
+The current system where TrainElements are linked via springs does not work for long train and curves. It needs to be replaced with hinge constraints.
+Locos placed on N-S rails do not move.
 
 ---------------------------------------------------------------------------------------------------
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
@@ -11,7 +12,7 @@ TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 
 A Cell may be a junction and contain two possible layouts, one being active and the other one greyed out.
 Locomotives and carriages are just a little smaller than a cell, one element per cell.
-A train is made of one locomotive and any number of carriages.
+A train is made of any number of locomotives and any number of carriages.
 A loco stores its position and speed, relative to its current cell.
 A train element (loco or wagon) stores a reference to its following element.
 A carriage stores its passenger max and current capacity.
