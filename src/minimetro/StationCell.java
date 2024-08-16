@@ -2,6 +2,7 @@ package minimetro;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.geom.Point2D;
 
 /**
  *
@@ -10,7 +11,7 @@ import java.awt.Graphics;
 public class StationCell extends Cell {
 
     public StationCell(double newX, double newY, double newWidth) {
-        super(newX, newY, newWidth);
+        super(new Point2D.Double(newX, newY));
         this.color = Color.black;
     }
 

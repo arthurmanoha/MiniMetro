@@ -182,8 +182,8 @@ public class World implements PropertyChangeListener {
         Cell oldCell = this.getCell(row, col);
         if (oldCell instanceof StationCell) {
             this.setCell(row, col, new Cell());
-        } else {
-            this.setCell(row, col, new StationCell());
+//        } else {
+//            this.setCell(row, col, new StationCell());
         }
     }
 
