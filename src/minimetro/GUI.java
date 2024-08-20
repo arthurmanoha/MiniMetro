@@ -46,6 +46,13 @@ public class GUI extends JFrame {
         });
         toolbar.add(trackButton);
 
+        JButton removeTrackButton = new JButton("Remove Track");
+        removeTrackButton.addActionListener((e) -> {
+            System.out.println("Pressed remove track button");
+            panel.setTool(GuiTool.TRACK_REMOVAL);
+        });
+        toolbar.add(removeTrackButton);
+
         JButton stationButton = new JButton("Station");
         stationButton.addActionListener((e) -> {
             System.out.println("Pressed station button");
@@ -66,6 +73,13 @@ public class GUI extends JFrame {
             panel.setTool(GuiTool.WAGON);
         });
         toolbar.add(wagonButton);
+
+        JButton removeTrainsButton = new JButton("Remove trains");
+        removeTrainsButton.addActionListener((e) -> {
+            System.out.println("Pressed remove trains button");
+            panel.setTool(GuiTool.TRAIN_REMOVAL);
+        });
+        toolbar.add(removeTrainsButton);
 
         JButton zoomInButton = new JButton("Zoom in");
         zoomInButton.addActionListener((e) -> {

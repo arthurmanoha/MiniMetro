@@ -8,7 +8,9 @@ package minimetro;
 enum GuiTool {
     NO_TOOL, // Default uninitialized tool
     TRACK,
+    TRACK_REMOVAL,
     STATION,
     LOCO,
     WAGON,
+    TRAIN_REMOVAL
 }

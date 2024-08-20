@@ -140,6 +140,12 @@ public class WorldPanel extends JPanel implements MouseListener,
                 System.out.println("WorldPanel mousePressed wagon");
                 world.addWagon(xReal, yReal);
             }
+            case TRAIN_REMOVAL -> {
+                currentCol = getCol(e.getX());
+                currentRow = getRow(e.getY());
+                world.removeTrains(currentRow, currentCol);
+                repaint();
+            }
             case TRACK -> {
                 System.out.println("WorldPanel mousePressed track");
                 prevCol = Integer.MAX_VALUE;
@@ -149,8 +155,6 @@ public class WorldPanel extends JPanel implements MouseListener,
                 System.out.println("WorldPanel mousePressed station");
                 world.toggleStation(currentRow, currentCol);
                 repaint();
-            }
-            default -> {
             }
             }
         }
@@ -199,6 +203,16 @@ public class WorldPanel extends JPanel implements MouseListener,
 
             prevCol = currentCol;
             prevRow = currentRow;
+        } else if (currentTool.equals(GuiTool.TRACK_REMOVAL)) {
+            currentCol = getCol(e.getX());
+            currentRow = getRow(e.getY());
+            world.removeTrack(currentRow, currentCol);
+            repaint();
+        } else if (currentTool.equals(GuiTool.TRAIN_REMOVAL)) {
+            currentCol = getCol(e.getX());
+            currentRow = getRow(e.getY());
+            world.removeTrains(currentRow, currentCol);
+            repaint();
         }
 
         prevMouseX = e.getX();
@@ -209,8 +223,6 @@ public class WorldPanel extends JPanel implements MouseListener,
     public void mouseMoved(MouseEvent e) {
         prevMouseX = e.getX();
         prevMouseY = e.getY();
-        prevCol = currentCol;
-        prevRow = currentRow;
         currentCol = getCol(e.getX());
         currentRow = getRow(e.getY());
     }

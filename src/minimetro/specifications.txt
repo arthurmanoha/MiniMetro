@@ -4,14 +4,14 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
+ConcurrentModificationExceptions when painting scene, must use iterators when removing TEs from cells or a toBeRemoved list and removeAll(list).
+
 ---------------------------------------------------------------------------------------------------
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
-A track may be removed by clicking in the cell with the 'Track' tool active.
-A cell may be emptied from its TrainElements when clicked with the 'Empty Cell' tool activated.
 A TrainElement shall not be added if too many elements are too close.
-A cell may have a speed indicator that the loco shall observe.
+A cell may have a speed indicator that the loco shall observe, and increase its max speed or apply brakes.
 A Cell may be a junction and contain two possible layouts, one being active and the other one greyed out.
 A carriage stores its passenger max and current capacity.
 An IntersectionCell is a special cell, where one track splits into several tracks.
@@ -25,15 +25,17 @@ A passenger may walk from one station to another if the stations have one side i
 Tools:
 
 Display a list radio buttons for locomotives in a panel; a selected radio button will focus the view on the loco.
+Display the current speed of each loco if a radio button is checked.
 
 Create passengers with destination.
 
 High-Speed trains:
-Go faster than other trains.
-Need more track in a straight line to accelerate.
-Has to slow down before turns.
+Can drive faster than other trains.
+Only high-speed tracks accept certain speeds; the higher the speed (above the limit), the greater probability that the track fails.
+Trains leave track and crash if turns are taken at an excessive speed.
 
-Tracks may wear off with time and use, and need to be replaced.
+Tracks wear off with time and use, and need to be replaced.
+Tracks wear off quicker when trains drive faster.
 High-speed tracks are more expensive per unit length.
 Passengers pay money when they get to their destination.
 
@@ -43,6 +45,8 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+A track may be removed by clicking in the cell with the 'Track' tool active.
+A cell may be emptied from its TrainElements when clicked with the 'Empty Cell' tool activated.
 Square grid
 One cell is either empty or a station.
 A cell may host one railway, which is made of several RailSegments.
