@@ -4,7 +4,6 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
-ConcurrentModificationExceptions when painting scene, must use iterators when removing TEs from cells or a toBeRemoved list and removeAll(list).
 
 ---------------------------------------------------------------------------------------------------
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
@@ -21,6 +20,7 @@ A passenger may transfer between a station cell and a neighboring wagon.
 A passenger has a station ID target.
 A passenger shall find a path from its current position to its target: which line to use, which station to walk to.
 A passenger may walk from one station to another if the stations have one side in common.
+Add portal cells.
 
 Tools:
 
@@ -45,6 +45,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+ConcurrentModificationExceptions when painting scene, fixed using SwingUtilities.invokeLater
 A track may be removed by clicking in the cell with the 'Track' tool active.
 A cell may be emptied from its TrainElements when clicked with the 'Empty Cell' tool activated.
 Square grid

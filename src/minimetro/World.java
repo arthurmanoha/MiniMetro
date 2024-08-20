@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
+import javax.swing.SwingUtilities;
 
 /**
  * This class represents the terrain that contains the tracks, trains,
@@ -378,7 +379,12 @@ public class World implements PropertyChangeListener {
             @Override
             public void run() {
                 if (isRunning) {
-                    step();
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            step();
+                        }
+                    });
                 }
             }
         }, 0, periodMillisec);
