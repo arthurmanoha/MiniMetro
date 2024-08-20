@@ -5,6 +5,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -284,7 +285,7 @@ public class World implements PropertyChangeListener {
     }
 
     /**
-     * Create a link between the specified cell and its specified neighbor.
+     * Create a link in the specified cell headed to the specified neighbor.
      *
      * @param row the row of the specified cell
      * @param col the column of the specified cell
@@ -522,5 +523,26 @@ public class World implements PropertyChangeListener {
         int row = getLine(c);
         int col = getColumn(c);
         return new Point2D.Double(col, row);
+    }
+
+    protected void removeTrack(int row, int col) {
+        Cell c = getCell(row, col);
+        c.removeTracks();
+    }
+
+    protected void removeTrains(int row, int col) {
+        Cell c = getCell(row, col);
+        ArrayList<TrainElement> list = c.getAllElements();
+        // Before we remove elem, we must remove any TrainLink involved.
+        for (TrainElement elem : list) {
+            Iterator<TrainLink> iterator = links.iterator();
+            while (iterator.hasNext()) {
+                TrainLink link = iterator.next();
+                if (link.getElement(0).equals(elem) || link.getElement(1).equals(elem)) {
+                    iterator.remove();
+                }
+            }
+        }
+        c.removeTrains();
     }
 }

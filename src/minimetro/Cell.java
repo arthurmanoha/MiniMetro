@@ -605,4 +605,15 @@ public class Cell {
             return false;
         }
     }
+
+    protected void removeTracks() {
+        if (!hasTrain()) {
+            rails.clear();
+        }
+    }
+
+    protected void removeTrains() {
+        trainElements.clear();
+        trainsLeavingCell.clear();
+    }
 }
