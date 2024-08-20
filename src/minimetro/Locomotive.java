@@ -14,9 +14,10 @@ public class Locomotive extends TrainElement {
 
     public Locomotive() {
         super();
-        maxSpeed = 1;
-        motorPower = .2;
+        maxSpeed = 0.3;
+        motorPower = .1;
         color = Color.red;
+        mass = 10;
     }
 
     public Locomotive(Point2D.Double newAbsolutePosition) {

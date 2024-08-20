@@ -3,21 +3,19 @@
 ---------------------------------------------------------------------------------------------------
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
-The current system where TrainElements are linked via springs does not work for long train and curves. It needs to be replaced with hinge constraints.
-Locos placed on N-S rails do not move.
 
 ---------------------------------------------------------------------------------------------------
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+A track may be removed by clicking in the cell with the 'Track' tool active.
+A cell may be emptied from its TrainElements when clicked with the 'Empty Cell' tool activated.
+A TrainElement shall not be added if too many elements are too close.
+A cell may have a speed indicator that the loco shall observe.
 A Cell may be a junction and contain two possible layouts, one being active and the other one greyed out.
-Locomotives and carriages are just a little smaller than a cell, one element per cell.
-A train is made of any number of locomotives and any number of carriages.
-A loco stores its position and speed, relative to its current cell.
-A train element (loco or wagon) stores a reference to its following element.
 A carriage stores its passenger max and current capacity.
 An IntersectionCell is a special cell, where one track splits into several tracks.
-A station cell shall not be crossed by a railway.
+A station cell may be crossed by a railway.
 A station cell may host passengers.
 A passenger may transfer between a station cell and a neighboring wagon.
 A passenger has a station ID target.
@@ -25,6 +23,8 @@ A passenger shall find a path from its current position to its target: which lin
 A passenger may walk from one station to another if the stations have one side in common.
 
 Tools:
+
+Display a list radio buttons for locomotives in a panel; a selected radio button will focus the view on the loco.
 
 Create passengers with destination.
 
@@ -51,3 +51,6 @@ Create stations.
 Create tracks with the mouse.
 Rails in turns shall be bent.
 A loco moves along the track and visits successive cells.
+A train is made of any number of locomotives and any number of carriages.
+A train element stores its absolute position and speed.
+A link stores references to the two elements it links.

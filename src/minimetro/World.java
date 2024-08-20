@@ -31,6 +31,9 @@ public class World implements PropertyChangeListener {
 
     private static int NB_TRAINS_CREATED = 0;
 
+    // Maximum distance between TEs for a link to be created.
+    private static double distanceMax = 0.15;
+
     // Tell observers that our state has changed.
     private final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
@@ -188,65 +191,96 @@ public class World implements PropertyChangeListener {
     }
 
     /**
-     * Add a locomotive if the designated cell has rails.
+     * Add a locomotive
      *
-     * @param row
-     * @param col
+     * @param xReal
+     * @param yReal
      */
-    protected void addLoco(int row, int col) {
-        Cell c = getCell(row, col);
-        c.setLoco();
-        updateTrainLinks(row, col);
+    protected void addLoco(double xReal, double yReal) {
+        this.addTrainElement(xReal, yReal, true);
     }
 
     /**
-     * Add a carriage to the end of the train under construction.
+     * Add a wagon
      *
-     * @param row
-     * @param col
+     * @param xReal
+     * @param yReal
      */
-    protected void addWagon(int row, int col) {
-        Cell c = getCell(row, col);
-        c.setWagon();
-        updateTrainLinks(row, col);
+    protected void addWagon(double xReal, double yReal) {
+        this.addTrainElement(xReal, yReal, false);
     }
 
     /**
-     * Link the TrainElements in the given cell to its potential neighbors.
+     * Add a loco or wagon at a specific location within a cell.
+     *
+     * @param xReal
+     * @param yReal
+     * @param isLoco when true, add a loco, otherwise add a wagon
+     */
+    private void addTrainElement(double xReal, double yReal, boolean isLoco) {
+
+        double size = Cell.cellSize;
+        int col = (int) ((xReal + size / 2) / size);
+        int row = nbRows - (int) ((yReal + size / 2) / size) - 1;
+
+        Point2D.Double newAbsolutePosition = new Point2D.Double(xReal, yReal);
+
+        TrainElement newElement;
+        if (isLoco) {
+            newElement = new Locomotive(newAbsolutePosition);
+        } else {
+            newElement = new Wagon(newAbsolutePosition);
+        }
+
+        Cell cell = getCell(row, col);
+        if (cell != null && cell.hasRails()) {
+            cell.addTrainElement(newElement);
+            updateTrainLinks(newElement, row, col);
+        }
+    }
+
+    /**
+     * Link the TrainElements in the given cell to their closest neighbors.
      *
      */
-    private void updateTrainLinks(int row, int col) {
+    private void updateTrainLinks(TrainElement te, int row, int col) {
 
-        Cell currentCell = getCell(row, col);
-        Cell neighbor;
-        if (currentCell.isLinked(CardinalPoint.NORTH)) {
-            // Test the North cell
-            neighbor = getCell(row - 1, col);
-            if (neighbor.isLinked(CardinalPoint.SOUTH)) {
-                addTrainLink(currentCell, neighbor);
+        // Find all element that could share a potential link with @te
+        // The list allElementsNearby contains all elements in this cell or in a neighboring cell.
+        ArrayList<TrainElement> allElementNearby = new ArrayList<>();
+        for (int currentRow = row - 1; currentRow <= row + 1; currentRow++) {
+            for (int currentCol = col - 1; currentCol <= col + 1; currentCol++) {
+                Cell neighborCell = getCell(currentRow, currentCol);
+                allElementNearby.addAll(neighborCell.getAllElements());
             }
         }
-        if (currentCell.isLinked(CardinalPoint.EAST)) {
-            // Test the East cell
-            neighbor = getCell(row, col + 1);
-            if (neighbor.isLinked(CardinalPoint.WEST)) {
-                addTrainLink(currentCell, neighbor);
+        allElementNearby.remove(te);
+
+        for (TrainElement neighbor : allElementNearby) {
+            double currentDistance = computeDistance(te, neighbor);
+            if (currentDistance < distanceMax) {
+                if (getNbLinks(neighbor) < 2) {
+                    links.add(new TrainLink(te, neighbor, distanceMax));
+                }
             }
         }
-        if (currentCell.isLinked(CardinalPoint.SOUTH)) {
-            // Test the East cell
-            neighbor = getCell(row + 1, col);
-            if (neighbor.isLinked(CardinalPoint.NORTH)) {
-                addTrainLink(currentCell, neighbor);
+    }
+
+    /**
+     * Return the number of links that involve the given element.
+     *
+     * @param e
+     * @return
+     */
+    private int getNbLinks(TrainElement e) {
+        int result = 0;
+        for (TrainLink link : links) {
+            if (link.getElement(0).equals(e) || link.getElement(1).equals(e)) {
+                // This link is related to the parameter element.
+                result++;
             }
         }
-        if (currentCell.isLinked(CardinalPoint.WEST)) {
-            // Test the East cell
-            neighbor = getCell(row, col - 1);
-            if (neighbor.isLinked(CardinalPoint.EAST)) {
-                addTrainLink(currentCell, neighbor);
-            }
-        }
+        return result;
     }
 
     /**
@@ -350,11 +384,7 @@ public class World implements PropertyChangeListener {
     }
 
     // Add a rectangular track loop.
-    void addTestTracks() {
-        int minRow = 31;
-        int maxRow = 38;
-        int minCol = 1;
-        int maxCol = 50;
+    protected void addTestTracks(int minRow, int maxRow, int minCol, int maxCol) {
 
         // West-East tracks
         for (int col = minCol; col < maxCol; col++) {
@@ -370,23 +400,6 @@ public class World implements PropertyChangeListener {
             setNewTrack(row + 1, minCol, row, minCol);
             setNewTrack(row, maxCol, row + 1, maxCol);
             setNewTrack(row + 1, maxCol, row, maxCol);
-        }
-    }
-
-    /**
-     * Mark the train in cell0 and that in cell1 as the same train.
-     */
-    private void addTrainLink(Cell cell0, Cell cell1) {
-
-        if (cell0.hasTrain() && cell1.hasTrain()) {
-
-            TrainElement elem0 = cell0.getTrainElement();
-            TrainElement elem1 = cell1.getTrainElement();
-
-            if (elem0 != null && elem1 != null) {
-                double distance = computeDistance(elem0, elem1);
-                links.add(new TrainLink(elem0, elem1, distance));
-            }
         }
     }
 

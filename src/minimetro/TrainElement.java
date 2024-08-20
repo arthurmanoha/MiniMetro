@@ -1,7 +1,9 @@
 package minimetro;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import static java.lang.Math.PI;
 
@@ -15,6 +17,7 @@ public abstract class TrainElement {
     protected Point2D.Double absolutePosition;
     protected Point2D.Double currentSpeed;
     protected double maxSpeed;
+    protected double mass;
     protected Point2D.Double currentForce;
     protected double headingDegrees; // 0:N, 90:E, 180:S, 270:W
 
@@ -37,13 +40,20 @@ public abstract class TrainElement {
         currentForce = new Point2D.Double();
         absolutePosition = new Point2D.Double();
         currentSpeed = new Point2D.Double();
-        size = 0.1;
+        size = 0.03;
+        mass = 1;
+    }
+
+    @Override
+    public String toString() {
+        return "TE_" + id;
     }
 
     public void paint(Graphics g, double x0, double y0, double zoom) {
         int xCenter = (int) (x0 + zoom * this.absolutePosition.x);
         int yCenter = g.getClipBounds().height - (int) (y0 + zoom * this.absolutePosition.y);
         int radiusApp = (int) (zoom * size);
+        ((Graphics2D) g).setStroke(new BasicStroke());
         g.setColor(this.color);
         g.fillOval((int) (xCenter - radiusApp), (int) (yCenter - radiusApp), 2 * radiusApp, 2 * radiusApp);
         g.setColor(Color.black);
@@ -126,9 +136,8 @@ public abstract class TrainElement {
     }
 
     void computeNewSpeed(double dt) {
-
-        currentSpeed.x += currentForce.x * dt;
-        currentSpeed.y += currentForce.y * dt;
+        currentSpeed.x += currentForce.x * dt / mass;
+        currentSpeed.y += currentForce.y * dt / mass;
     }
 
     void move(double dt) {
@@ -146,5 +155,11 @@ public abstract class TrainElement {
 
     protected void setPosition(double newX, double newY) {
         this.absolutePosition = new Point2D.Double(newX, newY);
+    }
+
+    protected boolean isStopped() {
+        double vx = currentSpeed.x;
+        double vy = currentSpeed.y;
+        return Math.abs(vx) + Math.abs(vy) < 0.01;
     }
 }
