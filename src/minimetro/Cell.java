@@ -40,7 +40,7 @@ public class Cell {
         trainsLeavingCell = new ArrayList<>();
         rails = new ArrayList<>();
         totalRailLength = cellSize;
-        nbRails = 10;
+        nbRails = 20;
         singleRailLength = totalRailLength / nbRails;
         colorList = new ArrayList<>();
         colorList.add(Color.red);
@@ -322,6 +322,19 @@ public class Cell {
 
     protected TrainElement getTrainElement() {
         return this.trainElements.get(0);
+    }
+
+    /**
+     * Get a list of all TrainElements in this cell.
+     *
+     * @return the list of TrainElements in this cell.
+     */
+    protected ArrayList<TrainElement> getAllElements() {
+        ArrayList<TrainElement> copyList = new ArrayList<>();
+        for (TrainElement te : this.trainElements) {
+            copyList.add(te);
+        }
+        return copyList;
     }
 
     /**

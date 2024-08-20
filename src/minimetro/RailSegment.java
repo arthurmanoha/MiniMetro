@@ -110,7 +110,14 @@ public class RailSegment {
         te.currentSpeed.y = u_v * uy;
 
         // HeadingRad is 0 for east, pi/2 for north.
-        double headingRad = Math.atan2(te.currentSpeed.y, te.currentSpeed.x);
+        // HeadingDeg is 90 for east, 0 for north.
+        double headingRad;
+        if (te.isStopped()) {
+            headingRad = Math.atan2(uy, ux);
+        } else {
+            headingRad = Math.atan2(te.currentSpeed.y, te.currentSpeed.x);
+        }
+
         // HedingDeg is 0 for north, 90 for east.
         double headingDeg = (Math.PI / 2 - headingRad) * 360 / (2 * PI);
         te.setHeadingDegrees(headingDeg);

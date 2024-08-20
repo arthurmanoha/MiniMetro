@@ -36,10 +36,10 @@ public class WorldPanel extends JPanel implements MouseListener,
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = 100;
+        zoomLevel = 259.37;
         zoomLevelFactor = 1.1;
-        x0 = 0;
-        y0 = 0;
+        x0 = -78;
+        y0 = -1411;
         currentTool = GuiTool.NO_TOOL;
         prevMouseX = 0;
         prevMouseY = 0;
@@ -126,32 +126,28 @@ public class WorldPanel extends JPanel implements MouseListener,
     public void mousePressed(MouseEvent e) {
         int b1 = MouseEvent.BUTTON1_DOWN_MASK;
         if ((e.getModifiersEx() & b1) == b1) {
+
+            double xReal = (e.getX() - x0) / zoomLevel;
+            double yReal = (graphicsCurrentHeight - e.getY() - y0) / zoomLevel;
+
             // Clicked first mouse button
             switch (currentTool) {
             case LOCO -> {
                 System.out.println("WorldPanel mousePressed loco");
-                currentCol = getCol(e.getX());
-                currentRow = getRow(e.getY());
-                world.addLoco(currentRow, currentCol);
+                world.addLoco(xReal, yReal);
             }
             case WAGON -> {
                 System.out.println("WorldPanel mousePressed wagon");
-                currentCol = getCol(e.getX());
-                currentRow = getRow(e.getY());
-                world.addWagon(currentRow, currentCol);
+                world.addWagon(xReal, yReal);
             }
             case TRACK -> {
                 System.out.println("WorldPanel mousePressed track");
                 prevCol = Integer.MAX_VALUE;
                 prevRow = Integer.MAX_VALUE;
-                currentCol = getCol(e.getX());
-                currentRow = getRow(e.getY());
             }
             case STATION -> {
                 System.out.println("WorldPanel mousePressed station");
-                int col = getCol(e.getX());
-                int row = getRow(e.getY());
-                world.toggleStation(row, col);
+                world.toggleStation(currentRow, currentCol);
                 repaint();
             }
             default -> {
@@ -213,6 +209,8 @@ public class WorldPanel extends JPanel implements MouseListener,
     public void mouseMoved(MouseEvent e) {
         prevMouseX = e.getX();
         prevMouseY = e.getY();
+        prevCol = currentCol;
+        prevRow = currentRow;
         currentCol = getCol(e.getX());
         currentRow = getRow(e.getY());
     }
