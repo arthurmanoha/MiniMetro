@@ -14,6 +14,8 @@ public class Wagon extends TrainElement {
         super();
         maxSpeed = 10;
         color = Color.blue;
+        imagePath = "src\\img\\Wagon.png";
+        loadImage();
     }
 
     public Wagon(Point2D.Double newAbsolutePosition) {

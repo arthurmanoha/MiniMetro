@@ -253,6 +253,7 @@ public class Cell {
                 trainsLeavingCell.add(new TransferringTrain(trainElement, leavingDirection));
             }
         }
+        snapToRail();
 
     }
 

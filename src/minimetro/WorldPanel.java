@@ -133,11 +133,9 @@ public class WorldPanel extends JPanel implements MouseListener,
             // Clicked first mouse button
             switch (currentTool) {
             case LOCO -> {
-                System.out.println("WorldPanel mousePressed loco");
                 world.addLoco(xReal, yReal);
             }
             case WAGON -> {
-                System.out.println("WorldPanel mousePressed wagon");
                 world.addWagon(xReal, yReal);
             }
             case TRAIN_REMOVAL -> {
@@ -147,12 +145,10 @@ public class WorldPanel extends JPanel implements MouseListener,
                 repaint();
             }
             case TRACK -> {
-                System.out.println("WorldPanel mousePressed track");
                 prevCol = Integer.MAX_VALUE;
                 prevRow = Integer.MAX_VALUE;
             }
             case STATION -> {
-                System.out.println("WorldPanel mousePressed station");
                 world.toggleStation(currentRow, currentCol);
                 repaint();
             }

@@ -4,7 +4,10 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.awt.image.ImageObserver;
 import static java.lang.Math.PI;
 
 /**
@@ -12,7 +15,7 @@ import static java.lang.Math.PI;
  *
  * @author arthu
  */
-public abstract class TrainElement {
+public abstract class TrainElement extends SpriteElement implements ImageObserver {
 
     protected Point2D.Double absolutePosition;
     protected Point2D.Double currentSpeed;
@@ -27,6 +30,7 @@ public abstract class TrainElement {
     protected boolean isLeading;
 
     protected Color color;
+    private int spriteZoomLevel = 600;
 
     protected int id; // Single value for each element
     protected int trainNumber; // This value is the same for elements linked together; -1 for non-linked elements.
@@ -49,15 +53,42 @@ public abstract class TrainElement {
         return "TE_" + id;
     }
 
+    @Override
     public void paint(Graphics g, double x0, double y0, double zoom) {
-        int xCenter = (int) (x0 + zoom * this.absolutePosition.x);
-        int yCenter = g.getClipBounds().height - (int) (y0 + zoom * this.absolutePosition.y);
-        int radiusApp = (int) (zoom * size);
-        ((Graphics2D) g).setStroke(new BasicStroke());
-        g.setColor(this.color);
-        g.fillOval((int) (xCenter - radiusApp), (int) (yCenter - radiusApp), 2 * radiusApp, 2 * radiusApp);
-        g.setColor(Color.black);
-        g.drawOval((int) (xCenter - radiusApp), (int) (yCenter - radiusApp), 2 * radiusApp, 2 * radiusApp);
+
+        super.paint(g, x0, y0, zoom);
+
+        if (image != null) {
+            // Paint the image
+            double newWidth = Math.max(5, (image.getWidth(this) * zoom) / spriteZoomLevel);
+            double newHeight = Math.max(5, (image.getHeight(this) * zoom) / spriteZoomLevel);
+            Image scaledImage = image.getScaledInstance((int) newWidth, (int) newHeight, Image.SCALE_DEFAULT);
+
+            double xCenter = x0 + zoom * this.absolutePosition.x;
+            double yCenter = g.getClipBounds().height - (y0 + zoom * this.absolutePosition.y);
+            double xImage = xCenter - newWidth / 2;
+            double yImage = yCenter - newHeight / 2;
+
+            Graphics2D g2d = (Graphics2D) g;
+            double headingRad = ((90 - headingDegrees) * 2 * PI) / 360;
+
+            AffineTransform initGraphicsTransform = g2d.getTransform();
+            g2d.rotate(-headingRad, xCenter, yCenter);
+            g2d.drawImage(scaledImage, (int) xImage, (int) yImage, (ImageObserver) this);
+            g2d.setTransform(initGraphicsTransform);
+
+        } else {
+            // Default drawing
+            double xCenter = (int) (x0 + zoom * this.absolutePosition.x);
+            double yCenter = g.getClipBounds().height - (int) (y0 + zoom * this.absolutePosition.y);
+            // Default painting
+            int radiusApp = (int) (zoom * size);
+            ((Graphics2D) g).setStroke(new BasicStroke());
+            g.setColor(this.color);
+            g.fillOval((int) (xCenter - radiusApp), (int) (yCenter - radiusApp), 2 * radiusApp, 2 * radiusApp);
+            g.setColor(Color.black);
+            g.drawOval((int) (xCenter - radiusApp), (int) (yCenter - radiusApp), 2 * radiusApp, 2 * radiusApp);
+        }
     }
 
     public void increaseSpeed(double dSpeed) {
@@ -161,5 +192,10 @@ public abstract class TrainElement {
         double vx = currentSpeed.x;
         double vy = currentSpeed.y;
         return Math.abs(vx) + Math.abs(vy) < 0.01;
+    }
+
+    @Override
+    public boolean imageUpdate(Image img, int infoflags, int x, int y, int width, int height) {
+        return false;
     }
 }

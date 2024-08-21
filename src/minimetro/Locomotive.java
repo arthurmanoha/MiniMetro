@@ -18,6 +18,8 @@ public class Locomotive extends TrainElement {
         motorPower = .1;
         color = Color.red;
         mass = 10;
+        imagePath = "src\\img\\Locomotive.png";
+        loadImage();
     }
 
     public Locomotive(Point2D.Double newAbsolutePosition) {

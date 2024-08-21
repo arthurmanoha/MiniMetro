@@ -11,8 +11,14 @@ public class MiniMetro {
         World w = new World();
         GUI gui = new GUI(w);
 
-        w.addTestTracks(31, 33, 1, 4);
-        w.addTestTracks(29, 30, 1, 80);
+        w.addTestTracks(31, 33, 0, 7);
+        double xStart = 3.7;
+        double yStart = 5.5;
+        int nbWagons = 20;
+        w.addTestTrain(xStart, yStart, nbWagons);
+        yStart = 7.5;
+        nbWagons = 5;
+        w.addTestTrain(xStart, yStart, nbWagons);
     }
 
 }
