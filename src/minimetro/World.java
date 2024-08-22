@@ -128,13 +128,29 @@ public class World implements PropertyChangeListener {
                     case NORTH:
                         newRow = rowIndex - 1;
                         break;
+                    case NORTHEAST:
+                        newRow = rowIndex - 1;
+                        newCol = colIndex + 1;
+                        break;
                     case EAST:
+                        newCol = colIndex + 1;
+                        break;
+                    case SOUTHEAST:
+                        newRow = rowIndex + 1;
                         newCol = colIndex + 1;
                         break;
                     case SOUTH:
                         newRow = rowIndex + 1;
                         break;
+                    case SOUTHWEST:
+                        newRow = rowIndex + 1;
+                        newCol = colIndex - 1;
+                        break;
                     case WEST:
+                        newCol = colIndex - 1;
+                        break;
+                    case NORTHWEST:
+                        newRow = rowIndex - 1;
                         newCol = colIndex - 1;
                         break;
                     }

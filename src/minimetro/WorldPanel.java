@@ -28,7 +28,8 @@ public class WorldPanel extends JPanel implements MouseListener,
 
     // Memorize the current cell and the last two, necessary to create rails.
     private int prevCol, prevRow;
-    private int currentCol, currentRow;
+    private double currentCol, currentRow;
+    private double cornerMargin;
 
     private int graphicsCurrentHeight;
 
@@ -45,6 +46,7 @@ public class WorldPanel extends JPanel implements MouseListener,
         prevMouseY = 0;
         prevRow = Integer.MAX_VALUE;
         prevCol = Integer.MAX_VALUE;
+        cornerMargin = 0.1;
 
         graphicsCurrentHeight = 0;
 
@@ -133,27 +135,23 @@ public class WorldPanel extends JPanel implements MouseListener,
             // Clicked first mouse button
             switch (currentTool) {
             case LOCO -> {
-                System.out.println("WorldPanel mousePressed loco");
                 world.addLoco(xReal, yReal);
             }
             case WAGON -> {
-                System.out.println("WorldPanel mousePressed wagon");
                 world.addWagon(xReal, yReal);
             }
             case TRAIN_REMOVAL -> {
                 currentCol = getCol(e.getX());
                 currentRow = getRow(e.getY());
-                world.removeTrains(currentRow, currentCol);
+                world.removeTrains((int) currentRow, (int) currentCol);
                 repaint();
             }
             case TRACK -> {
-                System.out.println("WorldPanel mousePressed track");
                 prevCol = Integer.MAX_VALUE;
                 prevRow = Integer.MAX_VALUE;
             }
             case STATION -> {
-                System.out.println("WorldPanel mousePressed station");
-                world.toggleStation(currentRow, currentCol);
+                world.toggleStation((int) currentRow, (int) currentCol);
                 repaint();
             }
             }
@@ -189,29 +187,38 @@ public class WorldPanel extends JPanel implements MouseListener,
         } else if (currentTool.equals(GuiTool.TRACK)) {
             currentCol = getCol(e.getX());
             currentRow = getRow(e.getY());
+            int currentColInt = (int) currentCol;
+            int currentRowInt = (int) currentRow;
 
             // Detect a change in cell
-            if (prevRow != Integer.MAX_VALUE && prevCol != Integer.MAX_VALUE
-                    && (prevCol != currentCol || prevRow != currentRow)) {
+            if (!isInCorner(currentRow, currentCol)) {
+                if (prevRow != Integer.MAX_VALUE && prevCol != Integer.MAX_VALUE
+                        && (prevCol != currentColInt || prevRow != currentRowInt)) {
 
-                // Each cell develops a link to the other one.
-                world.setNewTrack(prevRow, prevCol, currentRow, currentCol);
-                world.setNewTrack(currentRow, currentCol, prevRow, prevCol);
+                    // Each cell develops a link to the other one.
+                    world.setNewTrack(prevRow, prevCol, currentRowInt, currentColInt);
+                    world.setNewTrack(currentRowInt, currentColInt, prevRow, prevCol);
 
-                repaint();
+                    repaint();
+                }
+
+                prevCol = currentColInt;
+                prevRow = currentRowInt;
             }
 
-            prevCol = currentCol;
-            prevRow = currentRow;
         } else if (currentTool.equals(GuiTool.TRACK_REMOVAL)) {
+            int currentColInt = (int) currentCol;
+            int currentRowInt = (int) currentRow;
             currentCol = getCol(e.getX());
             currentRow = getRow(e.getY());
-            world.removeTrack(currentRow, currentCol);
+            world.removeTrack(currentRowInt, currentColInt);
             repaint();
         } else if (currentTool.equals(GuiTool.TRAIN_REMOVAL)) {
+            int currentColInt = (int) currentCol;
+            int currentRowInt = (int) currentRow;
             currentCol = getCol(e.getX());
             currentRow = getRow(e.getY());
-            world.removeTrains(currentRow, currentCol);
+            world.removeTrains(currentRowInt, currentColInt);
             repaint();
         }
 
@@ -249,9 +256,9 @@ public class WorldPanel extends JPanel implements MouseListener,
      * @param x the on-screen x-coorrdinate
      * @return the column that contains the given pixel
      */
-    private int getCol(int x) {
+    private double getCol(int x) {
         double appCellSize = Cell.cellSize * zoomLevel;
-        int result = (int) ((double) (x + appCellSize / 2 - x0) / zoomLevel);
+        double result = ((double) (x + appCellSize / 2 - x0) / zoomLevel);
         return result;
     }
 
@@ -261,9 +268,9 @@ public class WorldPanel extends JPanel implements MouseListener,
      * @param y the on-screen y-coorrdinate
      * @return the row that contains the given pixel
      */
-    private int getRow(int y) {
+    private double getRow(int y) {
         double appCellSize = Cell.cellSize * zoomLevel;
-        int result = world.getNbRows() - (int) ((double) ((graphicsCurrentHeight - y) + appCellSize / 2 - y0) / zoomLevel) - 1;
+        double result = world.getNbRows() - (double) ((graphicsCurrentHeight - y) + appCellSize / 2 - y0) / zoomLevel;
         return result;
     }
 
@@ -271,5 +278,22 @@ public class WorldPanel extends JPanel implements MouseListener,
     public void propertyChange(PropertyChangeEvent evt) {
         /* Récupère l'objet source */
         repaint();
+    }
+
+    /**
+     * Return true when the coordinates correspond to the corner of a cell.
+     *
+     * @param row
+     * @param col
+     * @return true when the location defined by row and col is close enough to
+     * the side of the cell.
+     */
+    private boolean isInCorner(double row, double col) {
+        double dRow = row - (int) row;
+        double dCol = col - (int) col;
+
+        boolean result = (dCol < cornerMargin | dCol > 1 - cornerMargin)
+                && (dRow < cornerMargin | dRow > 1 - cornerMargin);
+        return result;
     }
 }
