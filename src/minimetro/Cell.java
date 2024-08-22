@@ -40,7 +40,7 @@ public class Cell {
         trainsLeavingCell = new ArrayList<>();
         rails = new ArrayList<>();
         totalRailLength = cellSize;
-        nbRails = 20;
+        nbRails = 60;
         singleRailLength = totalRailLength / nbRails;
         colorList = new ArrayList<>();
         colorList.add(Color.red);
@@ -88,7 +88,7 @@ public class Cell {
 
         // Draw background
         g.setColor(this.color);
-        g.fillRect((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) (appSize), (int) (appSize));
+//        g.fillRect((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) (appSize), (int) (appSize));
 
         // Draw borders
         g.setColor(Color.black);
@@ -466,12 +466,46 @@ public class Cell {
         updateTracks();
     }
 
-    private boolean isTrackTurning() {
+    /**
+     * Test for 90° turns between horizontal and vertical.
+     *
+     * @return
+     */
+    private boolean isTrackTurningAxisAligned() {
 
         return (isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.EAST)
                 || isLinked(CardinalPoint.EAST) && isLinked(CardinalPoint.SOUTH)
                 || isLinked(CardinalPoint.SOUTH) && isLinked(CardinalPoint.WEST)
                 || isLinked(CardinalPoint.WEST) && isLinked(CardinalPoint.NORTH));
+    }
+
+    /**
+     * Test for 45° turns. Example: a track going from North to SouthWest
+     *
+     * @return
+     */
+    private boolean isTrackTurning45() {
+
+        return (isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.SOUTHEAST)
+                || isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.SOUTHWEST)
+                || isLinked(CardinalPoint.EAST) && isLinked(CardinalPoint.NORTHWEST)
+                || isLinked(CardinalPoint.EAST) && isLinked(CardinalPoint.SOUTHWEST)
+                || isLinked(CardinalPoint.SOUTH) && isLinked(CardinalPoint.NORTHEAST)
+                || isLinked(CardinalPoint.SOUTH) && isLinked(CardinalPoint.NORTHWEST)
+                || isLinked(CardinalPoint.WEST) && isLinked(CardinalPoint.NORTHEAST)
+                || isLinked(CardinalPoint.WEST) && isLinked(CardinalPoint.SOUTHEAST));
+    }
+
+    /**
+     * Test for a track that does not turn within this cell.
+     *
+     * @return
+     */
+    private boolean isTrackStraight() {
+        return isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.SOUTH)
+                || isLinked(CardinalPoint.NORTHEAST) && isLinked(CardinalPoint.SOUTHWEST)
+                || isLinked(CardinalPoint.EAST) && isLinked(CardinalPoint.WEST)
+                || isLinked(CardinalPoint.SOUTHEAST) && isLinked(CardinalPoint.NORTHWEST);
     }
 
     /**
@@ -481,17 +515,18 @@ public class Cell {
      */
     private void updateTracks() {
 
-        if (isTrackTurning()) {
+        if (isTrackTurningAxisAligned() || isTrackTurning45()) {
             updateTurningTracks();
-        } else {
-            updateHorizontalOrVerticalTracks();
+        } else if (isTrackStraight()) {
+            updateStraightTracks();
         }
     }
 
     /**
-     * Create the rails when the tracks go N-S or E-W, without turns.
+     * Create the rails when the tracks go N-S, E-W, NW-SE or SW-NE, without
+     * turns.
      */
-    private void updateHorizontalOrVerticalTracks() {
+    private void updateStraightTracks() {
         double xCell = absolutePosition.x, yCell = absolutePosition.y;
         double xStart = xCell, xEnd = xCell, yStart = yCell, yEnd = yCell;
         if (links.size() >= 1) {
@@ -501,16 +536,32 @@ public class Cell {
                 xStart = xCell - cellSize / 2;
                 yStart = yCell;
                 break;
+            case NORTHWEST:
+                xStart = xCell - cellSize / 2;
+                yStart = yCell + cellSize / 2;
+                break;
             case NORTH:
                 xStart = xCell;
+                yStart = yCell + cellSize / 2;
+                break;
+            case NORTHEAST:
+                xStart = xCell + cellSize / 2;
                 yStart = yCell + cellSize / 2;
                 break;
             case EAST:
                 xStart = xCell + cellSize / 2;
                 yStart = yCell;
                 break;
+            case SOUTHEAST:
+                xStart = xCell + cellSize / 2;
+                yStart = yCell - cellSize / 2;
+                break;
             case SOUTH:
                 xStart = xCell;
+                yStart = yCell - cellSize / 2;
+                break;
+            case SOUTHWEST:
+                xStart = xCell - cellSize / 2;
                 yStart = yCell - cellSize / 2;
                 break;
             default:
@@ -525,16 +576,32 @@ public class Cell {
                 xEnd = xCell - cellSize / 2;
                 yEnd = yCell;
                 break;
+            case NORTHWEST:
+                xEnd = xCell - cellSize / 2;
+                yEnd = yCell + cellSize / 2;
+                break;
             case NORTH:
                 xEnd = xCell;
+                yEnd = yCell + cellSize / 2;
+                break;
+            case NORTHEAST:
+                xEnd = xCell + cellSize / 2;
                 yEnd = yCell + cellSize / 2;
                 break;
             case EAST:
                 xEnd = xCell + cellSize / 2;
                 yEnd = yCell;
                 break;
+            case SOUTHEAST:
+                xEnd = xCell + cellSize / 2;
+                yEnd = yCell - cellSize / 2;
+                break;
             case SOUTH:
                 xEnd = xCell;
+                yEnd = yCell - cellSize / 2;
+                break;
+            case SOUTHWEST:
+                xEnd = xCell - cellSize / 2;
                 yEnd = yCell - cellSize / 2;
                 break;
             default:
@@ -553,42 +620,121 @@ public class Cell {
     }
 
     /**
-     * Create the rails when the tracks go from N-S to E-W, with a turn.
+     * Create the rails when the tracks go from N-S to E-W, with a turn,
+     * or when they go from axis-aligned to diagonal.
      */
     private void updateTurningTracks() {
-        double xCenter, yCenter;
-        double radius = cellSize / 2;
-        double angleStart, angleEnd;
-
-        if (isLinked(CardinalPoint.SOUTH) && isLinked(CardinalPoint.EAST)) {
-            xCenter = absolutePosition.x + cellSize / 2;
-            yCenter = absolutePosition.y - cellSize / 2;
-            angleStart = PI;
-            angleEnd = PI / 2;
-        } else if (isLinked(CardinalPoint.EAST) && isLinked(CardinalPoint.NORTH)) {
-            xCenter = absolutePosition.x + cellSize / 2;
-            yCenter = absolutePosition.y + cellSize / 2;
-            angleStart = 3 * PI / 2;
-            angleEnd = PI;
-        } else if (isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.WEST)) {
-            xCenter = absolutePosition.x - cellSize / 2;
-            yCenter = absolutePosition.y + cellSize / 2;
-            angleStart = 4 * PI / 2;
-            angleEnd = 3 * PI / 2;
-        } else { // linked WEST and SOUTH
-            xCenter = absolutePosition.x - cellSize / 2;
-            yCenter = absolutePosition.y - cellSize / 2;
-            angleStart = PI / 2;
-            angleEnd = 0;
-        }
 
         rails.clear();
+
+        double xCenter = 0, yCenter = 0;
+        double radius;
+        double angleStart = 0, angleEnd = 0;
+
+        // Add the curved part for both 45 and 90 degrees turns.
+        if (isTrackTurning45()) {
+            radius = (1 + 1.414) / 2;
+
+            // Horizontal EAST
+            if (isLinked(CardinalPoint.NORTHWEST) && isLinked(CardinalPoint.EAST)) {
+                xCenter = absolutePosition.x + cellSize / 2;
+                yCenter = absolutePosition.y + cellSize * (2.414 / 2);
+                angleStart = 5 * PI / 4;
+                angleEnd = 3 * PI / 2;
+            } else if (isLinked(CardinalPoint.SOUTHWEST) && isLinked(CardinalPoint.EAST)) {
+                xCenter = absolutePosition.x + cellSize / 2;
+                yCenter = absolutePosition.y - cellSize * (2.414 / 2);
+                angleStart = 3 * PI / 4;
+                angleEnd = PI / 2;
+            } // Horizontal WEST
+            else if (isLinked(CardinalPoint.NORTHEAST) && isLinked(CardinalPoint.WEST)) {
+                xCenter = absolutePosition.x - cellSize / 2;
+                yCenter = absolutePosition.y + cellSize * (2.414 / 2);
+                angleStart = 3 * PI / 2;
+                angleEnd = 7 * PI / 4;
+            } else if (isLinked(CardinalPoint.SOUTHEAST) && isLinked(CardinalPoint.WEST)) {
+                xCenter = absolutePosition.x - cellSize / 2;
+                yCenter = absolutePosition.y - cellSize * (2.414 / 2);
+                angleStart = PI / 2;
+                angleEnd = PI / 4;
+            } // Vertical NORTH
+            else if (isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.SOUTHWEST)) {
+                xCenter = absolutePosition.x - cellSize * (2.414 / 2);
+                yCenter = absolutePosition.y + cellSize / 2;
+                angleStart = 0;
+                angleEnd = -PI / 4;
+            } else if (isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.SOUTHEAST)) {
+                xCenter = absolutePosition.x + cellSize * (2.414 / 2);
+                yCenter = absolutePosition.y + cellSize / 2;
+                angleStart = PI;
+                angleEnd = 5 * PI / 4;
+            } // Vertical SOUTH
+            else if (isLinked(CardinalPoint.SOUTH) && isLinked(CardinalPoint.NORTHWEST)) {
+                xCenter = absolutePosition.x - cellSize * (2.414 / 2);
+                yCenter = absolutePosition.y - cellSize / 2;
+                angleStart = 0;
+                angleEnd = PI / 4;
+            } else if (isLinked(CardinalPoint.SOUTH) && isLinked(CardinalPoint.NORTHEAST)) {
+                xCenter = absolutePosition.x + cellSize * (2.414 / 2);
+                yCenter = absolutePosition.y - cellSize / 2;
+                angleStart = PI;
+                angleEnd = 3 * PI / 4;
+            }
+
+        } else {
+            // Axis-aligned right-angled turns
+            radius = cellSize / 2;
+            if (isLinked(CardinalPoint.SOUTH) && isLinked(CardinalPoint.EAST)) {
+                xCenter = absolutePosition.x + cellSize / 2;
+                yCenter = absolutePosition.y - cellSize / 2;
+                angleStart = PI;
+                angleEnd = PI / 2;
+                radius = cellSize / 2;
+            } else if (isLinked(CardinalPoint.EAST) && isLinked(CardinalPoint.NORTH)) {
+                xCenter = absolutePosition.x + cellSize / 2;
+                yCenter = absolutePosition.y + cellSize / 2;
+                angleStart = 3 * PI / 2;
+                angleEnd = PI;
+                radius = cellSize / 2;
+            } else if (isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.WEST)) {
+                xCenter = absolutePosition.x - cellSize / 2;
+                yCenter = absolutePosition.y + cellSize / 2;
+                angleStart = 4 * PI / 2;
+                angleEnd = 3 * PI / 2;
+                radius = cellSize / 2;
+            } else if (isLinked(CardinalPoint.WEST) && isLinked(CardinalPoint.SOUTH)) {
+                xCenter = absolutePosition.x - cellSize / 2;
+                yCenter = absolutePosition.y - cellSize / 2;
+                angleStart = PI / 2;
+                angleEnd = 0;
+                radius = cellSize / 2;
+            }
+        }
+
         for (int i = 0; i < nbRails; i++) {
             double x0 = xCenter + radius * cos(angleStart + i * (angleEnd - angleStart) / nbRails);
             double y0 = yCenter + radius * sin(angleStart + i * (angleEnd - angleStart) / nbRails);
             double x1 = xCenter + radius * cos(angleStart + (i + 1) * (angleEnd - angleStart) / nbRails);
             double y1 = yCenter + radius * sin(angleStart + (i + 1) * (angleEnd - angleStart) / nbRails);
             rails.add(new RailSegment(x0, y0, x1, y1));
+        }
+
+        // 45 degrees turns require an additional straight part
+        if (isTrackTurning45()) {
+            double dx = 0.5 - (2 - 1.414) / 4;
+            if (isLinked(CardinalPoint.NORTHEAST)) {
+                rails.add(new RailSegment(absolutePosition.x + cellSize * 0.5, absolutePosition.y + cellSize * 0.5,
+                        absolutePosition.x + cellSize * dx, absolutePosition.y + cellSize * dx));
+            } else if (isLinked(CardinalPoint.SOUTHEAST)) {
+                rails.add(new RailSegment(absolutePosition.x + cellSize * 0.5, absolutePosition.y - cellSize * 0.5,
+                        absolutePosition.x + cellSize * dx, absolutePosition.y - cellSize * dx));
+            } else if (isLinked(CardinalPoint.SOUTHWEST)) {
+                rails.add(new RailSegment(absolutePosition.x - cellSize * 0.5, absolutePosition.y - cellSize * 0.5,
+                        absolutePosition.x - cellSize * dx, absolutePosition.y - cellSize * dx));
+            } else if (isLinked(CardinalPoint.NORTHWEST)) {
+                rails.add(new RailSegment(absolutePosition.x - cellSize * 0.5, absolutePosition.y + cellSize * 0.5,
+                        absolutePosition.x - cellSize * dx, absolutePosition.y + cellSize * dx));
+            }
         }
     }
 
