@@ -40,7 +40,7 @@ public class Cell {
         trainsLeavingCell = new ArrayList<>();
         rails = new ArrayList<>();
         totalRailLength = cellSize;
-        nbRails = 60;
+        nbRails = 20;
         singleRailLength = totalRailLength / nbRails;
         colorList = new ArrayList<>();
         colorList.add(Color.red);
@@ -99,7 +99,7 @@ public class Cell {
         if (rails != null && !rails.isEmpty()) {
             for (RailSegment railSegment : rails) {
                 if (railSegment != null) {
-                    railSegment.paint(g, x0, y0, zoom, colorList.get(i % 6));
+                    railSegment.paint(g, x0, y0, zoom);
                 }
                 i++;
             }
@@ -509,6 +509,16 @@ public class Cell {
     }
 
     /**
+     * Test for a straight diagonal track.
+     *
+     * @return
+     */
+    private boolean isTrackDiagonal() {
+        return isLinked(CardinalPoint.NORTHEAST) && isLinked(CardinalPoint.SOUTHWEST)
+                || isLinked(CardinalPoint.NORTHWEST) && isLinked(CardinalPoint.SOUTHEAST);
+    }
+
+    /**
      * Set the rail segments in accordance with the cardinal points specified by
      * the link list.
      *
@@ -529,6 +539,11 @@ public class Cell {
     private void updateStraightTracks() {
         double xCell = absolutePosition.x, yCell = absolutePosition.y;
         double xStart = xCell, xEnd = xCell, yStart = yCell, yEnd = yCell;
+
+        if (isTrackDiagonal()) {
+            nbRails = (int) (nbRails * 1.5);
+        }
+
         if (links.size() >= 1) {
             CardinalPoint firstLink = links.get(0);
             switch (firstLink) {
@@ -721,19 +736,24 @@ public class Cell {
 
         // 45 degrees turns require an additional straight part
         if (isTrackTurning45()) {
-            double dx = 0.5 - (2 - 1.414) / 4;
-            if (isLinked(CardinalPoint.NORTHEAST)) {
-                rails.add(new RailSegment(absolutePosition.x + cellSize * 0.5, absolutePosition.y + cellSize * 0.5,
-                        absolutePosition.x + cellSize * dx, absolutePosition.y + cellSize * dx));
-            } else if (isLinked(CardinalPoint.SOUTHEAST)) {
-                rails.add(new RailSegment(absolutePosition.x + cellSize * 0.5, absolutePosition.y - cellSize * 0.5,
-                        absolutePosition.x + cellSize * dx, absolutePosition.y - cellSize * dx));
-            } else if (isLinked(CardinalPoint.SOUTHWEST)) {
-                rails.add(new RailSegment(absolutePosition.x - cellSize * 0.5, absolutePosition.y - cellSize * 0.5,
-                        absolutePosition.x - cellSize * dx, absolutePosition.y - cellSize * dx));
-            } else if (isLinked(CardinalPoint.NORTHWEST)) {
-                rails.add(new RailSegment(absolutePosition.x - cellSize * 0.5, absolutePosition.y + cellSize * 0.5,
-                        absolutePosition.x - cellSize * dx, absolutePosition.y + cellSize * dx));
+            double unitLength = (2 - 1.414) / 4; // The length of the straight part
+            int nbAdditionalSegments = 4;
+            double dx = unitLength / nbAdditionalSegments;
+
+            for (int i = 0; i < nbAdditionalSegments; i++) {
+                if (isLinked(CardinalPoint.NORTHEAST)) {
+                    rails.add(new RailSegment(absolutePosition.x + cellSize * (0.5 - i * dx), absolutePosition.y + cellSize * (0.5 - i * dx),
+                            absolutePosition.x + cellSize * (0.5 - (i + 1) * dx), absolutePosition.y + cellSize * (0.5 - (i + 1) * dx)));
+                } else if (isLinked(CardinalPoint.SOUTHEAST)) {
+                    rails.add(new RailSegment(absolutePosition.x + cellSize * (0.5 - i * dx), absolutePosition.y - cellSize * (0.5 - i * dx),
+                            absolutePosition.x + cellSize * (0.5 - (i + 1) * dx), absolutePosition.y - cellSize * (0.5 - (i + 1) * dx)));
+                } else if (isLinked(CardinalPoint.SOUTHWEST)) {
+                    rails.add(new RailSegment(absolutePosition.x - cellSize * (0.5 - i * dx), absolutePosition.y - cellSize * (0.5 - i * dx),
+                            absolutePosition.x - cellSize * (0.5 - (i + 1) * dx), absolutePosition.y - cellSize * (0.5 - (i + 1) * dx)));
+                } else if (isLinked(CardinalPoint.NORTHWEST)) {
+                    rails.add(new RailSegment(absolutePosition.x - cellSize * (0.5 - i * dx), absolutePosition.y + cellSize * (0.5 - i * dx),
+                            absolutePosition.x - cellSize * (0.5 - (i + 1) * dx), absolutePosition.y + cellSize * (0.5 - (i + 1) * dx)));
+                }
             }
         }
     }

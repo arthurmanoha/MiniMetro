@@ -269,7 +269,9 @@ public class World implements PropertyChangeListener {
         for (int currentRow = row - 1; currentRow <= row + 1; currentRow++) {
             for (int currentCol = col - 1; currentCol <= col + 1; currentCol++) {
                 Cell neighborCell = getCell(currentRow, currentCol);
-                allElementNearby.addAll(neighborCell.getAllElements());
+                if (neighborCell != null) {
+                    allElementNearby.addAll(neighborCell.getAllElements());
+                }
             }
         }
         allElementNearby.remove(te);
