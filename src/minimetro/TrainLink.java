@@ -116,7 +116,7 @@ public class TrainLink {
         int xSecondApp = (int) (x0 + posSecond.x * zoom);
         int ySecondApp = g.getClipBounds().height - (int) (y0 + posSecond.y * zoom);
         g.setColor(Color.black);
-        int width = 2;
+        int width = (int) Math.max(1, zoom / 100);
         Stroke s = new BasicStroke(width);
         ((Graphics2D) g).setStroke(s);
         g.drawLine(xFirstApp, yFirstApp, xSecondApp, ySecondApp);

@@ -60,21 +60,21 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
 
         if (image != null) {
             // Paint the image
-            double newWidth = Math.max(5, (image.getWidth(this) * zoom) / spriteZoomLevel);
-            double newHeight = Math.max(5, (image.getHeight(this) * zoom) / spriteZoomLevel);
-            Image scaledImage = image.getScaledInstance((int) newWidth, (int) newHeight, Image.SCALE_DEFAULT);
+            int newWidth = (int) Math.max(5, (image.getWidth(this) * zoom) / spriteZoomLevel);
+            int newHeight = (int) Math.max(5, (image.getHeight(this) * zoom) / spriteZoomLevel);
+            Image scaledImage = image.getScaledInstance(newWidth, -1, Image.SCALE_DEFAULT);
 
-            double xCenter = x0 + zoom * this.absolutePosition.x;
-            double yCenter = g.getClipBounds().height - (y0 + zoom * this.absolutePosition.y);
-            double xImage = xCenter - newWidth / 2;
-            double yImage = yCenter - newHeight / 2;
+            int xCenter = (int) (x0 + zoom * this.absolutePosition.x);
+            int yCenter = (int) (g.getClipBounds().height - (y0 + zoom * this.absolutePosition.y));
+            int xImage = xCenter - newWidth / 2;
+            int yImage = yCenter - newHeight / 2;
 
             Graphics2D g2d = (Graphics2D) g;
             double headingRad = ((90 - headingDegrees) * 2 * PI) / 360;
 
             AffineTransform initGraphicsTransform = g2d.getTransform();
             g2d.rotate(-headingRad, xCenter, yCenter);
-            g2d.drawImage(scaledImage, (int) xImage, (int) yImage, (ImageObserver) this);
+            g2d.drawImage(scaledImage, xImage, yImage, (ImageObserver) this);
             g2d.setTransform(initGraphicsTransform);
 
         } else {
