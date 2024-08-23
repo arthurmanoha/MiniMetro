@@ -16,7 +16,8 @@ public class RailSegment {
 
     // Distance between the two rails.
     private double railSpacing = 0.1;
-    private double tileLength = 0.16;
+    // Length of the wooden tie between the rails
+    private double tieLength = 0.16;
 
     // Colors of the main components of the rail segment
     private static Color ballastColor = Color.GRAY;
@@ -56,10 +57,10 @@ public class RailSegment {
         yEndRight = yEnd - vy * railSpacing / 2;
 
         // Tie coordinates
-        xTieLeft = xStart + ux * length / 2 + vx * tileLength / 2;
-        xTieRight = xStart + ux * length / 2 - vx * tileLength / 2;
-        yTieLeft = yStart + uy * length / 2 + vy * tileLength / 2;
-        yTieRight = yStart + uy * length / 2 - vy * tileLength / 2;
+        xTieLeft = xStart + ux * length / 2 + vx * tieLength / 2;
+        xTieRight = xStart + ux * length / 2 - vx * tieLength / 2;
+        yTieLeft = yStart + uy * length / 2 + vy * tieLength / 2;
+        yTieRight = yStart + uy * length / 2 - vy * tieLength / 2;
 
         id = NB_RAILS;
         NB_RAILS++;

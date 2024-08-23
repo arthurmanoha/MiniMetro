@@ -458,12 +458,18 @@ public class Cell {
      * @param newLinkDirection
      */
     void addLink(CardinalPoint newLinkDirection) {
-        if (!links.contains(newLinkDirection)) {
-            links.add(newLinkDirection);
-            if (links.size() > 2) {
-                links.remove(0);
-            }
+
+        // If the cell is already linked to two other cells, remove the oldest connection.
+        if (links.size() > 2) {
+            links.remove(2);
         }
+
+        // The new direction must be placed in first position in the list (as the most recent one).
+        if (links.contains(newLinkDirection)) {
+            links.remove(newLinkDirection);
+        }
+        links.add(0, newLinkDirection);
+
         updateTracks();
     }
 
@@ -526,6 +532,8 @@ public class Cell {
      */
     private void updateTracks() {
 
+        rails.clear();
+
         if (isTrackTurningAxisAligned() || isTrackTurning45()) {
             updateTurningTracks();
         } else if (isTrackStraight()) {
@@ -540,10 +548,6 @@ public class Cell {
     private void updateStraightTracks() {
         double xCell = absolutePosition.x, yCell = absolutePosition.y;
         double xStart = xCell, xEnd = xCell, yStart = yCell, yEnd = yCell;
-
-        if (isTrackDiagonal()) {
-            nbRails = (int) (nbRails * 1.5);
-        }
 
         if (links.size() >= 1) {
             CardinalPoint firstLink = links.get(0);
@@ -625,12 +629,16 @@ public class Cell {
                 yEnd = yCell;
             }
         }
-        rails.clear();
-        for (int i = 0; i < nbRails; i++) {
-            double x0 = xStart + i * (xEnd - xStart) / nbRails;
-            double y0 = yStart + i * (yEnd - yStart) / nbRails;
-            double x1 = xStart + (i + 1) * (xEnd - xStart) / nbRails;
-            double y1 = yStart + (i + 1) * (yEnd - yStart) / nbRails;
+
+        int actualNbRails = nbRails;
+        if (isTrackDiagonal()) {
+            actualNbRails = (int) (nbRails * 1.41);
+        }
+        for (int i = 0; i < actualNbRails; i++) {
+            double x0 = xStart + i * (xEnd - xStart) / actualNbRails;
+            double y0 = yStart + i * (yEnd - yStart) / actualNbRails;
+            double x1 = xStart + (i + 1) * (xEnd - xStart) / actualNbRails;
+            double y1 = yStart + (i + 1) * (yEnd - yStart) / actualNbRails;
             rails.add(new RailSegment(x0, y0, x1, y1));
         }
     }
@@ -640,8 +648,6 @@ public class Cell {
      * or when they go from axis-aligned to diagonal.
      */
     private void updateTurningTracks() {
-
-        rails.clear();
 
         double xCenter = 0, yCenter = 0;
         double radius;
