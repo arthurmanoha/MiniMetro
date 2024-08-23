@@ -14,24 +14,89 @@ public class RailSegment {
     // Absolute coordinates of the start and end of this segment.
     private final double xStart, yStart, xEnd, yEnd;
 
+    // Distance between the two rails.
+    private double railSpacing = 0.1;
+    private double tileLength = 0.16;
+
+    // Colors of the main components of the rail segment
+    private static Color ballastColor = Color.GRAY;
+    private static Color railColor = Color.LIGHT_GRAY;
+    private static Color tieColor = new Color(0.384f, 0.047f, 0.0f);
+
+    // Coordinates of the ends of the rails and the tie.
+    private double length, ux, uy, vx, vy,
+            xStartLeft, yStartLeft, xStartRight, yStartRight,
+            xEndLeft, yEndLeft, xEndRight, yEndRight,
+            xTieLeft, yTieLeft, xTieRight, yTieRight;
+
+    private static int NB_RAILS = 0;
+    private int id;
+
     public RailSegment(double x0, double y0, double x1, double y1) {
         xStart = x0;
         yStart = y0;
         xEnd = x1;
         yEnd = y1;
+
+        // Data used to compute rail and tie coordinates
+        length = Math.sqrt((xEnd - xStart) * (xEnd - xStart) + (yEnd - yStart) * (yEnd - yStart));
+        ux = (xEnd - xStart) / length;
+        uy = (yEnd - yStart) / length;
+        vx = -uy;
+        vy = ux;
+
+        // Rails coordinates
+        xStartLeft = xStart + vx * railSpacing / 2;
+        xStartRight = xStart - vx * railSpacing / 2;
+        yStartLeft = yStart + vy * railSpacing / 2;
+        yStartRight = yStart - vy * railSpacing / 2;
+        xEndLeft = xEnd + vx * railSpacing / 2;
+        xEndRight = xEnd - vx * railSpacing / 2;
+        yEndLeft = yEnd + vy * railSpacing / 2;
+        yEndRight = yEnd - vy * railSpacing / 2;
+
+        // Tie coordinates
+        xTieLeft = xStart + ux * length / 2 + vx * tileLength / 2;
+        xTieRight = xStart + ux * length / 2 - vx * tileLength / 2;
+        yTieLeft = yStart + uy * length / 2 + vy * tileLength / 2;
+        yTieRight = yStart + uy * length / 2 - vy * tileLength / 2;
+
+        id = NB_RAILS;
+        NB_RAILS++;
+
     }
 
-    void paint(Graphics g, double x0, double y0, double zoom, Color c) {
+    void paint(Graphics g, double x0, double y0, double zoom) {
 
         int panelHeight = g.getClipBounds().height;
 
-        int xStartApp = (int) (x0 + xStart * zoom);
-        int yStartApp = panelHeight - (int) (y0 + yStart * zoom);
-        int xEndApp = (int) (x0 + xEnd * zoom);
-        int yEndApp = panelHeight - (int) (y0 + yEnd * zoom);
+        int xStartApp;
+        int yStartApp;
+        int xEndApp;
+        int yEndApp;
 
-        g.setColor(c);
+        // Rails
+        g.setColor(railColor);
+
+        xStartApp = (int) (x0 + xStartLeft * zoom);
+        yStartApp = panelHeight - (int) (y0 + yStartLeft * zoom);
+        xEndApp = (int) (x0 + xEndLeft * zoom);
+        yEndApp = panelHeight - (int) (y0 + yEndLeft * zoom);
         g.drawLine(xStartApp, yStartApp, xEndApp, yEndApp);
+        xStartApp = (int) (x0 + xStartRight * zoom);
+        yStartApp = panelHeight - (int) (y0 + yStartRight * zoom);
+        xEndApp = (int) (x0 + xEndRight * zoom);
+        yEndApp = panelHeight - (int) (y0 + yEndRight * zoom);
+        g.drawLine(xStartApp, yStartApp, xEndApp, yEndApp);
+
+        // Tie
+        int xTieLeftApp = (int) (x0 + xTieLeft * zoom);
+        int yTieLeftApp = panelHeight - (int) (y0 + yTieLeft * zoom);
+        int xTieRightApp = (int) (x0 + xTieRight * zoom);
+        int yTieRightApp = panelHeight - (int) (y0 + yTieRight * zoom);
+
+        g.setColor(tieColor);
+        g.drawLine(xTieLeftApp, yTieLeftApp, xTieRightApp, yTieRightApp);
     }
 
     public double getXStart() {
@@ -90,9 +155,9 @@ public class RailSegment {
      */
     void snapTrain(TrainElement te) {
 
-        double length = Math.sqrt((xEnd - xStart) * (xEnd - xStart) + (yEnd - yStart) * (yEnd - yStart));
-        double ux = (xEnd - xStart) / length;
-        double uy = (yEnd - yStart) / length;
+        length = Math.sqrt((xEnd - xStart) * (xEnd - xStart) + (yEnd - yStart) * (yEnd - yStart));
+        ux = (xEnd - xStart) / length;
+        uy = (yEnd - yStart) / length;
 
         // A is the start of this segment, B is the end.
         // M denotes the position of the TrainElement.
