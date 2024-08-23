@@ -10,10 +10,9 @@ Tracks are not build as they should when drawn on top of existing tracks.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
-Snap : a TE shall be snapped to a RailSegment only if the velocity is reasonably aligned. Crossings become obvious.
 Cells shall be drawn as sprites.
-Tracks shall connect two sides of a cell, or one side and one corner of a cell, and be aligned vertically, horizontally or diagonally
 A TrainLink shall be connected to a point close to either end of the TrainElement, not to its center.
+Snap : a TE shall be snapped to a RailSegment only if the velocity is reasonably aligned. Crossings become obvious.
 A TrainLink shall have a maximum allowed force, above which it shall break.
 The CutLink shall allow to remove the link between two TrainElements.
 A TrainElement shall have a length that depends on its sub-type.
@@ -53,6 +52,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Tracks shall connect two sides of a cell, or one side and one corner of a cell, and be aligned vertically, horizontally or diagonally
 Train tracks shall be drawn procedurally with rails, ballast and railroad ties, on top of the cell.
 Curves allow for 90° and 45° turns, tracks can be placed diagonally.
 TrainElements shall be drawn as sprites.

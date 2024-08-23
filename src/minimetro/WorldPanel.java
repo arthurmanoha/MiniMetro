@@ -151,7 +151,7 @@ public class WorldPanel extends JPanel implements MouseListener,
                 prevRow = Integer.MAX_VALUE;
             }
             case STATION -> {
-                world.toggleStation((int) currentRow, (int) currentCol);
+                world.toggleStation(currentRow, currentCol);
                 repaint();
             }
             }

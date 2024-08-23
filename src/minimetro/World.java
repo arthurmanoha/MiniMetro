@@ -101,6 +101,11 @@ public class World implements PropertyChangeListener {
             }
         }
 
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                c.snapToRail();
+            }
+        }
         applyLinkForces();
 
         for (ArrayList<Cell> row : cells) {
@@ -159,12 +164,6 @@ public class World implements PropertyChangeListener {
                 colIndex++;
             }
             rowIndex++;
-        }
-
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                c.snapToRail();
-            }
         }
 
         // Flush transfer lists
@@ -278,7 +277,7 @@ public class World implements PropertyChangeListener {
 
         for (TrainElement neighbor : allElementNearby) {
             double currentDistance = computeDistance(te, neighbor);
-            if (currentDistance < distanceMax) {
+            if (currentDistance < distanceMax * 1.5) {
                 if (getNbLinks(neighbor) < 2) {
                     links.add(new TrainLink(te, neighbor, distanceMax));
                 }
@@ -568,5 +567,21 @@ public class World implements PropertyChangeListener {
             }
         }
         c.removeTrains();
+    }
+
+    protected void addTestTrain(double xStart, double yStart, int nbWagons) {
+
+        double spacing = distanceMax;
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                addLoco(xStart, yStart);
+                for (int i = 1; i <= nbWagons; i++) {
+                    addWagon(xStart - spacing * i, yStart);
+                }
+                updateListeners();
+            }
+        });
     }
 }
