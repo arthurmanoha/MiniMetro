@@ -16,7 +16,7 @@ import java.util.ArrayList;
  */
 public class Cell {
 
-    protected static double cellSize = 1;
+    protected static double cellSize = 100;
 
     protected Color color;
 
@@ -33,6 +33,8 @@ public class Cell {
     private Point2D.Double absolutePosition; // This point is the center of the cell.
 
     private ArrayList<CardinalPoint> links;
+
+    private double speedLimit; // Integer.MAX_VALUE if not set, -1 for end of limit, >0 for actual limit.
 
     public Cell() {
         color = Color.gray;
@@ -55,6 +57,7 @@ public class Cell {
         links = new ArrayList<>();
         links.add(CardinalPoint.CENTER);
         links.add(CardinalPoint.CENTER);
+        speedLimit = Integer.MAX_VALUE;
     }
 
     public Cell(Point2D.Double newAbsPos) {
@@ -106,6 +109,14 @@ public class Cell {
         }
         g.setColor(Color.black);
         String message = "";
+        // Integer.MAX_VALUE if not set, -1 for end of limit, >0 for actual limit.
+        if (speedLimit == Integer.MAX_VALUE) {
+//            message += " no_limit";
+        } else if (speedLimit == -1) {
+            message += " End of limit";
+        } else {
+            message += " " + speedLimit;
+        }
         g.drawString(message, (int) (xApp), (int) (yApp));
 
     }
@@ -246,6 +257,12 @@ public class Cell {
         for (TrainElement trainElement : trainElements) {
 
             trainElement.move(dt);
+            // Integer.MAX_VALUE if not set, -1 for end of limit, >0 for actual limit.
+            if (speedLimit != Integer.MAX_VALUE) {
+                trainElement.setSpeedLimit(speedLimit);
+            }
+
+            trainElement.enforceCurrentSpeedLimit();
 
             CardinalPoint leavingDirection = isTrainElementLeaving(trainElement);
             if (leavingDirection != CardinalPoint.CENTER) {
@@ -655,7 +672,7 @@ public class Cell {
 
         // Add the curved part for both 45 and 90 degrees turns.
         if (isTrackTurning45()) {
-            radius = (1 + 1.414) / 2;
+            radius = cellSize * (1 + 1.414) / 2;
 
             // Horizontal EAST
             if (isLinked(CardinalPoint.NORTHWEST) && isLinked(CardinalPoint.EAST)) {
@@ -788,5 +805,22 @@ public class Cell {
     protected void removeTrains() {
         trainElements.clear();
         trainsLeavingCell.clear();
+    }
+
+    protected void startLocos() {
+        for (TrainElement te : trainElements) {
+            te.start();
+        }
+    }
+
+    protected void stopLocos() {
+        for (TrainElement te : trainElements) {
+            te.stop();
+        }
+    }
+
+    protected void setSpeedIndicator(double speedIndicatorValue) {
+        speedLimit = speedIndicatorValue;
+        System.out.println("Cell " + this + " speed limit " + speedLimit);
     }
 }

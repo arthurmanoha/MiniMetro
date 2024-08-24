@@ -12,5 +12,6 @@ enum GuiTool {
     STATION,
     LOCO,
     WAGON,
-    TRAIN_REMOVAL
+    TRAIN_REMOVAL,
+    SPEED_INDICATOR
 }

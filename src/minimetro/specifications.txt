@@ -5,13 +5,19 @@ KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNO
 ---------------------------------------------------------------------------------------------------
 
 Tracks are not build as they should when drawn on top of existing tracks.
+Locos are reversed by slowing wagons.
 
 ---------------------------------------------------------------------------------------------------
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Implement speed limits in a cell, that are set to each loco crossing that cell, and stay active until another limit is set.
+Draw roadsigns to show the speed limits, in an empty part of the cell.
+Create a stop timer: any loco in that cell shall stop for the given amount of time and may then start moving again.
+Dampen springs between TrainElements: a spring has less force when shrinking.
 Cells shall be drawn as sprites.
 A TrainLink shall be connected to a point close to either end of the TrainElement, not to its center.
+A power mode shall allow the user to build an electric distribution system.
 Snap : a TE shall be snapped to a RailSegment only if the velocity is reasonably aligned. Crossings become obvious.
 A TrainLink shall have a maximum allowed force, above which it shall break.
 The CutLink shall allow to remove the link between two TrainElements.

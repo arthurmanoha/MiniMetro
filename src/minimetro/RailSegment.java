@@ -15,9 +15,9 @@ public class RailSegment {
     private final double xStart, yStart, xEnd, yEnd;
 
     // Distance between the two rails.
-    private double railSpacing = 0.1;
+    private double railSpacing = 10.0;
     // Length of the wooden tie between the rails
-    private double tieLength = 0.16;
+    private double tieLength = 16;
 
     // Colors of the main components of the rail segment
     private static Color ballastColor = Color.GRAY;

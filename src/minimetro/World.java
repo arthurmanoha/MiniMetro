@@ -34,10 +34,12 @@ public class World implements PropertyChangeListener {
     private static int NB_TRAINS_CREATED = 0;
 
     // Maximum distance between TEs for a link to be created.
-    private static double distanceMax = 0.15;
+    private static double distanceMax = 25;
 
     // Tell observers that our state has changed.
     private final PropertyChangeSupport support = new PropertyChangeSupport(this);
+
+    private double speedIndicatorValue;
 
     public World() {
         nbRows = 40;
@@ -56,9 +58,10 @@ public class World implements PropertyChangeListener {
         trainsInTransition = new ArrayList<>();
         links = new ArrayList<>();
         step = 0;
-        isRunning = false;
+        isRunning = true;
         periodMillisec = 30;
         startTimer();
+        speedIndicatorValue = 0;
     }
 
     public int getNbRows() {
@@ -578,10 +581,40 @@ public class World implements PropertyChangeListener {
             public void run() {
                 addLoco(xStart, yStart);
                 for (int i = 1; i <= nbWagons; i++) {
-                    addWagon(xStart - spacing * i, yStart);
+                    addWagon(xStart + spacing * i, yStart);
                 }
                 updateListeners();
             }
         });
+    }
+
+    protected void startLocos() {
+        System.out.println("World start locos");
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                c.startLocos();
+            }
+        }
+    }
+
+    protected void stopLocos() {
+        System.out.println("World stop locos");
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                c.stopLocos();
+            }
+        }
+    }
+
+    protected void setSpeedLimitValue(double newSpeedLimit) {
+        speedIndicatorValue = newSpeedLimit;
+        System.out.println("World received speed limit " + speedIndicatorValue);
+    }
+
+    protected void setSpeedIndicator(int row, int col) {
+        Cell c = getCell(row, col);
+        if (c != null) {
+            c.setSpeedIndicator(speedIndicatorValue);
+        }
     }
 }
