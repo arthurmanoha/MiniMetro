@@ -130,21 +130,6 @@ public class GUI extends JFrame {
         });
         bottomToolbar.add(stopLocoButton);
 
-        speedIndicatorTextField = new JTextField();
-        speedIndicatorTextField.setPreferredSize(new Dimension(80, 27));
-        speedIndicatorTextField.setText("0.0");
-        speedIndicatorTextField.addActionListener((e) -> {
-            readSpeedLimit();
-        });
-        bottomToolbar.add(speedIndicatorTextField);
-
-        JButton speedCellButton = new JButton("Apply Speed Indicator");
-        speedCellButton.addActionListener((e) -> {
-            readSpeedLimit();
-            panel.setTool(GuiTool.SPEED_INDICATOR);
-        });
-        bottomToolbar.add(speedCellButton);
-
         mainToolbar.add(bottomToolbar, BorderLayout.SOUTH);
 
         this.add(mainToolbar, BorderLayout.SOUTH);
@@ -189,6 +174,21 @@ public class GUI extends JFrame {
             w.setSpeedLimitValue(Integer.MAX_VALUE);
         });
         speedToolbar.add(noLimitButton);
+
+        speedIndicatorTextField = new JTextField();
+        speedIndicatorTextField.setPreferredSize(new Dimension(80, 27));
+        speedIndicatorTextField.setText("0.0");
+        speedIndicatorTextField.addActionListener((e) -> {
+            readSpeedLimit();
+        });
+        speedToolbar.add(speedIndicatorTextField);
+
+        JButton speedCellButton = new JButton("Custom speed limit");
+        speedCellButton.addActionListener((e) -> {
+            readSpeedLimit();
+            panel.setTool(GuiTool.SPEED_INDICATOR);
+        });
+        speedToolbar.add(speedCellButton);
 
         this.add(speedToolbar, BorderLayout.NORTH);
 

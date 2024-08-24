@@ -1,6 +1,7 @@
 package minimetro;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.geom.Point2D;
 import static java.lang.Math.PI;
@@ -107,18 +108,7 @@ public class Cell {
                 i++;
             }
         }
-        g.setColor(Color.black);
-        String message = "";
-        // Integer.MAX_VALUE if not set, -1 for end of limit, >0 for actual limit.
-        if (speedLimit == Integer.MAX_VALUE) {
-//            message += " no_limit";
-        } else if (speedLimit == -1) {
-            message += " End of limit";
-        } else {
-            message += " " + speedLimit;
-        }
-        g.drawString(message, (int) (xApp), (int) (yApp));
-
+        paintSpeedLimitSign(g, xApp, yApp, appSize);
     }
 
     /**
@@ -822,5 +812,64 @@ public class Cell {
     protected void setSpeedIndicator(double speedIndicatorValue) {
         speedLimit = speedIndicatorValue;
         System.out.println("Cell " + this + " speed limit " + speedLimit);
+    }
+
+    /**
+     * Paint a speed limit roadsign, with the value in a circle.
+     *
+     * @param xApp
+     * @param yApp
+     * @param appSize
+     */
+    private void paintSpeedLimitSign(Graphics g, double xApp, double yApp, double appSize) {
+
+        String text = "";
+        boolean mustDisplaySign = false;
+
+        if (speedLimit == -1) {
+            text = "End";
+            mustDisplaySign = true;
+        } else if (speedLimit == Integer.MAX_VALUE) {
+            // Not set
+        } else {
+            // Actual positive value
+            if (speedLimit >= 10) {
+                text = "" + (int) speedLimit;
+            } else {
+                text = "" + speedLimit;
+            }
+            mustDisplaySign = true;
+        }
+
+        if (mustDisplaySign) {
+            // Find a spot in the cell far enough from the railroad
+            // Default spot is above the center of the cell, halfway from the North border.
+            double xSign = xApp;
+            double ySign = yApp;
+
+            if (isLinked(CardinalPoint.NORTH)) {
+                // Second spot, halfway to the South border
+                if (isLinked(CardinalPoint.SOUTH)) {
+                    // Cell is linked North and South, the sign shall be placed in the East.
+                    xSign += appSize / 4;
+                } else {
+                    ySign += appSize / 4;
+                }
+            } else {
+                ySign -= appSize / 4;
+            }
+
+            double diskRadius = appSize / 8;
+            g.setColor(Color.red);
+            g.fillOval((int) (xSign - diskRadius), (int) (ySign - diskRadius), (int) (2 * diskRadius), (int) (2 * diskRadius));
+            g.setColor(Color.white);
+            diskRadius = 0.8 * diskRadius;
+            g.fillOval((int) (xSign - diskRadius), (int) (ySign - diskRadius), (int) (2 * diskRadius), (int) (2 * diskRadius));
+            g.setColor(Color.black);
+            g.setFont(new Font("helvetica", Font.PLAIN, (int) (appSize / 15)));
+            int textWidth = g.getFontMetrics().stringWidth(text);
+            int textHeight = g.getFontMetrics().getHeight();
+            g.drawString(text, (int) xSign - textWidth / 2, (int) ySign + textHeight / 2);
+        }
     }
 }
