@@ -4,14 +4,16 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
-Tracks are not build as they should when drawn on top of existing tracks.
+Locos are reversed by slowing wagons.
 
 ---------------------------------------------------------------------------------------------------
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Dampen springs between TrainElements: a spring has less force when shrinking.
 Cells shall be drawn as sprites.
 A TrainLink shall be connected to a point close to either end of the TrainElement, not to its center.
+A power mode shall allow the user to build an electric distribution system.
 Snap : a TE shall be snapped to a RailSegment only if the velocity is reasonably aligned. Crossings become obvious.
 A TrainLink shall have a maximum allowed force, above which it shall break.
 The CutLink shall allow to remove the link between two TrainElements.
@@ -52,6 +54,10 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Create a stop timer: any loco in that cell shall stop for the given amount of time and may then start moving again.
+Solved bug: Tracks are not build as they should when drawn on top of existing tracks.
+Implement speed limits in a cell, that are set to each loco crossing that cell, and stay active until another limit is set or the limit is removed.
+Draw roadsigns to show the speed limits, in an empty part of the cell.
 Tracks shall connect two sides of a cell, or one side and one corner of a cell, and be aligned vertically, horizontally or diagonally
 Train tracks shall be drawn procedurally with rails, ballast and railroad ties, on top of the cell.
 Curves allow for 90° and 45° turns, tracks can be placed diagonally.

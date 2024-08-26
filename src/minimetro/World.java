@@ -20,7 +20,7 @@ public class World implements PropertyChangeListener {
 
     private int nbRows, nbCols;
     private ArrayList<ArrayList<Cell>> cells;
-    private double dt; // Evolution step
+    private double dt; // Time elapsed in world during one simulation step.
 
     private ArrayList<TrainElement> trainsInTransition;
 
@@ -28,16 +28,19 @@ public class World implements PropertyChangeListener {
 
     private Timer timer;
     private boolean isRunning;
-    private int periodMillisec;
+    private int periodMillisec; // Time elapsed in real world between two simulation steps.
     private int step;
 
     private static int NB_TRAINS_CREATED = 0;
 
     // Maximum distance between TEs for a link to be created.
-    private static double distanceMax = 0.15;
+    private static double distanceMax = 25;
 
     // Tell observers that our state has changed.
     private final PropertyChangeSupport support = new PropertyChangeSupport(this);
+
+    private double speedIndicatorValue;
+    private double stopTimerValue;
 
     public World() {
         nbRows = 40;
@@ -52,13 +55,15 @@ public class World implements PropertyChangeListener {
                 cells.get(row).add(new Cell(newAbsPos));
             }
         }
-        dt = 0.1;
         trainsInTransition = new ArrayList<>();
         links = new ArrayList<>();
         step = 0;
-        isRunning = false;
-        periodMillisec = 30;
+        isRunning = true;
+        dt = 0.03;
+        periodMillisec = (int) (1000 * dt);
         startTimer();
+        speedIndicatorValue = 0;
+        stopTimerValue = 0;
     }
 
     public int getNbRows() {
@@ -349,22 +354,6 @@ public class World implements PropertyChangeListener {
      *
      */
     private void reinsertTrain(TrainElement movingTrain, int rowIndex, int colIndex) {
-        double currentHeading = movingTrain.headingDegrees;
-        if (headingIsCloseTo(currentHeading, 0)) {
-            // North
-            movingTrain.setHeadingDegrees(0);
-        } else if (headingIsCloseTo(currentHeading, 90)) {
-            // East
-            movingTrain.setHeadingDegrees(90);
-        } else if (headingIsCloseTo(currentHeading, 180)) {
-            // South
-            movingTrain.setHeadingDegrees(180);
-        } else if (headingIsCloseTo(currentHeading, 270)) {
-            // West
-            movingTrain.setHeadingDegrees(270);
-        } else {
-            System.out.println("World: error, direction unknown.");
-        }
 
         // Add the train to the new cell.
         Cell newCell = this.getCell(rowIndex, colIndex);
@@ -377,17 +366,6 @@ public class World implements PropertyChangeListener {
                 System.out.println("World: error in train reinsertion.");
             }
         }
-    }
-
-    /**
-     * Compare a heading to another with a 10 degrees margin
-     *
-     * @return
-     */
-    private boolean headingIsCloseTo(double h0, int h1) {
-        double limit = 11;
-        double dh = (h0 - h1) % 360;
-        return dh < limit || dh > 360 - limit;
     }
 
     private void startTimer() {
@@ -578,10 +556,51 @@ public class World implements PropertyChangeListener {
             public void run() {
                 addLoco(xStart, yStart);
                 for (int i = 1; i <= nbWagons; i++) {
-                    addWagon(xStart - spacing * i, yStart);
+                    addWagon(xStart + spacing * i, yStart);
                 }
                 updateListeners();
             }
         });
+    }
+
+    protected void startLocos() {
+        System.out.println("World start locos");
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                c.startLocos();
+            }
+        }
+    }
+
+    protected void stopLocos() {
+        System.out.println("World stop locos");
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                c.stopLocos();
+            }
+        }
+    }
+
+    protected void setSpeedLimitValue(double newSpeedLimit) {
+        speedIndicatorValue = newSpeedLimit;
+        System.out.println("World received speed limit " + speedIndicatorValue);
+    }
+
+    protected void setSpeedIndicator(int row, int col) {
+        Cell c = getCell(row, col);
+        if (c != null) {
+            c.setSpeedIndicator(speedIndicatorValue);
+        }
+    }
+
+    protected void setStopTimerDuration(double newStopTimerDuration) {
+        stopTimerValue = newStopTimerDuration;
+    }
+
+    protected void setStopTimer(int row, int col) {
+        Cell c = getCell(row, col);
+        if (c != null) {
+            c.setStopTimer(stopTimerValue);
+        }
     }
 }

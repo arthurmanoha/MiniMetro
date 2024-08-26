@@ -29,7 +29,7 @@ public class WorldPanel extends JPanel implements MouseListener,
     // Memorize the current cell and the last two, necessary to create rails.
     private int prevCol, prevRow;
     private double currentCol, currentRow;
-    private double cornerMargin;
+    private double cornerMargin; // percentage of cell that is considered its corner
 
     private int graphicsCurrentHeight;
 
@@ -37,7 +37,7 @@ public class WorldPanel extends JPanel implements MouseListener,
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = 259.37;
+        zoomLevel = 2.5937;
         zoomLevelFactor = 1.1;
         x0 = -78;
         y0 = -1411;
@@ -90,8 +90,8 @@ public class WorldPanel extends JPanel implements MouseListener,
         g.drawRect(
                 (int) (x0 - appCellSize / 2),
                 (int) (graphicsCurrentHeight - (y0 + world.getNbRows() * appCellSize - appCellSize / 2)),
-                (int) (world.getNbCols() * zoomLevel),
-                (int) (world.getNbRows() * zoomLevel));
+                (int) (world.getNbCols() * Cell.cellSize * zoomLevel),
+                (int) (world.getNbRows() * Cell.cellSize * zoomLevel));
     }
 
     void paintTrainLinks(Graphics g, double x0, double y0, double zoom) {
@@ -153,6 +153,12 @@ public class WorldPanel extends JPanel implements MouseListener,
             case STATION -> {
                 world.toggleStation((int) currentRow, (int) currentCol);
                 repaint();
+            }
+            case SPEED_INDICATOR -> {
+                world.setSpeedIndicator((int) currentRow, (int) currentCol);
+            }
+            case STOP_TIMER -> {
+                world.setStopTimer((int) currentRow, (int) currentCol);
             }
             }
         }
@@ -258,19 +264,19 @@ public class WorldPanel extends JPanel implements MouseListener,
      */
     private double getCol(int x) {
         double appCellSize = Cell.cellSize * zoomLevel;
-        double result = ((double) (x + appCellSize / 2 - x0) / zoomLevel);
+        double result = ((double) (x + appCellSize / 2 - x0) / (Cell.cellSize * zoomLevel));
         return result;
     }
 
     /**
      * Compute the row number for the given on-screen y-coordinate
      *
-     * @param y the on-screen y-coorrdinate
+     * @param y the on-screen y-coordinate
      * @return the row that contains the given pixel
      */
     private double getRow(int y) {
         double appCellSize = Cell.cellSize * zoomLevel;
-        double result = world.getNbRows() - (double) ((graphicsCurrentHeight - y) + appCellSize / 2 - y0) / zoomLevel;
+        double result = world.getNbRows() - (double) ((graphicsCurrentHeight - y) + appCellSize / 2 - y0) / (Cell.cellSize * zoomLevel);
         return result;
     }
 

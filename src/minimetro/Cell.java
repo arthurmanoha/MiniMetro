@@ -1,6 +1,7 @@
 package minimetro;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.geom.Point2D;
 import static java.lang.Math.PI;
@@ -16,7 +17,7 @@ import java.util.ArrayList;
  */
 public class Cell {
 
-    protected static double cellSize = 1;
+    protected static double cellSize = 100;
 
     protected Color color;
 
@@ -34,10 +35,19 @@ public class Cell {
 
     private ArrayList<CardinalPoint> links;
 
+    private double speedLimit; // Integer.MAX_VALUE if not set, -1 for end of limit, >0 for actual limit.
+    // StopTimer: -1: no stopping required; >0: brake and stop for that many seconds.
+    private double stopTimerDuration;
+
+    // The TrainElements that are currently stopped or have already stopped in
+    // this cell and started moving again, and still are in this cell.
+    private ArrayList<TrainElement> alreadyStoppedTrains;
+
     public Cell() {
         color = Color.gray;
         trainElements = new ArrayList<>();
         trainsLeavingCell = new ArrayList<>();
+        alreadyStoppedTrains = new ArrayList<>();
         rails = new ArrayList<>();
         totalRailLength = cellSize;
         nbRails = 20;
@@ -55,6 +65,7 @@ public class Cell {
         links = new ArrayList<>();
         links.add(CardinalPoint.CENTER);
         links.add(CardinalPoint.CENTER);
+        speedLimit = Integer.MAX_VALUE;
     }
 
     public Cell(Point2D.Double newAbsPos) {
@@ -104,10 +115,13 @@ public class Cell {
                 i++;
             }
         }
-        g.setColor(Color.black);
-        String message = "";
-        g.drawString(message, (int) (xApp), (int) (yApp));
+        paintSpeedLimitSign(g, xApp, yApp, appSize);
 
+        if (stopTimerDuration > 0) {
+            g.setColor(Color.black);
+            String text = "Stop for " + stopTimerDuration + " seconds";
+            g.drawString(text, (int) (xApp - appSize / 2 + 5), (int) (yApp - appSize / 2 + 15));
+        }
     }
 
     /**
@@ -246,14 +260,22 @@ public class Cell {
         for (TrainElement trainElement : trainElements) {
 
             trainElement.move(dt);
+            // Integer.MAX_VALUE if not set, -1 for end of limit, >0 for actual limit.
+            if (speedLimit != Integer.MAX_VALUE) {
+                trainElement.setSpeedLimit(speedLimit);
+            }
+
+            trainElement.observeCurrentSpeedLimit();
+
+            observeStop(trainElement);
 
             CardinalPoint leavingDirection = isTrainElementLeaving(trainElement);
             if (leavingDirection != CardinalPoint.CENTER) {
                 // The element has travelled to the next cell.
                 trainsLeavingCell.add(new TransferringTrain(trainElement, leavingDirection));
+                alreadyStoppedTrains.remove(trainElement);
             }
         }
-        snapToRail();
 
     }
 
@@ -655,7 +677,7 @@ public class Cell {
 
         // Add the curved part for both 45 and 90 degrees turns.
         if (isTrackTurning45()) {
-            radius = (1 + 1.414) / 2;
+            radius = cellSize * (1 + 1.414) / 2;
 
             // Horizontal EAST
             if (isLinked(CardinalPoint.NORTHWEST) && isLinked(CardinalPoint.EAST)) {
@@ -788,5 +810,97 @@ public class Cell {
     protected void removeTrains() {
         trainElements.clear();
         trainsLeavingCell.clear();
+    }
+
+    protected void startLocos() {
+        for (TrainElement te : trainElements) {
+            te.start();
+        }
+    }
+
+    protected void stopLocos() {
+        for (TrainElement te : trainElements) {
+            te.stop();
+        }
+    }
+
+    protected void setSpeedIndicator(double speedIndicatorValue) {
+        speedLimit = speedIndicatorValue;
+    }
+
+    protected void setStopTimer(double newStopTimerDuration) {
+        stopTimerDuration = newStopTimerDuration;
+    }
+
+    /**
+     * Paint a speed limit roadsign, with the value in a circle.
+     *
+     * @param xApp
+     * @param yApp
+     * @param appSize
+     */
+    private void paintSpeedLimitSign(Graphics g, double xApp, double yApp, double appSize) {
+
+        String text = "";
+        boolean mustDisplaySign = false;
+
+        if (speedLimit == -1) {
+            text = "End";
+            mustDisplaySign = true;
+        } else if (speedLimit == Integer.MAX_VALUE) {
+            // Not set
+        } else {
+            // Actual positive value
+            if (speedLimit >= 10) {
+                text = "" + (int) speedLimit;
+            } else {
+                text = "" + speedLimit;
+            }
+            mustDisplaySign = true;
+        }
+
+        if (mustDisplaySign) {
+            // Find a spot in the cell far enough from the railroad
+            // Default spot is above the center of the cell, halfway from the North border.
+            double xSign = xApp;
+            double ySign = yApp;
+
+            if (isLinked(CardinalPoint.NORTH)) {
+                // Second spot, halfway to the South border
+                if (isLinked(CardinalPoint.SOUTH)) {
+                    // Cell is linked North and South, the sign shall be placed in the East.
+                    xSign += appSize / 4;
+                } else {
+                    ySign += appSize / 4;
+                }
+            } else {
+                ySign -= appSize / 4;
+            }
+
+            double diskRadius = appSize / 8;
+            g.setColor(Color.red);
+            g.fillOval((int) (xSign - diskRadius), (int) (ySign - diskRadius), (int) (2 * diskRadius), (int) (2 * diskRadius));
+            g.setColor(Color.white);
+            diskRadius = 0.8 * diskRadius;
+            g.fillOval((int) (xSign - diskRadius), (int) (ySign - diskRadius), (int) (2 * diskRadius), (int) (2 * diskRadius));
+            g.setColor(Color.black);
+            g.setFont(new Font("helvetica", Font.PLAIN, (int) (appSize / 15)));
+            int textWidth = g.getFontMetrics().stringWidth(text);
+            int textHeight = g.getFontMetrics().getHeight();
+            g.drawString(text, (int) xSign - textWidth / 2, (int) ySign + textHeight / 2);
+        }
+    }
+
+    private void observeStop(TrainElement trainElement) {
+
+        if (stopTimerDuration > 0) {
+
+            if (!alreadyStoppedTrains.contains(trainElement)) {
+                // Set the train to stop for the requested duration.
+                alreadyStoppedTrains.add(trainElement);
+                trainElement.setTimedStop(this.stopTimerDuration);
+            }
+        }
+        // otherwise this cell does not stop trains.
     }
 }

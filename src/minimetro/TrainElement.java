@@ -19,10 +19,23 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
 
     protected Point2D.Double absolutePosition;
     protected Point2D.Double currentSpeed;
+
+    // Highest speed physically achievable.
     protected double maxSpeed;
+
+    // Highest speed legally achievable.
+    // -1 for end of limit, >0 for actual limit.
+    protected double currentSpeedLimit;
+
+    protected double stopTimerDuration;
+    private static double MAX_SPEED_FOR_STOPPED = 0.1;
+
     protected double mass;
     protected Point2D.Double currentForce;
     protected double headingDegrees; // 0:N, 90:E, 180:S, 270:W
+
+    protected boolean isEngineActive, isBraking;
+    protected double brakingForce = 10.0;
 
     protected double size; // Physical size of the object
 
@@ -30,7 +43,7 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
     protected boolean isLeading;
 
     protected Color color;
-    private int spriteZoomLevel = 600;
+    private double spriteZoomLevel = 0.4;
 
     protected int id; // Single value for each element
     protected int trainNumber; // This value is the same for elements linked together; -1 for non-linked elements.
@@ -46,6 +59,10 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         currentSpeed = new Point2D.Double();
         size = 0.03;
         mass = 1;
+        isEngineActive = false;
+        isBraking = false;
+        currentSpeedLimit = -1;
+        stopTimerDuration = -1;
     }
 
     @Override
@@ -60,8 +77,8 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
 
         if (image != null) {
             // Paint the image
-            int newWidth = (int) Math.max(5, (image.getWidth(this) * zoom) / spriteZoomLevel);
-            int newHeight = (int) Math.max(5, (image.getHeight(this) * zoom) / spriteZoomLevel);
+            int newWidth = (int) Math.max(5, (image.getWidth(this) * zoom) * spriteZoomLevel);
+            int newHeight = (int) Math.max(5, (image.getHeight(this) * zoom) * spriteZoomLevel);
             Image scaledImage = image.getScaledInstance(newWidth, -1, Image.SCALE_DEFAULT);
 
             int xCenter = (int) (x0 + zoom * this.absolutePosition.x);
@@ -174,6 +191,9 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
     void move(double dt) {
         Point2D.Double movement = new Point2D.Double(currentSpeed.x * dt, currentSpeed.y * dt);
         absolutePosition = new Point2D.Double(absolutePosition.x + movement.x, absolutePosition.y + movement.y);
+        if (stopTimerDuration > 0 && getLinearSpeed() < MAX_SPEED_FOR_STOPPED) {
+            stopTimerDuration -= dt;
+        }
     }
 
     double getX() {
@@ -188,6 +208,12 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         this.absolutePosition = new Point2D.Double(newX, newY);
     }
 
+    protected double getLinearSpeed() {
+        double vx = currentSpeed.x;
+        double vy = currentSpeed.y;
+        return Math.sqrt(vx * vx + vy * vy);
+    }
+
     protected boolean isStopped() {
         double vx = currentSpeed.x;
         double vy = currentSpeed.y;
@@ -197,5 +223,36 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
     @Override
     public boolean imageUpdate(Image img, int infoflags, int x, int y, int width, int height) {
         return false;
+    }
+
+    protected abstract void start();
+
+    protected abstract void stop();
+
+    /**
+     * Set a new speed limit or remove the previous limit.
+     *
+     * @param newSpeedLimit -1 for end of limit, >0 for actual limit.
+     */
+    protected void setSpeedLimit(double newSpeedLimit) {
+        currentSpeedLimit = newSpeedLimit;
+    }
+
+    /**
+     * Make sure the train slows down if it is travelling too fast.
+     *
+     * Use the value of currentSpeedLimit:
+     * -1 for end of limit, >0 for actual limit.
+     */
+    protected void observeCurrentSpeedLimit() {
+        if (currentSpeedLimit >= 0 && getLinearSpeed() > currentSpeedLimit) {
+            isBraking = true;
+        } else {
+            isBraking = false;
+        }
+    }
+
+    protected void setTimedStop(double newStopTimerDuration) {
+        stopTimerDuration = newStopTimerDuration;
     }
 }
