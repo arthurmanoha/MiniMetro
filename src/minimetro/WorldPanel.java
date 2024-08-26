@@ -157,6 +157,9 @@ public class WorldPanel extends JPanel implements MouseListener,
             case SPEED_INDICATOR -> {
                 world.setSpeedIndicator((int) currentRow, (int) currentCol);
             }
+            case STOP_TIMER -> {
+                world.setStopTimer((int) currentRow, (int) currentCol);
+            }
             }
         }
         repaint();

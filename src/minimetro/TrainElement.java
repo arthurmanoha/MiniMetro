@@ -27,12 +27,15 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
     // -1 for end of limit, >0 for actual limit.
     protected double currentSpeedLimit;
 
+    protected double stopTimerDuration;
+    private static double MAX_SPEED_FOR_STOPPED = 0.1;
+
     protected double mass;
     protected Point2D.Double currentForce;
     protected double headingDegrees; // 0:N, 90:E, 180:S, 270:W
 
     protected boolean isEngineActive, isBraking;
-    protected double brakingForce = 3.0;
+    protected double brakingForce = 10.0;
 
     protected double size; // Physical size of the object
 
@@ -59,6 +62,7 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         isEngineActive = false;
         isBraking = false;
         currentSpeedLimit = -1;
+        stopTimerDuration = -1;
     }
 
     @Override
@@ -187,6 +191,9 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
     void move(double dt) {
         Point2D.Double movement = new Point2D.Double(currentSpeed.x * dt, currentSpeed.y * dt);
         absolutePosition = new Point2D.Double(absolutePosition.x + movement.x, absolutePosition.y + movement.y);
+        if (stopTimerDuration > 0 && getLinearSpeed() < MAX_SPEED_FOR_STOPPED) {
+            stopTimerDuration -= dt;
+        }
     }
 
     double getX() {
@@ -237,11 +244,15 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
      * Use the value of currentSpeedLimit:
      * -1 for end of limit, >0 for actual limit.
      */
-    protected void enforceCurrentSpeedLimit() {
+    protected void observeCurrentSpeedLimit() {
         if (currentSpeedLimit >= 0 && getLinearSpeed() > currentSpeedLimit) {
             isBraking = true;
         } else {
             isBraking = false;
         }
+    }
+
+    protected void setTimedStop(double newStopTimerDuration) {
+        stopTimerDuration = newStopTimerDuration;
     }
 }

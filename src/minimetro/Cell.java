@@ -36,11 +36,18 @@ public class Cell {
     private ArrayList<CardinalPoint> links;
 
     private double speedLimit; // Integer.MAX_VALUE if not set, -1 for end of limit, >0 for actual limit.
+    // StopTimer: -1: no stopping required; >0: brake and stop for that many seconds.
+    private double stopTimerDuration;
+
+    // The TrainElements that are currently stopped or have already stopped in
+    // this cell and started moving again, and still are in this cell.
+    private ArrayList<TrainElement> alreadyStoppedTrains;
 
     public Cell() {
         color = Color.gray;
         trainElements = new ArrayList<>();
         trainsLeavingCell = new ArrayList<>();
+        alreadyStoppedTrains = new ArrayList<>();
         rails = new ArrayList<>();
         totalRailLength = cellSize;
         nbRails = 20;
@@ -109,6 +116,12 @@ public class Cell {
             }
         }
         paintSpeedLimitSign(g, xApp, yApp, appSize);
+
+        if (stopTimerDuration > 0) {
+            g.setColor(Color.black);
+            String text = "Stop for " + stopTimerDuration + " seconds";
+            g.drawString(text, (int) (xApp - appSize / 2 + 5), (int) (yApp - appSize / 2 + 15));
+        }
     }
 
     /**
@@ -252,15 +265,17 @@ public class Cell {
                 trainElement.setSpeedLimit(speedLimit);
             }
 
-            trainElement.enforceCurrentSpeedLimit();
+            trainElement.observeCurrentSpeedLimit();
+
+            observeStop(trainElement);
 
             CardinalPoint leavingDirection = isTrainElementLeaving(trainElement);
             if (leavingDirection != CardinalPoint.CENTER) {
                 // The element has travelled to the next cell.
                 trainsLeavingCell.add(new TransferringTrain(trainElement, leavingDirection));
+                alreadyStoppedTrains.remove(trainElement);
             }
         }
-        snapToRail();
 
     }
 
@@ -811,7 +826,10 @@ public class Cell {
 
     protected void setSpeedIndicator(double speedIndicatorValue) {
         speedLimit = speedIndicatorValue;
-        System.out.println("Cell " + this + " speed limit " + speedLimit);
+    }
+
+    protected void setStopTimer(double newStopTimerDuration) {
+        stopTimerDuration = newStopTimerDuration;
     }
 
     /**
@@ -871,5 +889,18 @@ public class Cell {
             int textHeight = g.getFontMetrics().getHeight();
             g.drawString(text, (int) xSign - textWidth / 2, (int) ySign + textHeight / 2);
         }
+    }
+
+    private void observeStop(TrainElement trainElement) {
+
+        if (stopTimerDuration > 0) {
+
+            if (!alreadyStoppedTrains.contains(trainElement)) {
+                // Set the train to stop for the requested duration.
+                alreadyStoppedTrains.add(trainElement);
+                trainElement.setTimedStop(this.stopTimerDuration);
+            }
+        }
+        // otherwise this cell does not stop trains.
     }
 }

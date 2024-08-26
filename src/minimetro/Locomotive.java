@@ -16,7 +16,7 @@ public class Locomotive extends TrainElement {
     public Locomotive() {
         super();
         maxSpeed = 60.0;
-        motorPower = 5.0;
+        motorPower = 30.0;
         color = Color.red;
         mass = 10;
         imagePath = "src\\img\\Locomotive.png";
@@ -43,7 +43,7 @@ public class Locomotive extends TrainElement {
         } else {
             linearSpeedText = "0";
         }
-        String text = "" + linearSpeedText + (isBraking ? " _" : "") + " - limit: " + currentSpeedLimit;
+        String text = "" + linearSpeedText;
         int xCenter = (int) (x0 + zoom * this.absolutePosition.x);
         int yCenter = (int) (g.getClipBounds().height - (y0 + zoom * this.absolutePosition.y));
         g.setColor(Color.black);
@@ -68,7 +68,7 @@ public class Locomotive extends TrainElement {
         double dy = Math.sin(getHeadingRad());
         double fx = 0, fy = 0;
 
-        if (isBraking) {
+        if (isBraking || stopTimerDuration > 0) {
             fx += -brakingForce * currentSpeed.x;
             fy += -brakingForce * currentSpeed.y;
         } else if (isEngineActive) { // Deactivate engine upon brake activation.

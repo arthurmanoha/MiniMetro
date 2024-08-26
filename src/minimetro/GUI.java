@@ -2,14 +2,9 @@ package minimetro;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
@@ -24,11 +19,12 @@ public class GUI extends JFrame {
     JPanel bottomToolbar;
     JPanel mainToolbar;
 
-    int windowWidth = 1900;
+    int windowWidth = 1000;
     int windowHeight = 1000;
 
     private World world;
     private JTextField speedIndicatorTextField;
+    private JTextField stopTimerTextField;
 
     public GUI(World w) {
         super();
@@ -180,6 +176,7 @@ public class GUI extends JFrame {
         speedIndicatorTextField.setText("0.0");
         speedIndicatorTextField.addActionListener((e) -> {
             readSpeedLimit();
+            panel.setTool(GuiTool.SPEED_INDICATOR);
         });
         speedToolbar.add(speedIndicatorTextField);
 
@@ -189,6 +186,21 @@ public class GUI extends JFrame {
             panel.setTool(GuiTool.SPEED_INDICATOR);
         });
         speedToolbar.add(speedCellButton);
+
+        stopTimerTextField = new JTextField();
+        stopTimerTextField.setPreferredSize(new Dimension(80, 27));
+        stopTimerTextField.setText("20.0");
+        stopTimerTextField.addActionListener((e) -> {
+            readStopTimer();
+        });
+        speedToolbar.add(stopTimerTextField);
+
+        JButton stopTimerButton = new JButton("Stop Timer");
+        stopTimerButton.addActionListener((e) -> {
+            readStopTimer();
+            panel.setTool(GuiTool.STOP_TIMER);
+        });
+        speedToolbar.add(stopTimerButton);
 
         this.add(speedToolbar, BorderLayout.NORTH);
 
@@ -203,5 +215,11 @@ public class GUI extends JFrame {
         double value = Double.valueOf(speedIndicatorTextField.getText());
         System.out.println("Value read from text field: " + value);
         world.setSpeedLimitValue(value);
+    }
+
+    private void readStopTimer() {
+        double value = Double.valueOf(stopTimerTextField.getText());
+        System.out.println("Value read from text field: " + value);
+        world.setStopTimerDuration(value);
     }
 }
