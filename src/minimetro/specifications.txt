@@ -4,7 +4,7 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
-Locos are reversed by slowing wagons.
+A Locomotive does not brake hard enough at low speed.
 
 ---------------------------------------------------------------------------------------------------
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
@@ -54,6 +54,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Speed of TrainElements is now represented with a heading and linear velocity, not as vx and vy. Thus, locos no longer are reversed by slowing wagons.
 Create a stop timer: any loco in that cell shall stop for the given amount of time and may then start moving again.
 Solved bug: Tracks are not build as they should when drawn on top of existing tracks.
 Implement speed limits in a cell, that are set to each loco crossing that cell, and stay active until another limit is set or the limit is removed.

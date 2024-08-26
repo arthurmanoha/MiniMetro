@@ -12,8 +12,8 @@ public class MiniMetro {
         GUI gui = new GUI(w);
 
         w.addTestTracks(31, 33, 1, 7);
-        double xStart = 170;
-        double yStart = 550;
+        double xStart = 100;
+        double yStart = 700;
         int nbWagons = 0;
         w.addTestTrain(xStart, yStart, nbWagons);
     }

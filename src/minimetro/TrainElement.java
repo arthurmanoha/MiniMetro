@@ -9,6 +9,9 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.ImageObserver;
 import static java.lang.Math.PI;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+import static java.lang.Math.sqrt;
 
 /**
  * This class represents either a locomotive or a passenger carriage.
@@ -18,7 +21,8 @@ import static java.lang.Math.PI;
 public abstract class TrainElement extends SpriteElement implements ImageObserver {
 
     protected Point2D.Double absolutePosition;
-    protected Point2D.Double currentSpeed;
+    protected double headingDegrees; // 0:N, 90:E, 180:S, 270:W, MAX_VALUE: not set yet.
+    protected double linearSpeed;
 
     // Highest speed physically achievable.
     protected double maxSpeed;
@@ -32,7 +36,6 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
 
     protected double mass;
     protected Point2D.Double currentForce;
-    protected double headingDegrees; // 0:N, 90:E, 180:S, 270:W
 
     protected boolean isEngineActive, isBraking;
     protected double brakingForce = 10.0;
@@ -56,7 +59,8 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         isLeading = false;
         currentForce = new Point2D.Double();
         absolutePosition = new Point2D.Double();
-        currentSpeed = new Point2D.Double();
+        headingDegrees = Double.MAX_VALUE;
+        linearSpeed = 0;
         size = 0.03;
         mass = 1;
         isEngineActive = false;
@@ -87,7 +91,7 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
             int yImage = yCenter - newHeight / 2;
 
             Graphics2D g2d = (Graphics2D) g;
-            double headingRad = ((90 - headingDegrees) * 2 * PI) / 360;
+            double headingRad = degToRad(headingDegrees);
 
             AffineTransform initGraphicsTransform = g2d.getTransform();
             g2d.rotate(-headingRad, xCenter, yCenter);
@@ -129,27 +133,30 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
      * @param forceIncrement
      */
     public void increaseEfficientForce(Point2D.Double forceIncrement) {
-        Point2D.Double efficientForce = computeEfficientForce(forceIncrement);
-        currentForce.x += efficientForce.x;
-        currentForce.y += efficientForce.y;
+        double efficientForce = computeEfficientForce(forceIncrement);
+
+        double ux = cos(getHeadingRad());
+        double uy = sin(getHeadingRad());
+
+        currentForce.x += efficientForce * ux;
+        currentForce.y += efficientForce * uy;
     }
 
-    private Point2D.Double computeEfficientForce(Point2D.Double f) {
+    private double computeEfficientForce(Point2D.Double f) {
         // unit is the unit vector aligned with the speed of the element.
-        double headingRad = (PI / 2) * (90 - headingDegrees) / 90;
+        double headingRad = degToRad(headingDegrees);
 
         Point2D.Double unit = new Point2D.Double(Math.cos(headingRad), Math.sin(headingRad));
         double fDotU = f.x * unit.x + f.y * unit.y;
-        Point2D.Double efficientForce = new Point2D.Double(fDotU * unit.x, fDotU * unit.y);
-        return efficientForce;
+        return fDotU;
     }
 
-    double getHeading() {
+    double getHeadingDeg() {
         return headingDegrees;
     }
 
     double getHeadingRad() {
-        return (2 * PI * (90 - headingDegrees)) / 360;
+        return degToRad(headingDegrees);
     }
 
     void setHeadingDegrees(double newHeading) {
@@ -161,8 +168,9 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
 
     private void paintSpeed(Graphics g, int xCenter, int yCenter, int size) {
         g.setColor(Color.white);
-        double vx = this.currentSpeed.x;
-        double vy = this.currentSpeed.y;
+        double headingRad = getHeadingRad();
+        double vx = linearSpeed * cos(headingRad);
+        double vy = linearSpeed * sin(headingRad);
         int scale = 100;
         g.drawLine(xCenter, yCenter, (int) (xCenter + scale * vx), (int) (yCenter - scale * vy));
     }
@@ -183,13 +191,26 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         currentForce = new Point2D.Double();
     }
 
-    void computeNewSpeed(double dt) {
-        currentSpeed.x += currentForce.x * dt / mass;
-        currentSpeed.y += currentForce.y * dt / mass;
+    /**
+     * Compute the effect of the current force on the speed.
+     *
+     * @param dt
+     */
+    protected void computeNewSpeed(double dt) {
+
+        // Force along the axis of the TrainElement
+        double efficientForce = computeEfficientForce(currentForce);
+        linearSpeed += efficientForce * dt / mass;
+    }
+
+    protected void setSpeed(double newVx, double newVy) {
+        linearSpeed = sqrt(newVx * newVx + newVy * newVy);
+        double newHeadingRad = Math.atan2(newVy, newVx);
+        headingDegrees = radToDeg(newHeadingRad);
     }
 
     void move(double dt) {
-        Point2D.Double movement = new Point2D.Double(currentSpeed.x * dt, currentSpeed.y * dt);
+        Point2D.Double movement = new Point2D.Double(getVx() * dt, getVy() * dt);
         absolutePosition = new Point2D.Double(absolutePosition.x + movement.x, absolutePosition.y + movement.y);
         if (stopTimerDuration > 0 && getLinearSpeed() < MAX_SPEED_FOR_STOPPED) {
             stopTimerDuration -= dt;
@@ -209,15 +230,11 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
     }
 
     protected double getLinearSpeed() {
-        double vx = currentSpeed.x;
-        double vy = currentSpeed.y;
-        return Math.sqrt(vx * vx + vy * vy);
+        return linearSpeed;
     }
 
     protected boolean isStopped() {
-        double vx = currentSpeed.x;
-        double vy = currentSpeed.y;
-        return Math.abs(vx) + Math.abs(vy) < 0.01;
+        return getLinearSpeed() < MAX_SPEED_FOR_STOPPED;
     }
 
     @Override
@@ -254,5 +271,21 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
 
     protected void setTimedStop(double newStopTimerDuration) {
         stopTimerDuration = newStopTimerDuration;
+    }
+
+    private double degToRad(double headingDegrees) {
+        return ((90 - headingDegrees) * 2 * PI) / 360;
+    }
+
+    private double radToDeg(double headingRad) {
+        return 90 - headingRad * 360 / (2 * PI);
+    }
+
+    protected double getVx() {
+        return linearSpeed * cos(getHeadingRad());
+    }
+
+    protected double getVy() {
+        return linearSpeed * sin(getHeadingRad());
     }
 }
