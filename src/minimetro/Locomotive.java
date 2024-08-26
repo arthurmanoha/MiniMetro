@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.geom.Point2D;
+import static java.lang.Math.abs;
 
 /**
  *
@@ -33,9 +34,8 @@ public class Locomotive extends TrainElement {
         super.paint(g, x0, y0, zoom);
         g.setColor(Color.black);
 
-        double linearSpeed = getLinearSpeed();
         String linearSpeedText = linearSpeed + "";
-        if (linearSpeed > 0.0001) {
+        if (abs(linearSpeed) > 0.0001) {
             int rankOfDot = linearSpeedText.indexOf(".");
             if (rankOfDot != -1) {
                 linearSpeedText = linearSpeedText.substring(0, Math.min(linearSpeedText.length(), rankOfDot + 3));
@@ -43,7 +43,11 @@ public class Locomotive extends TrainElement {
         } else {
             linearSpeedText = "0";
         }
-        String text = "" + linearSpeedText;
+        String text = "v " + linearSpeedText;
+        text += "  h <" + (int) headingDegrees + ">";
+        if (stopTimerDuration > 0) {
+            text += (" STOP " + stopTimerDuration);
+        }
         int xCenter = (int) (x0 + zoom * this.absolutePosition.x);
         int yCenter = (int) (g.getClipBounds().height - (y0 + zoom * this.absolutePosition.y));
         g.setColor(Color.black);
@@ -69,8 +73,8 @@ public class Locomotive extends TrainElement {
         double fx = 0, fy = 0;
 
         if (isBraking || stopTimerDuration > 0) {
-            fx += -brakingForce * currentSpeed.x;
-            fy += -brakingForce * currentSpeed.y;
+            fx += -brakingForce * getVx();
+            fy += -brakingForce * getVy();
         } else if (isEngineActive) { // Deactivate engine upon brake activation.
             fx += motorPower * dx;
             fy += motorPower * dy;
@@ -79,16 +83,14 @@ public class Locomotive extends TrainElement {
     }
 
     @Override
-    void computeNewSpeed(double dt) {
+    protected void computeNewSpeed(double dt) {
 
         super.computeNewSpeed(dt);
 
         // Limit the speed.
-        double speed = Math.sqrt(currentSpeed.x * currentSpeed.x + currentSpeed.y * currentSpeed.y);
-        if (speed > maxSpeed) {
-            double ratio = speed / maxSpeed;
-            currentSpeed.x = currentSpeed.x / ratio;
-            currentSpeed.y = currentSpeed.y / ratio;
+        if (linearSpeed > maxSpeed) {
+            double ratio = linearSpeed / maxSpeed;
+            linearSpeed = linearSpeed / ratio;
         }
     }
 

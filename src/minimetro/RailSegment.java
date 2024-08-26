@@ -123,8 +123,8 @@ public class RailSegment {
      */
     double getHeadingInDegrees() {
         // N:0, E:90, S:180, W:270
-        double hNorthToEast = Math.atan2(yEnd - yStart, xEnd - xStart) + PI / 2;
-        double headingInDegrees = hNorthToEast * 360 / (2 * Math.PI);
+        double headingRad = Math.atan2(yEnd - yStart, xEnd - xStart);
+        double headingInDegrees = (PI / 2 - headingRad) * 180 / PI;
         if (headingInDegrees < 0) {
             headingInDegrees += 360;
         }
@@ -169,23 +169,15 @@ public class RailSegment {
         double yP = yStart + am_u * uy;
         te.setPosition(xP, yP);
 
-        // Align train speed along rail direction
-        // u_v is the scalar product between unit vector u> and current speed.
-        double u_v = ux * te.currentSpeed.x + uy * te.currentSpeed.y;
-        te.currentSpeed.x = u_v * ux;
-        te.currentSpeed.y = u_v * uy;
+        // Align train speed along one of the two possible rail directions.
+        double potentialNewHeadingDeg = this.getHeadingInDegrees();
 
-        // HeadingRad is 0 for east, pi/2 for north.
-        // HeadingDeg is 90 for east, 0 for north.
-        double headingRad;
-        if (te.isStopped()) {
-            headingRad = Math.atan2(uy, ux);
-        } else {
-            headingRad = Math.atan2(te.currentSpeed.y, te.currentSpeed.x);
+        // Try the forward direction of the rail.
+        double deltaHeading = Math.abs(te.getHeadingDeg() - potentialNewHeadingDeg);
+        if (deltaHeading > 20 && deltaHeading < 340) {
+            // Use the backward rail direction instead.
+            potentialNewHeadingDeg = (potentialNewHeadingDeg + 180) % 360;
         }
-
-        // HedingDeg is 0 for north, 90 for east.
-        double headingDeg = (Math.PI / 2 - headingRad) * 360 / (2 * PI);
-        te.setHeadingDegrees(headingDeg);
+        te.setHeadingDegrees(potentialNewHeadingDeg);
     }
 }
