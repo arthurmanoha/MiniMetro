@@ -203,12 +203,29 @@ public class World implements PropertyChangeListener {
         }
     }
 
+    /**
+     * Convert a simple cell into a station, and the other way around.
+     *
+     * @param row
+     * @param col
+     */
     protected void toggleStation(int row, int col) {
         Cell oldCell = this.getCell(row, col);
-        if (oldCell instanceof StationCell) {
-            this.setCell(row, col, new Cell());
-//        } else {
-//            this.setCell(row, col, new StationCell());
+        if (oldCell != null) {
+            Cell newCell;
+
+            ArrayList<TrainElement> oldTrains = oldCell.getAllElements();
+
+            Point2D.Double pos = oldCell.getAbsolutePosition();
+            if (oldCell instanceof StationCell) {
+                newCell = new Cell(oldCell);
+            } else {
+                newCell = new StationCell(oldCell);
+            }
+            this.setCell(row, col, newCell);
+            for (TrainElement oldTrain : oldTrains) {
+                newCell.addTrainElement(oldTrain);
+            }
         }
     }
 

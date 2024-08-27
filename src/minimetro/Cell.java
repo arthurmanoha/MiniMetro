@@ -31,7 +31,7 @@ public class Cell {
     private double singleRailLength;
     ArrayList<Color> colorList;
 
-    private Point2D.Double absolutePosition; // This point is the center of the cell.
+    protected Point2D.Double absolutePosition; // This point is the center of the cell.
 
     private ArrayList<CardinalPoint> links;
 
@@ -68,6 +68,15 @@ public class Cell {
         speedLimit = Integer.MAX_VALUE;
     }
 
+    public Cell(Cell previousCell) {
+        this();
+        this.absolutePosition = previousCell.absolutePosition;
+        this.rails = previousCell.rails;
+        this.nbRails = previousCell.nbRails;
+        this.speedLimit = previousCell.speedLimit;
+        this.stopTimerDuration = previousCell.stopTimerDuration;
+    }
+
     public Cell(Point2D.Double newAbsPos) {
         this();
         this.absolutePosition = newAbsPos;
@@ -99,7 +108,7 @@ public class Cell {
 
         // Draw background
         g.setColor(this.color);
-//        g.fillRect((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) (appSize), (int) (appSize));
+        g.fillRect((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) (appSize), (int) (appSize));
 
         // Draw borders
         g.setColor(Color.black);
@@ -902,5 +911,9 @@ public class Cell {
             }
         }
         // otherwise this cell does not stop trains.
+    }
+
+    protected Point2D.Double getAbsolutePosition() {
+        return this.absolutePosition;
     }
 }

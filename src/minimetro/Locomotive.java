@@ -16,7 +16,7 @@ public class Locomotive extends TrainElement {
 
     public Locomotive() {
         super();
-        maxSpeed = 60.0;
+        maxSpeed = 300.0;
         motorPower = 30.0;
         color = Color.red;
         mass = 10;
