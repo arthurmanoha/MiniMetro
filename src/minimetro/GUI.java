@@ -2,6 +2,9 @@ package minimetro;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -16,7 +19,8 @@ public class GUI extends JFrame {
 
     WorldPanel panel;
     JPanel topToolbar;
-    JPanel bottomToolbar;
+    JPanel locoToolbar;
+    JPanel speedToolbar;
     JPanel mainToolbar;
 
     int windowWidth = 1000;
@@ -35,9 +39,10 @@ public class GUI extends JFrame {
         this.setLayout(new BorderLayout());
 
         mainToolbar = new JPanel();
-        mainToolbar.setLayout(new BorderLayout());
+        mainToolbar.setLayout(new GridLayout(3, 1));
 
         topToolbar = new JPanel();
+        topToolbar.setLayout(new GridLayout(10, 1));
 
         JButton playPauseButton = new JButton("PlayPause");
         playPauseButton.addActionListener((e) -> {
@@ -110,31 +115,32 @@ public class GUI extends JFrame {
         });
         topToolbar.add(zoomOutButton);
 
-        mainToolbar.add(topToolbar, BorderLayout.NORTH);
+        mainToolbar.add(topToolbar);
 
-        bottomToolbar = new JPanel();
+        locoToolbar = new JPanel();
 
         JButton startLocoButton = new JButton("Start Locos");
         startLocoButton.addActionListener((e) -> {
             w.startLocos();
         });
-        bottomToolbar.add(startLocoButton);
+        locoToolbar.add(startLocoButton);
 
         JButton stopLocoButton = new JButton("Stop Locos");
         stopLocoButton.addActionListener((e) -> {
             w.stopLocos();
         });
-        bottomToolbar.add(stopLocoButton);
+        locoToolbar.add(stopLocoButton);
 
-        mainToolbar.add(bottomToolbar, BorderLayout.SOUTH);
+        mainToolbar.add(locoToolbar);
 
-        this.add(mainToolbar, BorderLayout.SOUTH);
+        this.add(mainToolbar, BorderLayout.WEST);
 
         panel = new WorldPanel(w);
         this.add(panel, BorderLayout.CENTER);
 
         // Speed limit: positive value
-        JPanel speedToolbar = new JPanel();
+        speedToolbar = new JPanel();
+        speedToolbar.setLayout(new GridLayout(11, 1));
         speedToolbar.add(new JLabel("Speed limits: "));
         JButton limit01Button = new JButton("0.1");
         limit01Button.addActionListener((e) -> {
@@ -142,6 +148,12 @@ public class GUI extends JFrame {
             w.setSpeedLimitValue(0.1);
         });
         speedToolbar.add(limit01Button);
+        JButton limit2Button = new JButton("2");
+        limit2Button.addActionListener((e) -> {
+            panel.setTool(GuiTool.SPEED_INDICATOR);
+            w.setSpeedLimitValue(2);
+        });
+        speedToolbar.add(limit2Button);
         JButton limit5Button = new JButton("5");
         limit5Button.addActionListener((e) -> {
             panel.setTool(GuiTool.SPEED_INDICATOR);
@@ -202,7 +214,7 @@ public class GUI extends JFrame {
         });
         speedToolbar.add(stopTimerButton);
 
-        this.add(speedToolbar, BorderLayout.NORTH);
+        mainToolbar.add(speedToolbar);
 
         w.addPropertyChangeListener("currentStep", panel);
 
