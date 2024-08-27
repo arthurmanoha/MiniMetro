@@ -4,6 +4,7 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
+TEs are not snapped onto the correct RailSegment.
 A Locomotive does not brake hard enough at low speed.
 
 ---------------------------------------------------------------------------------------------------
@@ -11,9 +12,18 @@ TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
 Dampen springs between TrainElements: a spring has less force when shrinking.
+TrainElements shall turn smoothly in curves.
+Tracks and trains shall have a simplified drawing version for large-scale visualization.
+Speed limits and stop signs shall spread to the whole tile at large scales.
+Display only visible tiles.
+Tracks shall be saved to file and loaded from file.
 Cells shall be drawn as sprites.
 A TrainLink shall be connected to a point close to either end of the TrainElement, not to its center.
-A power mode shall allow the user to build an electric distribution system.
+A new TrainLink shall be created or severed between two existing TrainElements, without any TE being created or deleted.
+Locomotives can be electric or coal-fueled.
+Electricity is brought from a production tile to the tracks via cables, tracks are fit with an overhead line or via the tracks.
+Coal is produced at a specified rate in the factory.
+Coal is loaded at a specified rate into a coal wagon and has mass.
 Snap : a TE shall be snapped to a RailSegment only if the velocity is reasonably aligned. Crossings become obvious.
 A TrainLink shall have a maximum allowed force, above which it shall break.
 The CutLink shall allow to remove the link between two TrainElements.
@@ -54,6 +64,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Toolbars shall be set vertical on either side of the window.
 Speed of TrainElements is now represented with a heading and linear velocity, not as vx and vy. Thus, locos no longer are reversed by slowing wagons.
 Create a stop timer: any loco in that cell shall stop for the given amount of time and may then start moving again.
 Solved bug: Tracks are not build as they should when drawn on top of existing tracks.

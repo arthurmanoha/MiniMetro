@@ -22,8 +22,8 @@ public class TrainLink {
     private static int NB_LINKS_CREATED = 0;
     private int id;
 
-    private double strength = 5.2;
-    private double damping = 20.5;
+    private double strength = 50;
+    private double damping = 300;
 
     public TrainLink(TrainElement elem0, TrainElement elem1, double distance) {
         e0 = elem0;
