@@ -648,33 +648,25 @@ public class World implements PropertyChangeListener {
     }
 
     protected void generatePassengers() {
-        if (MiniMetro.TEST_PASSENGERS) {
-            System.out.println("test generate passengers");
-            StationCell startCell = stationList.get(1);
-            Passenger newPassenger = new Passenger();
-            newPassenger.setTargetStationId(3);
-            startCell.addPassenger(newPassenger);
-        } else {
-            int nbNewPassengers = 5;
-            int nbPassengersGenerated = 0;
-            while (nbPassengersGenerated < nbNewPassengers) {
+        int nbNewPassengers = 10;
+        int nbPassengersGenerated = 0;
+        while (nbPassengersGenerated < nbNewPassengers) {
 
-                // Choose one station at random
-                int startingRank = new Random().nextInt(stationList.size() - 1);
-                StationCell startingStation = stationList.get(startingRank);
+            // Choose one station at random
+            int startingRank = new Random().nextInt(stationList.size());
+            StationCell startingStation = stationList.get(startingRank);
 
-                // Set the target of the passenger
-                int targetRank = new Random().nextInt(stationList.size() - 1);
-                if (targetRank == startingRank) { // Target station must be different from start station.
-                    targetRank = (targetRank + 1) % (stationList.size());
-                }
-                int targetStationNumber = stationList.get(targetRank).getId();
-                Passenger newPassenger = new Passenger();
-                newPassenger.setTargetStationId(targetStationNumber);
-                // Add the passenger to the station
-                startingStation.addPassenger(newPassenger);
-                nbPassengersGenerated++;
+            // Set the target of the passenger
+            int targetRank = new Random().nextInt(stationList.size());
+            if (targetRank == startingRank) { // Target station must be different from start station.
+                targetRank = (targetRank + 1) % (stationList.size());
             }
+            int targetStationNumber = stationList.get(targetRank).getId();
+            Passenger newPassenger = new Passenger();
+            newPassenger.setTargetStationId(targetStationNumber);
+            // Add the passenger to the station
+            startingStation.addPassenger(newPassenger);
+            nbPassengersGenerated++;
         }
         computePaths();
     }

@@ -67,8 +67,8 @@ public class StationCell extends Cell {
         // Find a stopped Wagon
         for (TrainElement te : trainElements) {
             if (te instanceof Wagon && te.isStopped()) {
-                Wagon w = (Wagon) te;
-                this.passengerList.addAll(w.dropAllPassengers());
+                Wagon wagon = (Wagon) te;
+                this.passengerList.addAll(wagon.dropPassengers(this.id));
             }
         }
     }
@@ -81,7 +81,9 @@ public class StationCell extends Cell {
                 if (te instanceof Wagon && te.isStopped()) {
                     Wagon w = (Wagon) te;
                     for (Passenger p : passengerList) {
-                        w.receivePassenger(p);
+                        if (p.getTargetStationId() != this.id) {
+                            w.receivePassenger(p);
+                        }
                     }
                     passengerList.clear();
                 }

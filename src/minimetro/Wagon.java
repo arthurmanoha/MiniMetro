@@ -5,6 +5,7 @@ import java.awt.Graphics;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
 /**
  *
@@ -67,6 +68,30 @@ public class Wagon extends TrainElement {
         ArrayList<Passenger> removedPassengers = new ArrayList<>();
         removedPassengers.addAll(passengersList);
         passengersList.clear();
+        return removedPassengers;
+    }
+
+    /**
+     * Let go of the passangers that have the corresponding target station
+     * number.
+     *
+     * @param stationNumber
+     * @return
+     */
+    protected ArrayList<Passenger> dropPassengers(int stationNumber) {
+        ArrayList<Passenger> removedPassengers = new ArrayList<>();
+
+        // Add passengers to the 'getting off now' list.
+        for (Passenger p : this.passengersList) {
+            if (p.getTargetStationId() == stationNumber) {
+                // This passenger gets off here.
+                removedPassengers.add(p);
+            }
+        }
+        // Remove those passengers from the wagon.
+        for (Passenger p : removedPassengers) {
+            this.passengersList.remove(p);
+        }
         return removedPassengers;
     }
 }
