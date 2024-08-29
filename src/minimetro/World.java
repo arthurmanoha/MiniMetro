@@ -6,9 +6,11 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.SwingUtilities;
+import static minimetro.CardinalPoint.*;
 
 /**
  * This class represents the terrain that contains the tracks, trains,
@@ -42,9 +44,12 @@ public class World implements PropertyChangeListener {
     private double speedIndicatorValue;
     private double stopTimerValue;
 
+    private WorldMap map;
+    private ArrayList<StationCell> stationList;
+
     public World() {
-        nbRows = 40;
-        nbCols = 100;
+        nbRows = 10;
+        nbCols = 10;
         cells = new ArrayList<>();
         for (int row = 0; row < nbRows; row++) {
             double yCell = (nbRows - row - 1) * Cell.cellSize;
@@ -64,6 +69,8 @@ public class World implements PropertyChangeListener {
         startTimer();
         speedIndicatorValue = 0;
         stopTimerValue = 0;
+        map = new WorldMap(this);
+        stationList = new ArrayList<>();
     }
 
     public int getNbRows() {
@@ -219,14 +226,17 @@ public class World implements PropertyChangeListener {
             Point2D.Double pos = oldCell.getAbsolutePosition();
             if (oldCell instanceof StationCell) {
                 newCell = new Cell(oldCell);
+                stationList.remove((StationCell) oldCell);
             } else {
                 newCell = new StationCell(oldCell);
+                stationList.add((StationCell) newCell);
             }
             this.setCell(row, col, newCell);
             for (TrainElement oldTrain : oldTrains) {
                 newCell.addTrainElement(oldTrain);
             }
         }
+        map.computeMap();
     }
 
     /**
@@ -259,8 +269,8 @@ public class World implements PropertyChangeListener {
     private void addTrainElement(double xReal, double yReal, boolean isLoco) {
 
         double size = Cell.cellSize;
-        int col = (int) ((xReal + size / 2) / size);
-        int row = nbRows - (int) ((yReal + size / 2) / size) - 1;
+        int col = getCol(xReal);
+        int row = nbRows - getRow(yReal) - 1;
 
         Point2D.Double newAbsolutePosition = new Point2D.Double(xReal, yReal);
 
@@ -276,6 +286,20 @@ public class World implements PropertyChangeListener {
             cell.addTrainElement(newElement);
             updateTrainLinks(newElement, row, col);
         }
+    }
+
+    /**
+     * Tell which column a given coordinate belongs to.
+     *
+     * @param xReal
+     * @return
+     */
+    private int getCol(double xReal) {
+        return (int) ((xReal + Cell.cellSize / 2) / Cell.cellSize);
+    }
+
+    private int getRow(double yReal) {
+        return (int) ((yReal + Cell.cellSize / 2) / Cell.cellSize);
     }
 
     /**
@@ -363,6 +387,7 @@ public class World implements PropertyChangeListener {
             }
             newTrackCell.addLink(newLinkDirection);
         }
+        map.computeMap();
     }
 
     /**
@@ -546,6 +571,7 @@ public class World implements PropertyChangeListener {
     protected void removeTrack(int row, int col) {
         Cell c = getCell(row, col);
         c.removeTracks();
+        map.computeMap();
     }
 
     protected void removeTrains(int row, int col) {
@@ -618,6 +644,97 @@ public class World implements PropertyChangeListener {
         Cell c = getCell(row, col);
         if (c != null) {
             c.setStopTimer(stopTimerValue);
+        }
+    }
+
+    protected void generatePassengers() {
+        if (MiniMetro.TEST_PASSENGERS) {
+            System.out.println("test generate passengers");
+            StationCell startCell = stationList.get(1);
+            Passenger newPassenger = new Passenger();
+            newPassenger.setTargetStationId(3);
+            startCell.addPassenger(newPassenger);
+        } else {
+            int nbNewPassengers = 5;
+            int nbPassengersGenerated = 0;
+            while (nbPassengersGenerated < nbNewPassengers) {
+
+                // Choose one station at random
+                int startingRank = new Random().nextInt(stationList.size() - 1);
+                StationCell startingStation = stationList.get(startingRank);
+
+                // Set the target of the passenger
+                int targetRank = new Random().nextInt(stationList.size() - 1);
+                if (targetRank == startingRank) { // Target station must be different from start station.
+                    targetRank = (targetRank + 1) % (stationList.size());
+                }
+                int targetStationNumber = stationList.get(targetRank).getId();
+                Passenger newPassenger = new Passenger();
+                newPassenger.setTargetStationId(targetStationNumber);
+                // Add the passenger to the station
+                startingStation.addPassenger(newPassenger);
+                nbPassengersGenerated++;
+            }
+        }
+        computePaths();
+    }
+
+    private Iterable<StationCell> getStations() {
+        ArrayList<StationCell> allStations = new ArrayList<>();
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                if (c instanceof StationCell) {
+                    allStations.add((StationCell) c);
+                }
+            }
+        }
+        return allStations;
+    }
+
+    /**
+     * Compute all passengers paths to their destinations.
+     */
+    protected void computePaths() {
+        for (StationCell station : stationList) {
+            for (Passenger p : station.passengerList) {
+                p.computePath(this, station);
+            }
+        }
+    }
+
+    /**
+     * Find all the cells that are reachable with one movement from the given
+     * cell.
+     */
+    protected ArrayList<Movement> getMovements(double x, double y) {
+        int row = getRow(y);
+        int col = getCol(x);
+        return getMovements(row, col);
+    }
+
+    private ArrayList<Movement> getMovements(int row, int col) {
+        ArrayList<Movement> availableMovements = new ArrayList<>();
+
+        Cell currentCell = getCell(row, col);
+        if (currentCell.isLinked(NORTH)) {
+            availableMovements.add(new Movement(Movement.MovementType.RIDE, NORTH, row + 1, col));
+        }
+        return availableMovements;
+    }
+
+    protected void boardPassengers() {
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                c.boardPassengers();
+            }
+        }
+    }
+
+    protected void getPassengersOff() {
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                c.getPassengersOff();
+            }
         }
     }
 }

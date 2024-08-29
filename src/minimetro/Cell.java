@@ -21,7 +21,7 @@ public class Cell {
 
     protected Color color;
 
-    private ArrayList<TrainElement> trainElements;
+    protected ArrayList<TrainElement> trainElements;
     public ArrayList<TransferringTrain> trainsLeavingCell;
     double maxHeadingDiff = 10;
 
@@ -42,6 +42,7 @@ public class Cell {
     // The TrainElements that are currently stopped or have already stopped in
     // this cell and started moving again, and still are in this cell.
     private ArrayList<TrainElement> alreadyStoppedTrains;
+    private Cell previous;
 
     public Cell() {
         color = Color.gray;
@@ -916,4 +917,13 @@ public class Cell {
     protected Point2D.Double getAbsolutePosition() {
         return this.absolutePosition;
     }
+
+    protected void getPassengersOff() {
+
+    }
+
+    protected void boardPassengers() {
+
+    }
+
 }

@@ -2,9 +2,7 @@ package minimetro;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -23,7 +21,7 @@ public class GUI extends JFrame {
     JPanel speedToolbar;
     JPanel mainToolbar;
 
-    int windowWidth = 1000;
+    int windowWidth = 1200;
     int windowHeight = 1000;
 
     private World world;
@@ -42,7 +40,7 @@ public class GUI extends JFrame {
         mainToolbar.setLayout(new GridLayout(3, 1));
 
         topToolbar = new JPanel();
-        topToolbar.setLayout(new GridLayout(10, 1));
+        topToolbar.setLayout(new GridLayout(12, 1));
 
         JButton playPauseButton = new JButton("PlayPause");
         playPauseButton.addActionListener((e) -> {
@@ -114,6 +112,24 @@ public class GUI extends JFrame {
             panel.repaint();
         });
         topToolbar.add(zoomOutButton);
+
+        JButton generatePassengersButton = new JButton("Generate Passengers");
+        generatePassengersButton.addActionListener((e) -> {
+            w.generatePassengers();
+        });
+        topToolbar.add(generatePassengersButton);
+
+        JButton boardButton = new JButton("Board");
+        boardButton.addActionListener((e) -> {
+            w.boardPassengers();
+        });
+        topToolbar.add(boardButton);
+
+        JButton getOffButton = new JButton("Get off");
+        getOffButton.addActionListener((e) -> {
+            w.getPassengersOff();
+        });
+        topToolbar.add(getOffButton);
 
         mainToolbar.add(topToolbar);
 
