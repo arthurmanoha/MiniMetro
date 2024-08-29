@@ -14,8 +14,9 @@ import java.util.Random;
 public class StationCell extends Cell {
 
     private static int NB_STATIONS_CREATED = 0;
+    private static ArrayList<Color> colorList;
     private int id;
-    ArrayList<Passenger> passengerList;
+    protected ArrayList<Passenger> passengerList;
 
     public StationCell(Cell previousCell) {
         super(previousCell);
@@ -23,10 +24,29 @@ public class StationCell extends Cell {
         id = NB_STATIONS_CREATED;
         NB_STATIONS_CREATED++;
         passengerList = new ArrayList<>();
+
+        colorList = new ArrayList<>();
+        colorList.add(Color.red.darker().darker());
+        colorList.add(Color.red);
+        colorList.add(Color.green);
+        colorList.add(Color.green.darker().darker());
+        colorList.add(Color.blue.darker().darker());
+        colorList.add(Color.blue);
+        colorList.add(Color.CYAN);
+        colorList.add(Color.yellow);
+        colorList.add(Color.orange);
+        colorList.add(Color.MAGENTA);
+        colorList.add(Color.gray.darker());
+        int colorIndex = id % colorList.size();
+        color = colorList.get(colorIndex);
     }
 
     public int getId() {
         return id;
+    }
+
+    protected static Color getStationColor(int stationNumber) {
+        return colorList.get(stationNumber % colorList.size());
     }
 
     @Override

@@ -6,6 +6,7 @@ KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNO
 
 TEs are not snapped onto the correct RailSegment.
 A Locomotive does not brake hard enough at low speed.
+Passengers shall only board a wagon at zero speed.
 
 ---------------------------------------------------------------------------------------------------
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 

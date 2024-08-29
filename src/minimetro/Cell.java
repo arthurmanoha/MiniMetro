@@ -28,8 +28,6 @@ public class Cell {
     private ArrayList<RailSegment> rails;
     private int nbRails;
     private double totalRailLength;
-    private double singleRailLength;
-    ArrayList<Color> colorList;
 
     protected Point2D.Double absolutePosition; // This point is the center of the cell.
 
@@ -52,16 +50,6 @@ public class Cell {
         rails = new ArrayList<>();
         totalRailLength = cellSize;
         nbRails = 20;
-        singleRailLength = totalRailLength / nbRails;
-        colorList = new ArrayList<>();
-        colorList.add(Color.red);
-        colorList.add(Color.green);
-        colorList.add(Color.blue);
-        colorList.add(Color.yellow);
-        colorList.add(Color.gray);
-        colorList.add(Color.orange);
-        colorList.add(Color.MAGENTA);
-        colorList.add(Color.CYAN);
         absolutePosition = new Point2D.Double();
         links = new ArrayList<>();
         links.add(CardinalPoint.CENTER);
@@ -890,6 +878,8 @@ public class Cell {
             double diskRadius = appSize / 8;
             g.setColor(Color.red);
             g.fillOval((int) (xSign - diskRadius), (int) (ySign - diskRadius), (int) (2 * diskRadius), (int) (2 * diskRadius));
+            g.setColor(Color.black);
+            g.drawOval((int) (xSign - diskRadius), (int) (ySign - diskRadius), (int) (2 * diskRadius), (int) (2 * diskRadius));
             g.setColor(Color.white);
             diskRadius = 0.8 * diskRadius;
             g.fillOval((int) (xSign - diskRadius), (int) (ySign - diskRadius), (int) (2 * diskRadius), (int) (2 * diskRadius));

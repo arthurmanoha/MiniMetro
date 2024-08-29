@@ -21,7 +21,7 @@ public class GUI extends JFrame {
     JPanel speedToolbar;
     JPanel mainToolbar;
 
-    int windowWidth = 1200;
+    int windowWidth = 1900;
     int windowHeight = 1000;
 
     private World world;
@@ -241,14 +241,22 @@ public class GUI extends JFrame {
     }
 
     private void readSpeedLimit() {
-        double value = Double.valueOf(speedIndicatorTextField.getText());
-        System.out.println("Value read from text field: " + value);
-        world.setSpeedLimitValue(value);
+        try {
+            double value = Double.valueOf(speedIndicatorTextField.getText());
+            System.out.println("Value read from text field: " + value);
+            world.setSpeedLimitValue(value);
+        } catch (NumberFormatException e) {
+            System.out.println("Value incorrect, speed limit unchanged.");
+        }
     }
 
     private void readStopTimer() {
-        double value = Double.valueOf(stopTimerTextField.getText());
-        System.out.println("Value read from text field: " + value);
-        world.setStopTimerDuration(value);
+        try {
+            double value = Double.valueOf(stopTimerTextField.getText());
+            System.out.println("Value read from text field: " + value);
+            world.setStopTimerDuration(value);
+        } catch (NumberFormatException e) {
+            System.out.println("Value incorrect, stop timer unchanged.");
+        }
     }
 }

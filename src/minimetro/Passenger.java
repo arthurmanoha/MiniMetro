@@ -58,6 +58,7 @@ public class Passenger {
 
     protected void setTargetStationId(int newTargetStation) {
         targetStationId = newTargetStation;
+        color = StationCell.getStationColor(targetStationId);
     }
 
     protected int getTargetStationId() {
