@@ -14,7 +14,7 @@ public class Passenger {
 
     private double x, y;
     private int targetStationId;
-    private double size = 10;
+    private double size = 2.5;
     private Color color = Color.blue;
     private static int NB_PASSENGERS_CREATED = 0;
     private int id;
@@ -46,9 +46,9 @@ public class Passenger {
         g.setColor(this.color);
         g.fillOval((int) (xApp - appSize / 2), (int) (yApp - appSize / 2),
                 (int) appSize, (int) appSize);
-        g.setColor(Color.gray.brighter());
-        g.setFont(new Font("helvetica", Font.PLAIN, (int) (max(10, appSize / 15))));
-        g.drawString(id + " -> " + targetStationId, (int) (xApp), (int) (yApp));
+        g.setColor(Color.black);
+        g.drawOval((int) (xApp - appSize / 2), (int) (yApp - appSize / 2),
+                (int) appSize, (int) appSize);
     }
 
     protected void setCoordinates(double newX, double newY) {

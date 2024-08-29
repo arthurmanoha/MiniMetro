@@ -27,6 +27,7 @@ public class GUI extends JFrame {
     private World world;
     private JTextField speedIndicatorTextField;
     private JTextField stopTimerTextField;
+    double defaultStopTimerDuration = 10;
 
     public GUI(World w) {
         super();
@@ -217,7 +218,7 @@ public class GUI extends JFrame {
 
         stopTimerTextField = new JTextField();
         stopTimerTextField.setPreferredSize(new Dimension(80, 27));
-        stopTimerTextField.setText("20.0");
+        stopTimerTextField.setText("" + defaultStopTimerDuration);
         stopTimerTextField.addActionListener((e) -> {
             readStopTimer();
         });

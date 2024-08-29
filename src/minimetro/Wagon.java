@@ -3,6 +3,8 @@ package minimetro;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.geom.Point2D;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 import java.util.ArrayList;
 
 /**
@@ -13,6 +15,7 @@ public class Wagon extends TrainElement {
 
     private ArrayList<Passenger> passengersList;
     private int maxCapacity;
+    private int nbPassengerPerRow;
 
     public Wagon() {
         super();
@@ -21,7 +24,8 @@ public class Wagon extends TrainElement {
         imagePath = "src\\img\\Wagon.png";
         loadImage();
         passengersList = new ArrayList<>();
-        maxCapacity = 5;
+        maxCapacity = 18;
+        nbPassengerPerRow = 3;
     }
 
     public Wagon(Point2D.Double newAbsolutePosition) {
@@ -45,13 +49,26 @@ public class Wagon extends TrainElement {
     protected void stop() {
     }
 
+    private boolean isEven(int n) {
+        return 2 * (n / 2) == n;
+    }
+
     @Override
     protected void move(double dt) {
         super.move(dt);
-        double margin = 10;
+        double margin = 2.6;
+        int nbRows = maxCapacity / nbPassengerPerRow;
+        int nbCols = maxCapacity / nbRows;
         int passengerRank = 0;
         for (Passenger p : passengersList) {
-            p.setCoordinates(this.getX(), this.getY() + margin * passengerRank);
+            double row = passengerRank / nbPassengerPerRow + (isEven(nbCols) ? 0.0 : 0.5);
+            double col = passengerRank % nbPassengerPerRow + (isEven(nbRows) ? 0.0 : 0.5);
+            double passengerX = (row - nbRows / 2) * margin;
+            double passengerY = (col - nbCols / 2) * margin;
+            double headingRad = degToRad(headingDegrees);
+            double xRotated = this.getX() + passengerX * cos(headingRad) - passengerY * sin(headingRad);
+            double yRotated = this.getY() + passengerY * cos(headingRad) + passengerX * sin(headingRad);
+            p.setCoordinates(xRotated, yRotated);
             passengerRank++;
         }
     }

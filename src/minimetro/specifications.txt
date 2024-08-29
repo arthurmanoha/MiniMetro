@@ -13,7 +13,6 @@ TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 
 Stations shall have unique colors.
 Passengers shall have the same color as their target station.
-Passengers inside their wagon shall be displayed on aligned seats.
 Passengers on the platform shall be positioned away from the tracks.
 A logical map of the tracks shall be constructed every time the tracks are changed.
 Passengers shall use the logical map to find their way.
@@ -45,10 +44,6 @@ A cell may have a speed indicator that the loco shall observe, and increase its 
 A Cell may be a junction and contain two possible layouts, one being active and the other one greyed out.
 A carriage stores its passenger max and current capacity.
 An IntersectionCell is a special cell, where one track splits into several tracks.
-A station cell may be crossed by a railway.
-A station cell may host passengers.
-A passenger may transfer between a station cell and a neighboring wagon.
-A passenger has a station ID target.
 A passenger shall find a path from its current position to its target: which line to use, which station to walk to.
 A passenger may walk from one station to another if the stations have one side in common.
 Add portal cells.
@@ -76,6 +71,11 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+A station cell may be crossed by a railway.
+A station cell may host passengers.
+A passenger may transfer between a station cell and a wagon inside that cell.
+A passenger has a station ID target.
+Passengers inside their wagon shall be displayed on aligned seats.
 Passengers board wagons up to capacity.
 Passengers do not board when they already are at destination.
 Toolbars shall be set vertical on either side of the window.

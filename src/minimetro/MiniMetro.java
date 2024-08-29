@@ -16,7 +16,7 @@ public class MiniMetro {
         w.addTestTracks(6, 7, 0, 4);
         double xStart = 149;
         double yStart = 300;
-        int nbWagons = 4;
+        int nbWagons = 1;
         w.addTestTrain(xStart, yStart, nbWagons);
         w.setSpeedLimitValue(10);
         w.setSpeedIndicator(6, 1);

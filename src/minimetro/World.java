@@ -648,7 +648,7 @@ public class World implements PropertyChangeListener {
     }
 
     protected void generatePassengers() {
-        int nbNewPassengers = 10;
+        int nbNewPassengers = new Random().nextInt(30);
         int nbPassengersGenerated = 0;
         while (nbPassengersGenerated < nbNewPassengers) {
 
