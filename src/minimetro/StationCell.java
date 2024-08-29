@@ -75,19 +75,31 @@ public class StationCell extends Cell {
 
     @Override
     protected void boardPassengers() {
+        ArrayList<Passenger> boardingPassengers = new ArrayList<>();
+
         if (hasPassengers()) {
-            // Find a stopped Wagon
-            for (TrainElement te : trainElements) {
-                if (te instanceof Wagon && te.isStopped()) {
-                    Wagon w = (Wagon) te;
-                    for (Passenger p : passengerList) {
-                        if (p.getTargetStationId() != this.id) {
-                            w.receivePassenger(p);
+            for (Passenger p : passengerList) {
+                if (p.getTargetStationId() != this.id) {
+
+                    // Try to fit the current passenger into the first non-full wagon.
+                    boolean passengerStillOnPlatform = true;
+                    for (TrainElement te : trainElements) {
+                        if (passengerStillOnPlatform) {
+                            if (te instanceof Wagon) {
+                                Wagon wagon = (Wagon) te;
+                                if (wagon.hasRoom()) {
+                                    wagon.receivePassenger(p);
+                                    passengerStillOnPlatform = false;
+                                    boardingPassengers.add(p);
+                                }
+                            }
                         }
                     }
-                    passengerList.clear();
                 }
             }
+        }
+        for (Passenger p : boardingPassengers) {
+            passengerList.remove(p);
         }
     }
 }

@@ -4,8 +4,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 
 /**
  *
@@ -14,6 +12,7 @@ import java.util.Iterator;
 public class Wagon extends TrainElement {
 
     private ArrayList<Passenger> passengersList;
+    private int maxCapacity;
 
     public Wagon() {
         super();
@@ -22,6 +21,7 @@ public class Wagon extends TrainElement {
         imagePath = "src\\img\\Wagon.png";
         loadImage();
         passengersList = new ArrayList<>();
+        maxCapacity = 5;
     }
 
     public Wagon(Point2D.Double newAbsolutePosition) {
@@ -56,8 +56,12 @@ public class Wagon extends TrainElement {
         }
     }
 
-    protected void receivePassenger(Passenger p) {
-        passengersList.add(p);
+    protected boolean receivePassenger(Passenger p) {
+        if (passengersList.size() < maxCapacity) {
+            passengersList.add(p);
+            return true;
+        }
+        return false;
     }
 
     protected void dropPassenger(Passenger p) {
@@ -93,5 +97,9 @@ public class Wagon extends TrainElement {
             this.passengersList.remove(p);
         }
         return removedPassengers;
+    }
+
+    protected boolean hasRoom() {
+        return passengersList.size() < maxCapacity;
     }
 }

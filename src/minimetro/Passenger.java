@@ -1,7 +1,9 @@
 package minimetro;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
+import static java.lang.Math.max;
 import java.util.ArrayList;
 
 /**
@@ -44,8 +46,9 @@ public class Passenger {
         g.setColor(this.color);
         g.fillOval((int) (xApp - appSize / 2), (int) (yApp - appSize / 2),
                 (int) appSize, (int) appSize);
-        g.setColor(Color.red);
-        g.drawString("" + targetStationId, (int) (xApp + appSize), (int) (yApp + appSize));
+        g.setColor(Color.gray.brighter());
+        g.setFont(new Font("helvetica", Font.PLAIN, (int) (max(10, appSize / 15))));
+        g.drawString(id + " -> " + targetStationId, (int) (xApp), (int) (yApp));
     }
 
     protected void setCoordinates(double newX, double newY) {

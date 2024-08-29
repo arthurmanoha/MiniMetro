@@ -11,6 +11,18 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Stations shall have unique colors.
+Passengers shall have the same color as their target station.
+Passengers inside their wagon shall be displayed on aligned seats.
+Passengers on the platform shall be positioned away from the tracks.
+A logical map of the tracks shall be constructed every time the tracks are changed.
+Passengers shall use the logical map to find their way.
+The world shall be stored as a sparse matrix but still painted the same way.
+The grid shall show one in ten lines at large enough scales.
+The world shall contain water areas.
+Water areas can be crossed by bridges.
+The world shall contain mountains of different altitudes.
+A railroad on a slope shall have an impact on the speed of any TrainElement that drives on it.
 Dampen springs between TrainElements: a spring has less force when shrinking.
 TrainElements shall turn smoothly in curves.
 Tracks and trains shall have a simplified drawing version for large-scale visualization.
@@ -64,6 +76,8 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Passengers board wagons up to capacity.
+Passengers do not board when they already are at destination.
 Toolbars shall be set vertical on either side of the window.
 Speed of TrainElements is now represented with a heading and linear velocity, not as vx and vy. Thus, locos no longer are reversed by slowing wagons.
 Create a stop timer: any loco in that cell shall stop for the given amount of time and may then start moving again.

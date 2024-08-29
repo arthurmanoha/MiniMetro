@@ -113,12 +113,6 @@ public class GUI extends JFrame {
         });
         topToolbar.add(zoomOutButton);
 
-        JButton generatePassengersButton = new JButton("Generate Passengers");
-        generatePassengersButton.addActionListener((e) -> {
-            w.generatePassengers();
-        });
-        topToolbar.add(generatePassengersButton);
-
         JButton boardButton = new JButton("Board");
         boardButton.addActionListener((e) -> {
             w.boardPassengers();
@@ -130,6 +124,12 @@ public class GUI extends JFrame {
             w.getPassengersOff();
         });
         topToolbar.add(getOffButton);
+
+        JButton generatePassengersButton = new JButton("Generate Passengers");
+        generatePassengersButton.addActionListener((e) -> {
+            w.generatePassengers();
+        });
+        topToolbar.add(generatePassengersButton);
 
         mainToolbar.add(topToolbar);
 
