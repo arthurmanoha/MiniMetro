@@ -21,7 +21,7 @@ import static minimetro.CardinalPoint.*;
 public class World implements PropertyChangeListener {
 
     private int nbRows, nbCols;
-    private ArrayList<ArrayList<Cell>> cells;
+    protected ArrayList<ArrayList<Cell>> cells;
     private double dt; // Time elapsed in world during one simulation step.
 
     private ArrayList<TrainElement> trainsInTransition;
@@ -44,7 +44,7 @@ public class World implements PropertyChangeListener {
     private double speedIndicatorValue;
     private double stopTimerValue;
 
-    private WorldMap map;
+    public static WorldMap map;
     private ArrayList<StationCell> stationList;
 
     public World() {
@@ -68,7 +68,7 @@ public class World implements PropertyChangeListener {
         periodMillisec = (int) (1000 * dt);
         startTimer();
         speedIndicatorValue = 0;
-        stopTimerValue = 0;
+        stopTimerValue = 5;
         map = new WorldMap(this);
         stationList = new ArrayList<>();
     }
@@ -236,7 +236,6 @@ public class World implements PropertyChangeListener {
                 newCell.addTrainElement(oldTrain);
             }
         }
-        map.computeMap();
     }
 
     /**
@@ -387,7 +386,7 @@ public class World implements PropertyChangeListener {
             }
             newTrackCell.addLink(newLinkDirection);
         }
-        map.computeMap();
+//        map.computeMap();
     }
 
     /**
@@ -571,7 +570,7 @@ public class World implements PropertyChangeListener {
     protected void removeTrack(int row, int col) {
         Cell c = getCell(row, col);
         c.removeTracks();
-        map.computeMap();
+//        map.computeMap();
     }
 
     protected void removeTrains(int row, int col) {
@@ -694,26 +693,6 @@ public class World implements PropertyChangeListener {
         }
     }
 
-    /**
-     * Find all the cells that are reachable with one movement from the given
-     * cell.
-     */
-    protected ArrayList<Movement> getMovements(double x, double y) {
-        int row = getRow(y);
-        int col = getCol(x);
-        return getMovements(row, col);
-    }
-
-    private ArrayList<Movement> getMovements(int row, int col) {
-        ArrayList<Movement> availableMovements = new ArrayList<>();
-
-        Cell currentCell = getCell(row, col);
-        if (currentCell.isLinked(NORTH)) {
-            availableMovements.add(new Movement(Movement.MovementType.RIDE, NORTH, row + 1, col));
-        }
-        return availableMovements;
-    }
-
     protected void boardPassengers() {
         for (ArrayList<Cell> row : cells) {
             for (Cell c : row) {
@@ -728,5 +707,13 @@ public class World implements PropertyChangeListener {
                 c.getPassengersOff();
             }
         }
+    }
+
+    /**
+     * Map the links between the stations.
+     */
+    protected void clearMap() {
+        System.out.println("Reset world map");
+        map = new WorldMap(this);
     }
 }

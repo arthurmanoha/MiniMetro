@@ -21,14 +21,12 @@ public class Passenger {
 
     private ArrayList<Cell> openList;
     private ArrayList<Cell> closedList;
-    private ArrayList<Movement> path;
 
     public Passenger() {
         id = NB_PASSENGERS_CREATED;
         NB_PASSENGERS_CREATED++;
         openList = new ArrayList<>();
         closedList = new ArrayList<>();
-        path = new ArrayList<>();
     }
 
     @Override
@@ -84,7 +82,6 @@ public class Passenger {
     }
 
     void clearPath() {
-        path.clear();
     }
 
     protected Cell removeFirstOpen() {
@@ -102,6 +99,5 @@ public class Passenger {
 
     protected void computePath(World w, StationCell station) {
 
-        ArrayList<Movement> movementList = w.getMovements(x, y);
     }
 }

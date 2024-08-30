@@ -13,20 +13,31 @@ public class MiniMetro {
         World w = new World();
         GUI gui = new GUI(w);
 
-        w.addTestTracks(6, 7, 0, 4);
-        double xStart = 149;
-        double yStart = 300;
-        int nbWagons = 1;
+        w.addTestTracks(4, 5, 2, 6);
+        w.addTestTracks(6, 7, 2, 8);
+        double xStart = 349;
+        double yStart = 500;
+        int nbWagons = 0;
         w.addTestTrain(xStart, yStart, nbWagons);
-        w.setSpeedLimitValue(10);
-        w.setSpeedIndicator(6, 1);
-        w.setStopTimerDuration(10);
-        w.setStopTimer(6, 0);
-        w.setStopTimer(6, 2);
-        w.setStopTimer(7, 3);
-        w.toggleStation(6, 1);
-        w.toggleStation(6, 3);
-        w.toggleStation(7, 2);
+        xStart = 549;
+        yStart = 300;
+        w.addTestTrain(xStart, yStart, nbWagons);
+        w.setSpeedLimitValue(30);
+        w.setSpeedIndicator(4, 3);
+        w.setStopTimerDuration(0);
+        w.setStopTimer(4, 2);
+        w.setStopTimer(4, 4);
+        w.setStopTimer(5, 5);
+        w.toggleStation(4, 3);
+        w.toggleStation(4, 5);
+        w.toggleStation(5, 4);
+        w.toggleStation(6, 4);
+        w.setSpeedIndicator(6, 4);
+        w.setStopTimer(6, 3);
+        w.toggleStation(7, 5);
+        w.setStopTimer(7, 4);
+        w.toggleStation(7, 7);
+        w.setStopTimer(7, 8);
 
         w.generatePassengers();
     }

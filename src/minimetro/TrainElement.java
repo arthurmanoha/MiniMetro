@@ -291,4 +291,8 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
     protected double getVy() {
         return linearSpeed * sin(getHeadingRad());
     }
+
+    protected void addStationToLine(StationCell newStation) {
+        World.map.addStation(newStation, this.id);
+    }
 }

@@ -105,7 +105,7 @@ public class StationCell extends Cell {
                     boolean passengerStillOnPlatform = true;
                     for (TrainElement te : trainElements) {
                         if (passengerStillOnPlatform) {
-                            if (te instanceof Wagon) {
+                            if (te instanceof Wagon && te.isStopped()) {
                                 Wagon wagon = (Wagon) te;
                                 if (wagon.hasRoom()) {
                                     wagon.receivePassenger(p);
@@ -121,5 +121,22 @@ public class StationCell extends Cell {
         for (Passenger p : boardingPassengers) {
             passengerList.remove(p);
         }
+    }
+
+    /**
+     * This function is used to tell a TrainElement that it now is in a station.
+     *
+     * @param newTrain
+     * @return
+     */
+    @Override
+    protected TrainElement addTrainElement(TrainElement newTrain) {
+        super.addTrainElement(newTrain);
+        if (newTrain instanceof Locomotive) {
+
+            Locomotive newLoco = (Locomotive) newTrain;
+            newLoco.addStationToLine(this);
+        }
+        return null;
     }
 }

@@ -170,6 +170,7 @@ public class Cell {
     protected TrainElement addTrainElement(TrainElement newTrain) {
         this.trainElements.add(newTrain);
         snapToRail();
+//        newTrain.setCurrentStationNumber(-1);
         return null;
     }
 
@@ -916,4 +917,26 @@ public class Cell {
 
     }
 
+    /**
+     * Get the direction of one of the two connections of that cell to a
+     * neighbor;
+     * but not the direction leading to where we're coming from.
+     * Example: calling that method on a cell linked NORTH-SOUTH with
+     * comingFrom=North, we must return south.
+     *
+     * @param comingFrom
+     * @return
+     */
+    protected CardinalPoint getDirectionExcept(CardinalPoint comingFrom) {
+        if (!this.hasRails()) {
+            return null;
+        }
+
+        CardinalPoint forbiddenDirection = CardinalPoint.getOpposite(comingFrom);
+        if (links.get(0).equals(forbiddenDirection)) {
+            return links.get(1);
+        } else {
+            return links.get(0);
+        }
+    }
 }
