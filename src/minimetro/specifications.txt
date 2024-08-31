@@ -4,6 +4,7 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
+Wagons are not perfectly centered, especially when comparing 90 and 270 degrees heading.
 TEs are not snapped onto the correct RailSegment.
 A Locomotive does not brake hard enough at low speed.
 Passengers shall only board a wagon at zero speed.
@@ -12,9 +13,10 @@ Passengers shall only board a wagon at zero speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Passengers shall use the logical map to find their way.
+Stations names shall be selected from a list made of real-life subway stations of cities.
 Passengers on the platform shall be positioned away from the tracks.
 A tool shall be available to place straight tracks overs long distances, horizontally, vertically or diagonally.
-Passengers shall use the logical map to find their way.
 The world shall be stored as a sparse matrix but still painted the same way.
 The grid shall show one in ten lines at large enough scales.
 The world shall contain water areas.
@@ -71,6 +73,7 @@ DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE 
 ---------------------------------------------------------------------------------------------------
 
 A logical map of the tracks shall be updated when locos drive into stations.
+The links between two neighboring stations is made upon world map computation.
 Stations shall have unique colors.
 Passengers shall have the same color as their target station.
 A station cell may be crossed by a railway.
