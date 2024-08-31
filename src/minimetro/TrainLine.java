@@ -3,8 +3,7 @@ package minimetro;
 import java.util.ArrayList;
 
 /**
- * This class logically represents a train line with its stations and its
- * connections.
+ * This class logically represents the path of a single train.
  *
  * @author arthu
  */

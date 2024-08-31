@@ -22,7 +22,7 @@ public class GUI extends JFrame {
     JPanel speedToolbar;
     JPanel mainToolbar;
 
-    int windowWidth = 1000;
+    int windowWidth = 1900;
     int windowHeight = 1000;
 
     private World world;

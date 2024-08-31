@@ -12,10 +12,8 @@ Passengers shall only board a wagon at zero speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
-Stations shall have unique colors.
-Passengers shall have the same color as their target station.
 Passengers on the platform shall be positioned away from the tracks.
-A logical map of the tracks shall be constructed every time the tracks are changed.
+A tool shall be available to place straight tracks overs long distances, horizontally, vertically or diagonally.
 Passengers shall use the logical map to find their way.
 The world shall be stored as a sparse matrix but still painted the same way.
 The grid shall show one in ten lines at large enough scales.
@@ -72,6 +70,9 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+A logical map of the tracks shall be updated when locos drive into stations.
+Stations shall have unique colors.
+Passengers shall have the same color as their target station.
 A station cell may be crossed by a railway.
 A station cell may host passengers.
 A passenger may transfer between a station cell and a wagon inside that cell.

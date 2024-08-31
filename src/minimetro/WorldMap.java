@@ -1,6 +1,5 @@
 package minimetro;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -35,7 +34,8 @@ public class WorldMap {
     public String toFormattedString() {
         String res = "<html>";
         for (int key : linesList.keySet()) {
-            res += "Line " + key + ": {" + linesList.get(key).getAllStations() + "}<br/>";
+            TrainLine currentLine = linesList.get(key);
+            res += "Line " + key + ": {" + currentLine.getAllStations() + "}<br/>";
         }
         res += "</html>";
         return res;

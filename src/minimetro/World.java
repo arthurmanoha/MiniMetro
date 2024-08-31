@@ -48,8 +48,8 @@ public class World implements PropertyChangeListener {
     private ArrayList<StationCell> stationList;
 
     public World() {
-        nbRows = 10;
-        nbCols = 10;
+        nbRows = 200;
+        nbCols = 200;
         cells = new ArrayList<>();
         for (int row = 0; row < nbRows; row++) {
             double yCell = (nbRows - row - 1) * Cell.cellSize;
@@ -267,9 +267,8 @@ public class World implements PropertyChangeListener {
      */
     private void addTrainElement(double xReal, double yReal, boolean isLoco) {
 
-        double size = Cell.cellSize;
         int col = getCol(xReal);
-        int row = nbRows - getRow(yReal) - 1;
+        int row = getRow(yReal);
 
         Point2D.Double newAbsolutePosition = new Point2D.Double(xReal, yReal);
 
@@ -294,11 +293,13 @@ public class World implements PropertyChangeListener {
      * @return
      */
     private int getCol(double xReal) {
-        return (int) ((xReal + Cell.cellSize / 2) / Cell.cellSize);
+        int result = (int) ((xReal + Cell.cellSize / 2) / Cell.cellSize);
+        return result;
     }
 
     private int getRow(double yReal) {
-        return (int) ((yReal + Cell.cellSize / 2) / Cell.cellSize);
+        int result = nbRows - (int) ((yReal + Cell.cellSize / 2) / Cell.cellSize) - 1;
+        return result;
     }
 
     /**
@@ -591,15 +592,29 @@ public class World implements PropertyChangeListener {
 
     protected void addTestTrain(double xStart, double yStart, int nbWagons) {
 
-        double spacing = distanceMax;
-
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 addLoco(xStart, yStart);
-                for (int i = 1; i <= nbWagons; i++) {
-                    addWagon(xStart + spacing * i, yStart);
+                int row = getRow(yStart);
+                int col = getCol(xStart);
+                Cell c = getCell(row, col);
+                TrainElement loco = c.getLoco();
+                double spacingX = 0;
+                double spacingY = 0;
+                if (loco.headingDegrees == 0) {
+                    spacingY = -distanceMax;
+                } else if (loco.headingDegrees == 90) {
+                    spacingX = -distanceMax;
+                } else if (loco.headingDegrees == 180) {
+                    spacingY = distanceMax;
+                } else if (loco.headingDegrees == 270) {
+                    spacingX = distanceMax;
                 }
+                for (int i = 1; i <= nbWagons; i++) {
+                    addWagon(xStart + spacingX * i, yStart + spacingY * i);
+                }
+
                 updateListeners();
             }
         });
