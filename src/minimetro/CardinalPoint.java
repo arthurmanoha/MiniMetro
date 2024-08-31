@@ -13,5 +13,31 @@ public enum CardinalPoint {
     SOUTHWEST,
     WEST,
     NORTHWEST,
-    CENTER
+    CENTER;
+
+    public static CardinalPoint getOpposite(CardinalPoint p) {
+        if (p == null) {
+            return null;
+        }
+        switch (p) {
+        case NORTH:
+            return SOUTH;
+        case NORTHEAST:
+            return SOUTHWEST;
+        case EAST:
+            return WEST;
+        case SOUTHEAST:
+            return NORTHWEST;
+        case SOUTH:
+            return NORTH;
+        case SOUTHWEST:
+            return NORTHEAST;
+        case WEST:
+            return EAST;
+        case NORTHWEST:
+            return SOUTHEAST;
+        default:
+            return CENTER;
+        }
+    }
 }

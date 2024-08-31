@@ -47,6 +47,7 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
 
     protected Color color;
     private double spriteZoomLevel = 0.4;
+    protected double spriteWidth, spriteHeight;
 
     protected int id; // Single value for each element
     protected int trainNumber; // This value is the same for elements linked together; -1 for non-linked elements.
@@ -67,6 +68,8 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         isBraking = false;
         currentSpeedLimit = -1;
         stopTimerDuration = -1;
+        spriteWidth = 0;
+        spriteHeight = 0;
     }
 
     @Override
@@ -81,14 +84,14 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
 
         if (image != null) {
             // Paint the image
-            int newWidth = (int) Math.max(5, (image.getWidth(this) * zoom) * spriteZoomLevel);
-            int newHeight = (int) Math.max(5, (image.getHeight(this) * zoom) * spriteZoomLevel);
-            Image scaledImage = image.getScaledInstance(newWidth, -1, Image.SCALE_DEFAULT);
+            spriteWidth = (int) Math.max(5, (image.getWidth(this) * zoom) * spriteZoomLevel);
+            spriteHeight = (int) Math.max(5, (image.getHeight(this) * zoom) * spriteZoomLevel);
+            Image scaledImage = image.getScaledInstance((int) spriteWidth, -1, Image.SCALE_DEFAULT);
 
             int xCenter = (int) (x0 + zoom * this.absolutePosition.x);
             int yCenter = (int) (g.getClipBounds().height - (y0 + zoom * this.absolutePosition.y));
-            int xImage = xCenter - newWidth / 2;
-            int yImage = yCenter - newHeight / 2;
+            int xImage = (int) (xCenter - spriteWidth / 2);
+            int yImage = (int) (yCenter - spriteHeight / 2);
 
             Graphics2D g2d = (Graphics2D) g;
             double headingRad = degToRad(headingDegrees);
@@ -273,7 +276,7 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         stopTimerDuration = newStopTimerDuration;
     }
 
-    private double degToRad(double headingDegrees) {
+    protected double degToRad(double headingDegrees) {
         return ((90 - headingDegrees) * 2 * PI) / 360;
     }
 
@@ -287,5 +290,9 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
 
     protected double getVy() {
         return linearSpeed * sin(getHeadingRad());
+    }
+
+    protected void addStationToLine(StationCell newStation) {
+        World.map.addStation(newStation, this.id);
     }
 }

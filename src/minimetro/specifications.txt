@@ -6,11 +6,21 @@ KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNO
 
 TEs are not snapped onto the correct RailSegment.
 A Locomotive does not brake hard enough at low speed.
+Passengers shall only board a wagon at zero speed.
 
 ---------------------------------------------------------------------------------------------------
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Passengers on the platform shall be positioned away from the tracks.
+A tool shall be available to place straight tracks overs long distances, horizontally, vertically or diagonally.
+Passengers shall use the logical map to find their way.
+The world shall be stored as a sparse matrix but still painted the same way.
+The grid shall show one in ten lines at large enough scales.
+The world shall contain water areas.
+Water areas can be crossed by bridges.
+The world shall contain mountains of different altitudes.
+A railroad on a slope shall have an impact on the speed of any TrainElement that drives on it.
 Dampen springs between TrainElements: a spring has less force when shrinking.
 TrainElements shall turn smoothly in curves.
 Tracks and trains shall have a simplified drawing version for large-scale visualization.
@@ -33,10 +43,6 @@ A cell may have a speed indicator that the loco shall observe, and increase its 
 A Cell may be a junction and contain two possible layouts, one being active and the other one greyed out.
 A carriage stores its passenger max and current capacity.
 An IntersectionCell is a special cell, where one track splits into several tracks.
-A station cell may be crossed by a railway.
-A station cell may host passengers.
-A passenger may transfer between a station cell and a neighboring wagon.
-A passenger has a station ID target.
 A passenger shall find a path from its current position to its target: which line to use, which station to walk to.
 A passenger may walk from one station to another if the stations have one side in common.
 Add portal cells.
@@ -64,6 +70,16 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+A logical map of the tracks shall be updated when locos drive into stations.
+Stations shall have unique colors.
+Passengers shall have the same color as their target station.
+A station cell may be crossed by a railway.
+A station cell may host passengers.
+A passenger may transfer between a station cell and a wagon inside that cell.
+A passenger has a station ID target.
+Passengers inside their wagon shall be displayed on aligned seats.
+Passengers board wagons up to capacity.
+Passengers do not board when they already are at destination.
 Toolbars shall be set vertical on either side of the window.
 Speed of TrainElements is now represented with a heading and linear velocity, not as vx and vy. Thus, locos no longer are reversed by slowing wagons.
 Create a stop timer: any loco in that cell shall stop for the given amount of time and may then start moving again.

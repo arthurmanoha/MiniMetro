@@ -6,9 +6,11 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.SwingUtilities;
+import static minimetro.CardinalPoint.*;
 
 /**
  * This class represents the terrain that contains the tracks, trains,
@@ -19,7 +21,7 @@ import javax.swing.SwingUtilities;
 public class World implements PropertyChangeListener {
 
     private int nbRows, nbCols;
-    private ArrayList<ArrayList<Cell>> cells;
+    protected ArrayList<ArrayList<Cell>> cells;
     private double dt; // Time elapsed in world during one simulation step.
 
     private ArrayList<TrainElement> trainsInTransition;
@@ -42,9 +44,12 @@ public class World implements PropertyChangeListener {
     private double speedIndicatorValue;
     private double stopTimerValue;
 
+    public static WorldMap map;
+    private ArrayList<StationCell> stationList;
+
     public World() {
-        nbRows = 40;
-        nbCols = 100;
+        nbRows = 200;
+        nbCols = 200;
         cells = new ArrayList<>();
         for (int row = 0; row < nbRows; row++) {
             double yCell = (nbRows - row - 1) * Cell.cellSize;
@@ -63,7 +68,9 @@ public class World implements PropertyChangeListener {
         periodMillisec = (int) (1000 * dt);
         startTimer();
         speedIndicatorValue = 0;
-        stopTimerValue = 0;
+        stopTimerValue = 5;
+        map = new WorldMap(this);
+        stationList = new ArrayList<>();
     }
 
     public int getNbRows() {
@@ -203,12 +210,31 @@ public class World implements PropertyChangeListener {
         }
     }
 
+    /**
+     * Convert a simple cell into a station, and the other way around.
+     *
+     * @param row
+     * @param col
+     */
     protected void toggleStation(int row, int col) {
         Cell oldCell = this.getCell(row, col);
-        if (oldCell instanceof StationCell) {
-            this.setCell(row, col, new Cell());
-//        } else {
-//            this.setCell(row, col, new StationCell());
+        if (oldCell != null) {
+            Cell newCell;
+
+            ArrayList<TrainElement> oldTrains = oldCell.getAllElements();
+
+            Point2D.Double pos = oldCell.getAbsolutePosition();
+            if (oldCell instanceof StationCell) {
+                newCell = new Cell(oldCell);
+                stationList.remove((StationCell) oldCell);
+            } else {
+                newCell = new StationCell(oldCell);
+                stationList.add((StationCell) newCell);
+            }
+            this.setCell(row, col, newCell);
+            for (TrainElement oldTrain : oldTrains) {
+                newCell.addTrainElement(oldTrain);
+            }
         }
     }
 
@@ -241,9 +267,8 @@ public class World implements PropertyChangeListener {
      */
     private void addTrainElement(double xReal, double yReal, boolean isLoco) {
 
-        double size = Cell.cellSize;
-        int col = (int) ((xReal + size / 2) / size);
-        int row = nbRows - (int) ((yReal + size / 2) / size) - 1;
+        int col = getCol(xReal);
+        int row = getRow(yReal);
 
         Point2D.Double newAbsolutePosition = new Point2D.Double(xReal, yReal);
 
@@ -259,6 +284,22 @@ public class World implements PropertyChangeListener {
             cell.addTrainElement(newElement);
             updateTrainLinks(newElement, row, col);
         }
+    }
+
+    /**
+     * Tell which column a given coordinate belongs to.
+     *
+     * @param xReal
+     * @return
+     */
+    private int getCol(double xReal) {
+        int result = (int) ((xReal + Cell.cellSize / 2) / Cell.cellSize);
+        return result;
+    }
+
+    private int getRow(double yReal) {
+        int result = nbRows - (int) ((yReal + Cell.cellSize / 2) / Cell.cellSize) - 1;
+        return result;
     }
 
     /**
@@ -346,6 +387,7 @@ public class World implements PropertyChangeListener {
             }
             newTrackCell.addLink(newLinkDirection);
         }
+//        map.computeMap();
     }
 
     /**
@@ -529,6 +571,7 @@ public class World implements PropertyChangeListener {
     protected void removeTrack(int row, int col) {
         Cell c = getCell(row, col);
         c.removeTracks();
+//        map.computeMap();
     }
 
     protected void removeTrains(int row, int col) {
@@ -549,15 +592,29 @@ public class World implements PropertyChangeListener {
 
     protected void addTestTrain(double xStart, double yStart, int nbWagons) {
 
-        double spacing = distanceMax;
-
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 addLoco(xStart, yStart);
-                for (int i = 1; i <= nbWagons; i++) {
-                    addWagon(xStart + spacing * i, yStart);
+                int row = getRow(yStart);
+                int col = getCol(xStart);
+                Cell c = getCell(row, col);
+                TrainElement loco = c.getLoco();
+                double spacingX = 0;
+                double spacingY = 0;
+                if (loco.headingDegrees == 0) {
+                    spacingY = -distanceMax;
+                } else if (loco.headingDegrees == 90) {
+                    spacingX = -distanceMax;
+                } else if (loco.headingDegrees == 180) {
+                    spacingY = distanceMax;
+                } else if (loco.headingDegrees == 270) {
+                    spacingX = distanceMax;
                 }
+                for (int i = 1; i <= nbWagons; i++) {
+                    addWagon(xStart + spacingX * i, yStart + spacingY * i);
+                }
+
                 updateListeners();
             }
         });
@@ -602,5 +659,76 @@ public class World implements PropertyChangeListener {
         if (c != null) {
             c.setStopTimer(stopTimerValue);
         }
+    }
+
+    protected void generatePassengers() {
+        int nbNewPassengers = new Random().nextInt(30);
+        int nbPassengersGenerated = 0;
+        while (nbPassengersGenerated < nbNewPassengers) {
+
+            // Choose one station at random
+            int startingRank = new Random().nextInt(stationList.size());
+            StationCell startingStation = stationList.get(startingRank);
+
+            // Set the target of the passenger
+            int targetRank = new Random().nextInt(stationList.size());
+            if (targetRank == startingRank) { // Target station must be different from start station.
+                targetRank = (targetRank + 1) % (stationList.size());
+            }
+            int targetStationNumber = stationList.get(targetRank).getId();
+            Passenger newPassenger = new Passenger();
+            newPassenger.setTargetStationId(targetStationNumber);
+            // Add the passenger to the station
+            startingStation.addPassenger(newPassenger);
+            nbPassengersGenerated++;
+        }
+        computePaths();
+    }
+
+    private Iterable<StationCell> getStations() {
+        ArrayList<StationCell> allStations = new ArrayList<>();
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                if (c instanceof StationCell) {
+                    allStations.add((StationCell) c);
+                }
+            }
+        }
+        return allStations;
+    }
+
+    /**
+     * Compute all passengers paths to their destinations.
+     */
+    protected void computePaths() {
+        for (StationCell station : stationList) {
+            for (Passenger p : station.passengerList) {
+                p.computePath(this, station);
+            }
+        }
+    }
+
+    protected void boardPassengers() {
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                c.boardPassengers();
+            }
+        }
+    }
+
+    protected void getPassengersOff() {
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                c.getPassengersOff();
+            }
+        }
+    }
+
+    /**
+     * Map the links between the stations.
+     */
+    protected void clearMap() {
+        System.out.println("Reset world map");
+        map = new WorldMap(this);
     }
 }

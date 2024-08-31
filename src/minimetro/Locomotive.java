@@ -16,7 +16,7 @@ public class Locomotive extends TrainElement {
 
     public Locomotive() {
         super();
-        maxSpeed = 60.0;
+        maxSpeed = 300.0;
         motorPower = 30.0;
         color = Color.red;
         mass = 10;
@@ -35,7 +35,7 @@ public class Locomotive extends TrainElement {
         g.setColor(Color.black);
 
         String linearSpeedText = linearSpeed + "";
-        if (abs(linearSpeed) > 0.0001) {
+        if (abs(linearSpeed) > 0.001) {
             int rankOfDot = linearSpeedText.indexOf(".");
             if (rankOfDot != -1) {
                 linearSpeedText = linearSpeedText.substring(0, Math.min(linearSpeedText.length(), rankOfDot + 3));
@@ -44,9 +44,8 @@ public class Locomotive extends TrainElement {
             linearSpeedText = "0";
         }
         String text = "v " + linearSpeedText;
-        text += "  h <" + (int) headingDegrees + ">";
         if (stopTimerDuration > 0) {
-            text += (" STOP " + stopTimerDuration);
+            text += (" STOP " + (int) stopTimerDuration);
         }
         int xCenter = (int) (x0 + zoom * this.absolutePosition.x);
         int yCenter = (int) (g.getClipBounds().height - (y0 + zoom * this.absolutePosition.y));

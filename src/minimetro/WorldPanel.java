@@ -37,10 +37,10 @@ public class WorldPanel extends JPanel implements MouseListener,
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = 2.5937;
+        zoomLevel = 0.83;
         zoomLevelFactor = 1.1;
-        x0 = -78;
-        y0 = -1411;
+        x0 = -491;
+        y0 = -14566;
         currentTool = GuiTool.NO_TOOL;
         prevMouseX = 0;
         prevMouseY = 0;
@@ -188,7 +188,7 @@ public class WorldPanel extends JPanel implements MouseListener,
             // compute movement
             x0 += dx;
             y0 += dy;
-
+//            System.out.println(x0 + " " + y0 + " " + zoomLevel);
             repaint();
         } else if (currentTool.equals(GuiTool.TRACK)) {
             currentCol = getCol(e.getX());

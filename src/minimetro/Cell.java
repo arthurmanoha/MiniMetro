@@ -21,17 +21,15 @@ public class Cell {
 
     protected Color color;
 
-    private ArrayList<TrainElement> trainElements;
+    protected ArrayList<TrainElement> trainElements;
     public ArrayList<TransferringTrain> trainsLeavingCell;
     double maxHeadingDiff = 10;
 
     private ArrayList<RailSegment> rails;
     private int nbRails;
     private double totalRailLength;
-    private double singleRailLength;
-    ArrayList<Color> colorList;
 
-    private Point2D.Double absolutePosition; // This point is the center of the cell.
+    protected Point2D.Double absolutePosition; // This point is the center of the cell.
 
     private ArrayList<CardinalPoint> links;
 
@@ -42,6 +40,7 @@ public class Cell {
     // The TrainElements that are currently stopped or have already stopped in
     // this cell and started moving again, and still are in this cell.
     private ArrayList<TrainElement> alreadyStoppedTrains;
+    private Cell previous;
 
     public Cell() {
         color = Color.gray;
@@ -51,21 +50,20 @@ public class Cell {
         rails = new ArrayList<>();
         totalRailLength = cellSize;
         nbRails = 20;
-        singleRailLength = totalRailLength / nbRails;
-        colorList = new ArrayList<>();
-        colorList.add(Color.red);
-        colorList.add(Color.green);
-        colorList.add(Color.blue);
-        colorList.add(Color.yellow);
-        colorList.add(Color.gray);
-        colorList.add(Color.orange);
-        colorList.add(Color.MAGENTA);
-        colorList.add(Color.CYAN);
         absolutePosition = new Point2D.Double();
         links = new ArrayList<>();
         links.add(CardinalPoint.CENTER);
         links.add(CardinalPoint.CENTER);
         speedLimit = Integer.MAX_VALUE;
+    }
+
+    public Cell(Cell previousCell) {
+        this();
+        this.absolutePosition = previousCell.absolutePosition;
+        this.rails = previousCell.rails;
+        this.nbRails = previousCell.nbRails;
+        this.speedLimit = previousCell.speedLimit;
+        this.stopTimerDuration = previousCell.stopTimerDuration;
     }
 
     public Cell(Point2D.Double newAbsPos) {
@@ -99,7 +97,7 @@ public class Cell {
 
         // Draw background
         g.setColor(this.color);
-//        g.fillRect((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) (appSize), (int) (appSize));
+        g.fillRect((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) (appSize), (int) (appSize));
 
         // Draw borders
         g.setColor(Color.black);
@@ -172,6 +170,7 @@ public class Cell {
     protected TrainElement addTrainElement(TrainElement newTrain) {
         this.trainElements.add(newTrain);
         snapToRail();
+//        newTrain.setCurrentStationNumber(-1);
         return null;
     }
 
@@ -880,6 +879,8 @@ public class Cell {
             double diskRadius = appSize / 8;
             g.setColor(Color.red);
             g.fillOval((int) (xSign - diskRadius), (int) (ySign - diskRadius), (int) (2 * diskRadius), (int) (2 * diskRadius));
+            g.setColor(Color.black);
+            g.drawOval((int) (xSign - diskRadius), (int) (ySign - diskRadius), (int) (2 * diskRadius), (int) (2 * diskRadius));
             g.setColor(Color.white);
             diskRadius = 0.8 * diskRadius;
             g.fillOval((int) (xSign - diskRadius), (int) (ySign - diskRadius), (int) (2 * diskRadius), (int) (2 * diskRadius));
@@ -902,5 +903,40 @@ public class Cell {
             }
         }
         // otherwise this cell does not stop trains.
+    }
+
+    protected Point2D.Double getAbsolutePosition() {
+        return this.absolutePosition;
+    }
+
+    protected void getPassengersOff() {
+
+    }
+
+    protected void boardPassengers() {
+
+    }
+
+    /**
+     * Get the direction of one of the two connections of that cell to a
+     * neighbor;
+     * but not the direction leading to where we're coming from.
+     * Example: calling that method on a cell linked NORTH-SOUTH with
+     * comingFrom=North, we must return south.
+     *
+     * @param comingFrom
+     * @return
+     */
+    protected CardinalPoint getDirectionExcept(CardinalPoint comingFrom) {
+        if (!this.hasRails()) {
+            return null;
+        }
+
+        CardinalPoint forbiddenDirection = CardinalPoint.getOpposite(comingFrom);
+        if (links.get(0).equals(forbiddenDirection)) {
+            return links.get(1);
+        } else {
+            return links.get(0);
+        }
     }
 }

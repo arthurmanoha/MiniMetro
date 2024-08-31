@@ -2,13 +2,12 @@ package minimetro;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.GridBagLayout;
 import java.awt.GridLayout;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
 /**
@@ -23,12 +22,13 @@ public class GUI extends JFrame {
     JPanel speedToolbar;
     JPanel mainToolbar;
 
-    int windowWidth = 1000;
+    int windowWidth = 1900;
     int windowHeight = 1000;
 
     private World world;
     private JTextField speedIndicatorTextField;
     private JTextField stopTimerTextField;
+    double defaultStopTimerDuration = 5;
 
     public GUI(World w) {
         super();
@@ -42,7 +42,7 @@ public class GUI extends JFrame {
         mainToolbar.setLayout(new GridLayout(3, 1));
 
         topToolbar = new JPanel();
-        topToolbar.setLayout(new GridLayout(10, 1));
+        topToolbar.setLayout(new GridLayout(14, 1));
 
         JButton playPauseButton = new JButton("PlayPause");
         playPauseButton.addActionListener((e) -> {
@@ -66,42 +66,36 @@ public class GUI extends JFrame {
 
         JButton removeTrackButton = new JButton("Remove Track");
         removeTrackButton.addActionListener((e) -> {
-            System.out.println("Pressed remove track button");
             panel.setTool(GuiTool.TRACK_REMOVAL);
         });
         topToolbar.add(removeTrackButton);
 
         JButton stationButton = new JButton("Station");
         stationButton.addActionListener((e) -> {
-            System.out.println("Pressed station button");
             panel.setTool(GuiTool.STATION);
         });
         topToolbar.add(stationButton);
 
         JButton locoButton = new JButton("Loco");
         locoButton.addActionListener((e) -> {
-            System.out.println("Pressed loco button");
             panel.setTool(GuiTool.LOCO);
         });
         topToolbar.add(locoButton);
 
         JButton wagonButton = new JButton("Wagon");
         wagonButton.addActionListener((e) -> {
-            System.out.println("Pressed wagon button");
             panel.setTool(GuiTool.WAGON);
         });
         topToolbar.add(wagonButton);
 
         JButton removeTrainsButton = new JButton("Remove trains");
         removeTrainsButton.addActionListener((e) -> {
-            System.out.println("Pressed remove trains button");
             panel.setTool(GuiTool.TRAIN_REMOVAL);
         });
         topToolbar.add(removeTrainsButton);
 
         JButton zoomInButton = new JButton("Zoom in");
         zoomInButton.addActionListener((e) -> {
-            System.out.println("Pressed zoom in button");
             panel.zoomIn();
             panel.repaint();
         });
@@ -109,15 +103,33 @@ public class GUI extends JFrame {
 
         JButton zoomOutButton = new JButton("Zoom out");
         zoomOutButton.addActionListener((e) -> {
-            System.out.println("Pressed zoom out button");
             panel.zoomOut();
             panel.repaint();
         });
         topToolbar.add(zoomOutButton);
 
+        JButton boardButton = new JButton("Board");
+        boardButton.addActionListener((e) -> {
+            w.boardPassengers();
+        });
+        topToolbar.add(boardButton);
+
+        JButton getOffButton = new JButton("Get off");
+        getOffButton.addActionListener((e) -> {
+            w.getPassengersOff();
+        });
+        topToolbar.add(getOffButton);
+
+        JButton generatePassengersButton = new JButton("Generate Passengers");
+        generatePassengersButton.addActionListener((e) -> {
+            w.generatePassengers();
+        });
+        topToolbar.add(generatePassengersButton);
+
         mainToolbar.add(topToolbar);
 
         locoToolbar = new JPanel();
+        locoToolbar.setLayout(new GridLayout(4, 2));
 
         JButton startLocoButton = new JButton("Start Locos");
         startLocoButton.addActionListener((e) -> {
@@ -132,6 +144,24 @@ public class GUI extends JFrame {
         locoToolbar.add(stopLocoButton);
 
         mainToolbar.add(locoToolbar);
+
+        JButton worldMapButton = new JButton("Display World Map");
+        locoToolbar.add(worldMapButton);
+
+        JButton clearMapButton = new JButton("Clear Map");
+        clearMapButton.addActionListener((e) -> {
+            w.clearMap();
+        });
+
+        locoToolbar.add(clearMapButton);
+        JLabel worldMapLabel = new JLabel();
+        worldMapButton.addActionListener((e) -> {
+            worldMapLabel.setText(World.map.toFormattedString());
+        });
+        JScrollPane scrollMapLabel = new JScrollPane(worldMapLabel,
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        locoToolbar.add(scrollMapLabel);
 
         this.add(mainToolbar, BorderLayout.WEST);
 
@@ -201,7 +231,7 @@ public class GUI extends JFrame {
 
         stopTimerTextField = new JTextField();
         stopTimerTextField.setPreferredSize(new Dimension(80, 27));
-        stopTimerTextField.setText("20.0");
+        stopTimerTextField.setText("" + defaultStopTimerDuration);
         stopTimerTextField.addActionListener((e) -> {
             readStopTimer();
         });
@@ -224,14 +254,22 @@ public class GUI extends JFrame {
     }
 
     private void readSpeedLimit() {
-        double value = Double.valueOf(speedIndicatorTextField.getText());
-        System.out.println("Value read from text field: " + value);
-        world.setSpeedLimitValue(value);
+        try {
+            double value = Double.valueOf(speedIndicatorTextField.getText());
+            System.out.println("Value read from text field: " + value);
+            world.setSpeedLimitValue(value);
+        } catch (NumberFormatException e) {
+            System.out.println("Value incorrect, speed limit unchanged.");
+        }
     }
 
     private void readStopTimer() {
-        double value = Double.valueOf(stopTimerTextField.getText());
-        System.out.println("Value read from text field: " + value);
-        world.setStopTimerDuration(value);
+        try {
+            double value = Double.valueOf(stopTimerTextField.getText());
+            System.out.println("Value read from text field: " + value);
+            world.setStopTimerDuration(value);
+        } catch (NumberFormatException e) {
+            System.out.println("Value incorrect, stop timer unchanged.");
+        }
     }
 }
