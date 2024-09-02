@@ -113,7 +113,10 @@ public class WorldMap {
         if (success) {
             p.clearPath();
             while (currentNode != null) {
-                p.addPathStep(currentNode.getStationId());
+                int stationId = currentNode.getStationId();
+                if (stationId != currentStationId) {
+                    p.addPathStep(stationId);
+                }
                 currentNode = currentNode.getPrev();
             }
         }

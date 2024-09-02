@@ -34,6 +34,9 @@ public class MiniMetro {
         xStart = 1200;
         yStart = 18200;
         w.addTestTrain(xStart, yStart, nbWagons);
+        xStart = 1200;
+        yStart = 18400;
+        w.addTestTrain(xStart, yStart, nbWagons);
 
 //        w.setSpeedIndicator(14, 17);
 //        w.setSpeedIndicator(16, 17);
@@ -53,11 +56,10 @@ public class MiniMetro {
         w.toggleStation(18, 11);
 //        w.setStopTimer(19, 11);
         w.toggleStation(17, 6);
-        w.setSpeedLimitValue(10);
-        w.setSpeedIndicator(17, 6);
         w.setSpeedLimitValue(60);
+        w.setSpeedIndicator(17, 6);
         w.setSpeedIndicator(17, 9);
-        w.setSpeedIndicator(17, 12);
+        w.setSpeedIndicator(15, 12);
         w.setStopTimer(17, 9);
         w.setStopTimer(17, 11);
         w.toggleStation(14, 15);

@@ -39,7 +39,6 @@ public class StationCell extends Cell {
         colorList.add(Color.gray.darker());
         int colorIndex = id % colorList.size();
         color = colorList.get(colorIndex);
-        speedLimit = 10;
     }
 
     public int getId() {
@@ -94,11 +93,19 @@ public class StationCell extends Cell {
                 }
             }
         }
+
+        for (Passenger p : passengerList) {
+            World.map.computePath(this.getId(), p);
+        }
     }
 
     @Override
     protected void boardPassengers() {
         ArrayList<Passenger> boardingPassengers = new ArrayList<>();
+
+        for (Passenger p : passengerList) {
+            World.map.computePath(this.getId(), p);
+        }
 
         if (hasPassengers()) {
             for (Passenger p : passengerList) {
@@ -114,6 +121,7 @@ public class StationCell extends Cell {
                                     wagon.receivePassenger(p);
                                     passengerStillOnPlatform = false;
                                     boardingPassengers.add(p);
+                                    p.removeStationFromPath(this.getId());
                                 }
                             }
                         }
@@ -141,23 +149,5 @@ public class StationCell extends Cell {
             newLoco.addStationToLine(this);
         }
         return null;
-    }
-
-    /**
-     * While moving trains (which is done by parent class Cell), we update the
-     * passengers travel itineraries.
-     *
-     * @param dt
-     */
-    @Override
-    protected void moveTrains(double dt) {
-        super.moveTrains(dt);
-
-        for (TrainElement te : trainElements) {
-            if (te instanceof Wagon) {
-                Wagon w = ((Wagon) te);
-                w.updatePassengersItineraries(this.id, World.map);
-            }
-        }
     }
 }

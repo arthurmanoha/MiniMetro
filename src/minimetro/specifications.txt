@@ -13,12 +13,15 @@ Passengers shall only board a wagon at zero speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Passengers shall walk along a walkway to reach another station.
 Tracks, trains and stations shall be saved to file and loaded from file.
 Locomotives shall be numbered independantly from the wagons.
 Long-range 45° or 90° turns, that link two distant squares with a track independant from the other squares it crosses.
+Wagons shall be created and linked together by click and drag over a track.
 Stations names shall be selected from a list made of real-life subway stations of cities.
 Passengers on the platform shall be positioned away from the tracks.
 A tool shall be available to place straight tracks overs long distances, horizontally, vertically or diagonally.
+Rain makes braking distances longer.
 The world shall be stored as a sparse matrix but still painted the same way.
 The grid shall show one in ten lines at large enough scales.
 The world shall contain water areas.
@@ -53,6 +56,8 @@ Add portal cells.
 Tools:
 
 Display a list radio buttons for locomotives in a panel; a selected radio button will focus the view on the loco.
+Focus from static view to loco view shall be smoothed.
+Focus on a full train, a loco and everything linked to it.
 Display the current speed of each loco if a radio button is checked.
 
 Create passengers with destination.

@@ -49,11 +49,14 @@ public class Passenger {
         g.drawOval((int) (xApp - appSize / 2), (int) (yApp - appSize / 2),
                 (int) appSize, (int) appSize);
         g.setColor(Color.black);
-        String text = "" + targetStationId;
+        String text = "";
+        for (int step : path) {
+            text += step + " ";
+        }
         Font font = new Font("helvetica", Font.PLAIN, (int) appSize);
         g.setFont(font);
         FontMetrics metrics = g.getFontMetrics(font);
-        g.setColor(Color.white);
+        g.setColor(Color.gray.darker());
         g.drawString(text,
                 (int) (xApp - metrics.stringWidth(text) / 2),
                 (int) (yApp - metrics.getHeight() / 2 + metrics.getAscent()));
@@ -105,5 +108,14 @@ public class Passenger {
             res += stationId + " ";
         }
         return res;
+    }
+
+    /**
+     * Remove the given station id from path
+     *
+     * @param stationId
+     */
+    protected void removeStationFromPath(int stationId) {
+        path.remove((Integer) stationId);
     }
 }

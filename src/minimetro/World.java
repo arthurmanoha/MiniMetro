@@ -21,7 +21,7 @@ import static minimetro.CardinalPoint.*;
 public class World implements PropertyChangeListener {
 
     private static final boolean IS_TESTING_PASSENGERS = true;
-    private static final int TEST_TARGET_STATION_NUMBER = 4;
+    private static final int TEST_TARGET_STATION_NUMBER = 7;
     private static final int TEST_NB_PASSENGERS = 1;
     private static final int TEST_STARTING_STATION = 11;
 
@@ -705,6 +705,7 @@ public class World implements PropertyChangeListener {
     }
 
     protected void boardPassengers() {
+        System.out.println("World.boardPassengers()");
         for (ArrayList<Cell> row : cells) {
             for (Cell c : row) {
                 c.boardPassengers();

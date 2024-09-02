@@ -120,13 +120,4 @@ public class Wagon extends TrainElement {
     protected boolean hasRoom() {
         return passengersList.size() < maxCapacity;
     }
-
-    protected void updatePassengersItineraries(int stationId, WorldMap map) {
-        if (isStopped()) {
-            // Each passenger must use the map to update their path acros the grid.
-            for (Passenger p : passengersList) {
-                map.computePath(stationId, p);
-            }
-        }
-    }
 }
