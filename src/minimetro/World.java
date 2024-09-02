@@ -20,10 +20,10 @@ import static minimetro.CardinalPoint.*;
  */
 public class World implements PropertyChangeListener {
 
-    private static final boolean IS_TESTING_PASSENGERS = true;
+    private static final boolean IS_TESTING_PASSENGERS = false;
     private static final int TEST_TARGET_STATION_NUMBER = 7;
     private static final int TEST_NB_PASSENGERS = 1;
-    private static final int TEST_STARTING_STATION = 11;
+    private static final int TEST_STARTING_STATION = -1;
 
     private int nbRows, nbCols;
     protected ArrayList<ArrayList<Cell>> cells;
@@ -134,6 +134,12 @@ public class World implements PropertyChangeListener {
         for (ArrayList<Cell> row : cells) {
             for (Cell c : row) {
                 c.moveTrains(dt);
+            }
+        }
+
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                c.movePassengers(dt);
             }
         }
 
@@ -678,7 +684,7 @@ public class World implements PropertyChangeListener {
 
             // Choose one station at random
             int startingRank;
-            if (IS_TESTING_PASSENGERS) {
+            if (IS_TESTING_PASSENGERS && TEST_STARTING_STATION != -1) {
                 startingRank = TEST_STARTING_STATION;
             } else {
                 startingRank = new Random().nextInt(stationList.size());
@@ -701,6 +707,18 @@ public class World implements PropertyChangeListener {
             // Add the passenger to the station
             startingStation.addPassenger(newPassenger);
             nbPassengersGenerated++;
+        }
+
+        World.map.computeWalkways();
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                if (c instanceof StationCell) {
+                    StationCell station = (StationCell) c;
+                    for (Passenger p : station.passengerList) {
+                        World.map.computePath(station.getId(), p);
+                    }
+                }
+            }
         }
     }
 

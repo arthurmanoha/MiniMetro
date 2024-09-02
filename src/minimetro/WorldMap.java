@@ -60,11 +60,15 @@ public class WorldMap {
                     if (cellEast != null && cellEast instanceof StationCell) {
                         walkwayList.add(new Walkway(((StationCell) currentCell).getId(),
                                 ((StationCell) cellEast).getId()));
+                        currentCell.addWalkwayDirection((StationCell) cellEast, CardinalPoint.EAST);
+                        cellEast.addWalkwayDirection((StationCell) currentCell, CardinalPoint.WEST);
                     }
                     Cell cellSouth = w.getCell(row + 1, col);
                     if (cellSouth != null && cellSouth instanceof StationCell) {
                         walkwayList.add(new Walkway(((StationCell) currentCell).getId(),
                                 ((StationCell) cellSouth).getId()));
+                        currentCell.addWalkwayDirection((StationCell) cellSouth, CardinalPoint.SOUTH);
+                        cellSouth.addWalkwayDirection((StationCell) currentCell, CardinalPoint.NORTH);
                     }
                 }
             }

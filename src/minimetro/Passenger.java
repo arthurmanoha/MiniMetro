@@ -13,6 +13,8 @@ import java.util.ArrayList;
 public class Passenger {
 
     private double x, y;
+    private double vx, vy;
+    private double vMax;
     private int targetStationId;
     private double size = 10;
     private Color color = Color.blue;
@@ -24,6 +26,11 @@ public class Passenger {
         id = NB_PASSENGERS_CREATED;
         NB_PASSENGERS_CREATED++;
         path = new ArrayList<>();
+        x = Double.MAX_VALUE;
+        y = Double.MAX_VALUE;
+        vx = 0;
+        vy = 0;
+        vMax = 10;
     }
 
     @Override
@@ -53,6 +60,9 @@ public class Passenger {
         for (int step : path) {
             text += step + " ";
         }
+        if (path.isEmpty()) {
+            text += "_no_path_";
+        }
         Font font = new Font("helvetica", Font.PLAIN, (int) appSize);
         g.setFont(font);
         FontMetrics metrics = g.getFontMetrics(font);
@@ -60,6 +70,14 @@ public class Passenger {
         g.drawString(text,
                 (int) (xApp - metrics.stringWidth(text) / 2),
                 (int) (yApp - metrics.getHeight() / 2 + metrics.getAscent()));
+    }
+
+    protected double getX() {
+        return this.x;
+    }
+
+    protected double getY() {
+        return this.y;
     }
 
     protected void setCoordinates(double newX, double newY) {
@@ -99,7 +117,9 @@ public class Passenger {
     }
 
     protected void validateFirstPathStep() {
-        path.remove(0);
+        if (!path.isEmpty()) {
+            path.remove(0);
+        }
     }
 
     protected String getItineraryToString() {
@@ -117,5 +137,20 @@ public class Passenger {
      */
     protected void removeStationFromPath(int stationId) {
         path.remove((Integer) stationId);
+    }
+
+    protected void setSpeed(double newVx, double newVy) {
+        vx = newVx * vMax;
+        vy = newVy * vMax;
+    }
+
+    protected void move(double dt) {
+        this.x += vx * dt;
+        this.y += vy * dt;
+    }
+
+    protected void stopWalking() {
+        vx = 0;
+        vy = 0;
     }
 }

@@ -5,6 +5,8 @@ import java.awt.Font;
 import java.awt.Graphics;
 import static java.lang.Math.max;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Random;
 
 /**
@@ -18,12 +20,16 @@ public class StationCell extends Cell {
     private int id;
     protected ArrayList<Passenger> passengerList;
 
+    // Directions of the connected stations.
+    private HashMap<CardinalPoint, StationCell> walkways;
+
     public StationCell(Cell previousCell) {
         super(previousCell);
         this.color = Color.yellow;
         id = NB_STATIONS_CREATED;
         NB_STATIONS_CREATED++;
         passengerList = new ArrayList<>();
+        walkways = new HashMap<>();
 
         colorList = new ArrayList<>();
         colorList.add(Color.red.darker().darker());
@@ -71,9 +77,12 @@ public class StationCell extends Cell {
 
     protected void addPassenger(Passenger passenger) {
 
-        double newX = this.absolutePosition.x + (new Random().nextDouble() - 0.5) * cellSize / 2;
-        double newY = this.absolutePosition.y + (new Random().nextDouble() - 0.5) * cellSize / 2;
-        passenger.setCoordinates(newX, newY);
+        if (passenger.getX() == Double.MAX_VALUE) {
+            double newX = this.absolutePosition.x + (new Random().nextDouble() - 0.5) * cellSize / 2;
+            double newY = this.absolutePosition.y + (new Random().nextDouble() - 0.5) * cellSize / 2;
+            passenger.setCoordinates(newX, newY);
+        }
+        passenger.stopWalking();
 
         this.passengerList.add(passenger);
     }
@@ -149,5 +158,65 @@ public class StationCell extends Cell {
             newLoco.addStationToLine(this);
         }
         return null;
+    }
+
+    /**
+     * Move passengers following these rules, in a descending order of priority:
+     * passengers on a connection shall walk to the nearby station,
+     * passengers shall move away from each other,
+     * passengers shall stay away from the tracks and the limits of the cell.
+     *
+     * @param dt
+     */
+    @Override
+    protected void movePassengers(double dt) {
+
+        Iterator<Passenger> iter = passengerList.iterator();
+        while (iter.hasNext()) {
+            Passenger p = iter.next();
+            int otherStationId = p.getLastPathStep();
+
+            StationCell neighborCell = null;
+            for (CardinalPoint direction : walkways.keySet()) {
+                neighborCell = walkways.get(direction);
+                if (neighborCell != null && neighborCell.getId() == otherStationId) {
+                    // Passenger wants to go to neighborCell.
+                    switch (direction) {
+                    case NORTH:
+                        p.setSpeed(0, 1);
+                        break;
+                    case EAST:
+                        p.setSpeed(1, 0);
+                        break;
+                    case SOUTH:
+                        p.setSpeed(0, -1);
+                        break;
+                    case WEST:
+                        p.setSpeed(-1, 0);
+                        break;
+                    default:
+                        p.setSpeed(0, 0);
+                    }
+                }
+            }
+            p.move(dt);
+            if (hasLeftCell(p) && neighborCell != null) {
+                iter.remove();
+                neighborCell.addPassenger(p);
+            }
+        }
+    }
+
+    private boolean hasLeftCell(Passenger p) {
+        return (p.getX() > this.absolutePosition.x + cellSize / 2
+                || p.getX() < this.absolutePosition.x - cellSize / 2
+                || p.getY() > this.absolutePosition.y + cellSize / 2
+                || p.getY() < this.absolutePosition.y - cellSize / 2);
+    }
+
+    @Override
+    protected void addWalkwayDirection(StationCell connectedStation, CardinalPoint cardinalPoint
+    ) {
+        this.walkways.put(cardinalPoint, connectedStation);
     }
 }

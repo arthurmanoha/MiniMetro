@@ -31,6 +31,7 @@ public class Cell {
 
     protected Point2D.Double absolutePosition; // This point is the center of the cell.
 
+    // Directions with which this cell shares a railroad.
     private ArrayList<CardinalPoint> links;
 
     protected double speedLimit; // Integer.MAX_VALUE if not set, -1 for end of limit, >0 for actual limit.
@@ -940,5 +941,17 @@ public class Cell {
         } else {
             return links.get(0);
         }
+    }
+
+    /**
+     * Only StationCells do that.
+     */
+    protected void movePassengers(double dt) {
+    }
+
+    /**
+     * Only StationCells do that.
+     */
+    protected void addWalkwayDirection(StationCell cell, CardinalPoint cardinalPoint) {
     }
 }
