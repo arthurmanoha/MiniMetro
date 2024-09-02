@@ -33,7 +33,7 @@ public class Cell {
 
     private ArrayList<CardinalPoint> links;
 
-    private double speedLimit; // Integer.MAX_VALUE if not set, -1 for end of limit, >0 for actual limit.
+    protected double speedLimit; // Integer.MAX_VALUE if not set, -1 for end of limit, >0 for actual limit.
     // StopTimer: -1: no stopping required; >0: brake and stop for that many seconds.
     private double stopTimerDuration;
 
@@ -117,6 +117,8 @@ public class Cell {
 
         if (stopTimerDuration > 0) {
             g.setColor(Color.black);
+            Font font = new Font("helvetica", Font.PLAIN, 10);
+            g.setFont(font);
             String text = "Stop for " + stopTimerDuration + " seconds";
             g.drawString(text, (int) (xApp - appSize / 2 + 5), (int) (yApp - appSize / 2 + 15));
         }

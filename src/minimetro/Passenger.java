@@ -2,8 +2,8 @@ package minimetro;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
-import static java.lang.Math.max;
 import java.util.ArrayList;
 
 /**
@@ -14,24 +14,25 @@ public class Passenger {
 
     private double x, y;
     private int targetStationId;
-    private double size = 2.5;
+    private double size = 10;
     private Color color = Color.blue;
     private static int NB_PASSENGERS_CREATED = 0;
     private int id;
-
-    private ArrayList<Cell> openList;
-    private ArrayList<Cell> closedList;
+    private ArrayList<Integer> path;
 
     public Passenger() {
         id = NB_PASSENGERS_CREATED;
         NB_PASSENGERS_CREATED++;
-        openList = new ArrayList<>();
-        closedList = new ArrayList<>();
+        path = new ArrayList<>();
     }
 
     @Override
     public String toString() {
-        return "P_" + id;
+        String result = "P_ " + id;
+        for (Integer step : path) {
+            result += " " + step;
+        }
+        return result;
     }
 
     protected void paint(Graphics g, double x0, double y0, double zoom) {
@@ -47,6 +48,15 @@ public class Passenger {
         g.setColor(Color.black);
         g.drawOval((int) (xApp - appSize / 2), (int) (yApp - appSize / 2),
                 (int) appSize, (int) appSize);
+        g.setColor(Color.black);
+        String text = "" + targetStationId;
+        Font font = new Font("helvetica", Font.PLAIN, (int) appSize);
+        g.setFont(font);
+        FontMetrics metrics = g.getFontMetrics(font);
+        g.setColor(Color.white);
+        g.drawString(text,
+                (int) (xApp - metrics.stringWidth(text) / 2),
+                (int) (yApp - metrics.getHeight() / 2 + metrics.getAscent()));
     }
 
     protected void setCoordinates(double newX, double newY) {
@@ -63,41 +73,37 @@ public class Passenger {
         return targetStationId;
     }
 
-    /**
-     * Add a cell to the open list, without duplicates.
-     *
-     * @param cell
-     */
-    protected void addToOpenList(Cell cell) {
-        if (!openList.contains(cell)) {
-            openList.add(cell);
-        }
-    }
-
-    protected boolean openListIsEmpty() {
-        return openList.isEmpty();
-    }
-
-    void setPath(Object object) {
-    }
-
     void clearPath() {
+        path.clear();
     }
 
-    protected Cell removeFirstOpen() {
-        Cell cell = openList.remove(0);
-        return cell;
+    protected void addPathStep(int newStep) {
+        path.add(newStep);
     }
 
-    protected void addToClosedList(Cell cell) {
-        closedList.add(cell);
+    protected int getFirstPathStep() {
+        if (path.isEmpty()) {
+            return Integer.MAX_VALUE;
+        }
+        return path.get(0);
     }
 
-    protected void finalizePath() {
-
+    protected int getLastPathStep() {
+        if (path.isEmpty()) {
+            return Integer.MAX_VALUE;
+        }
+        return path.get(path.size() - 1);
     }
 
-    protected void computePath(World w, StationCell station) {
+    protected void validateFirstPathStep() {
+        path.remove(0);
+    }
 
+    protected String getItineraryToString() {
+        String res = "";
+        for (int stationId : path) {
+            res += stationId + " ";
+        }
+        return res;
     }
 }

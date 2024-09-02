@@ -20,6 +20,11 @@ import static minimetro.CardinalPoint.*;
  */
 public class World implements PropertyChangeListener {
 
+    private static final boolean IS_TESTING_PASSENGERS = true;
+    private static final int TEST_TARGET_STATION_NUMBER = 4;
+    private static final int TEST_NB_PASSENGERS = 1;
+    private static final int TEST_STARTING_STATION = 11;
+
     private int nbRows, nbCols;
     protected ArrayList<ArrayList<Cell>> cells;
     private double dt; // Time elapsed in world during one simulation step.
@@ -662,49 +667,40 @@ public class World implements PropertyChangeListener {
     }
 
     protected void generatePassengers() {
-        int nbNewPassengers = new Random().nextInt(30);
+        int nbNewPassengers;
+        if (IS_TESTING_PASSENGERS) {
+            nbNewPassengers = TEST_NB_PASSENGERS;
+        } else {
+            nbNewPassengers = new Random().nextInt(30);
+        }
         int nbPassengersGenerated = 0;
         while (nbPassengersGenerated < nbNewPassengers) {
 
             // Choose one station at random
-            int startingRank = new Random().nextInt(stationList.size());
+            int startingRank;
+            if (IS_TESTING_PASSENGERS) {
+                startingRank = TEST_STARTING_STATION;
+            } else {
+                startingRank = new Random().nextInt(stationList.size());
+            }
             StationCell startingStation = stationList.get(startingRank);
 
             // Set the target of the passenger
-            int targetRank = new Random().nextInt(stationList.size());
-            if (targetRank == startingRank) { // Target station must be different from start station.
-                targetRank = (targetRank + 1) % (stationList.size());
+            int targetStationNumber;
+            if (IS_TESTING_PASSENGERS) {
+                targetStationNumber = TEST_TARGET_STATION_NUMBER;
+            } else {
+                int targetRank = new Random().nextInt(stationList.size());
+                if (targetRank == startingRank) { // Target station must be different from start station.
+                    targetRank = (targetRank + 1) % (stationList.size());
+                }
+                targetStationNumber = stationList.get(targetRank).getId();
             }
-            int targetStationNumber = stationList.get(targetRank).getId();
             Passenger newPassenger = new Passenger();
             newPassenger.setTargetStationId(targetStationNumber);
             // Add the passenger to the station
             startingStation.addPassenger(newPassenger);
             nbPassengersGenerated++;
-        }
-        computePaths();
-    }
-
-    private Iterable<StationCell> getStations() {
-        ArrayList<StationCell> allStations = new ArrayList<>();
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                if (c instanceof StationCell) {
-                    allStations.add((StationCell) c);
-                }
-            }
-        }
-        return allStations;
-    }
-
-    /**
-     * Compute all passengers paths to their destinations.
-     */
-    protected void computePaths() {
-        for (StationCell station : stationList) {
-            for (Passenger p : station.passengerList) {
-                p.computePath(this, station);
-            }
         }
     }
 

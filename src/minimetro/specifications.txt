@@ -13,7 +13,9 @@ Passengers shall only board a wagon at zero speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
-Passengers shall use the logical map to find their way.
+Tracks, trains and stations shall be saved to file and loaded from file.
+Locomotives shall be numbered independantly from the wagons.
+Long-range 45° or 90° turns, that link two distant squares with a track independant from the other squares it crosses.
 Stations names shall be selected from a list made of real-life subway stations of cities.
 Passengers on the platform shall be positioned away from the tracks.
 A tool shall be available to place straight tracks overs long distances, horizontally, vertically or diagonally.
@@ -28,7 +30,6 @@ TrainElements shall turn smoothly in curves.
 Tracks and trains shall have a simplified drawing version for large-scale visualization.
 Speed limits and stop signs shall spread to the whole tile at large scales.
 Display only visible tiles.
-Tracks shall be saved to file and loaded from file.
 Cells shall be drawn as sprites.
 A TrainLink shall be connected to a point close to either end of the TrainElement, not to its center.
 A new TrainLink shall be created or severed between two existing TrainElements, without any TE being created or deleted.
@@ -72,6 +73,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Passengers shall use the logical map to find their way.
 A logical map of the tracks shall be updated when locos drive into stations.
 The links between two neighboring stations is made upon world map computation.
 Stations shall have unique colors.

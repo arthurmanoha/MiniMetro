@@ -104,9 +104,10 @@ public class Wagon extends TrainElement {
 
         // Add passengers to the 'getting off now' list.
         for (Passenger p : this.passengersList) {
-            if (p.getTargetStationId() == stationNumber) {
+            if (p.getLastPathStep() == stationNumber) {
                 // This passenger gets off here.
                 removedPassengers.add(p);
+                p.validateFirstPathStep();
             }
         }
         // Remove those passengers from the wagon.
@@ -118,5 +119,14 @@ public class Wagon extends TrainElement {
 
     protected boolean hasRoom() {
         return passengersList.size() < maxCapacity;
+    }
+
+    protected void updatePassengersItineraries(int stationId, WorldMap map) {
+        if (isStopped()) {
+            // Each passenger must use the map to update their path acros the grid.
+            for (Passenger p : passengersList) {
+                map.computePath(stationId, p);
+            }
+        }
     }
 }

@@ -25,4 +25,24 @@ public class Walkway {
             return -1;
         }
     }
+
+    protected boolean contains(int currentStationId) {
+        return firstStationId == currentStationId || secondStationId == currentStationId;
+    }
+
+    /**
+     * Get one of the two stations linked by this walkway,
+     * but not the one specified with currentStationId. By default, return the
+     * first id.
+     *
+     * @param currentStationId
+     * @return
+     */
+    protected int getOtherStation(int currentStationId) {
+        if (firstStationId == currentStationId) {
+            return secondStationId;
+        } else {
+            return firstStationId;
+        }
+    }
 }

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 public class TrainLine {
 
     // Coordinates of the ids of the stations served by this line.
-    private ArrayList<Cell> cells;
+    private ArrayList<StationCell> cells;
 
     // The id of the loco which discovered this line.
     private int locoId;
@@ -20,15 +20,32 @@ public class TrainLine {
         locoId = newLocoId;
     }
 
-    protected void addCell(Cell c) {
-        if (!cells.contains(c)) {
-            cells.add(c);
+    /**
+     * Add a Cell to a line.
+     *
+     * @param c the cell added. If it already exists, we move it to the last
+     * position.
+     */
+    protected void addCell(StationCell c) {
+        if (cells.contains(c)) {
+            cells.remove(c);
         }
+        int index = cells.size();
+        cells.add(index, c);
     }
 
-    protected boolean containsCell(Cell candidate) {
+    protected boolean containsCell(StationCell candidate) {
         for (Cell c : cells) {
             if (candidate.equals(c)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected boolean containsStation(int stationId) {
+        for (StationCell c : cells) {
+            if (c.getId() == stationId) {
                 return true;
             }
         }
@@ -39,19 +56,30 @@ public class TrainLine {
         return locoId;
     }
 
-    protected String getAllStations() {
+    protected String getAllStationsString() {
 
         String result = "";
-        for (Cell c : cells) {
-            if (c instanceof StationCell) {
-                int id = ((StationCell) c).getId();
-                if (result.isEmpty()) {
-                    result += id + "";
-                } else {
-                    result += " - " + id;
-                }
+        for (StationCell c : cells) {
+            int id = c.getId();
+            if (result.isEmpty()) {
+                result += id + "";
+            } else {
+                result += " - " + id;
+
             }
         }
         return result;
+    }
+
+    protected ArrayList<Integer> getAllStationsIds() {
+        ArrayList<Integer> result = new ArrayList<>();
+        for (StationCell c : cells) {
+            result.add(c.getId());
+        }
+        return result;
+    }
+
+    protected ArrayList<StationCell> getAllStations() {
+        return cells;
     }
 }
