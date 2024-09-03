@@ -26,6 +26,7 @@ public class Locomotive extends TrainElement {
 
     public Locomotive(Point2D.Double newAbsolutePosition) {
         this();
+//        System.out.println(newAbsolutePosition.x + ", " + newAbsolutePosition.y);
         this.absolutePosition = newAbsolutePosition;
     }
 

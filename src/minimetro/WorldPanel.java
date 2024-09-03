@@ -37,10 +37,10 @@ public class WorldPanel extends JPanel implements MouseListener,
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = 0.83;
+        zoomLevel = 1.209;
         zoomLevelFactor = 1.1;
-        x0 = -491;
-        y0 = -14566;
+        x0 = 123;
+        y0 = -23246;
         currentTool = GuiTool.NO_TOOL;
         prevMouseX = 0;
         prevMouseY = 0;

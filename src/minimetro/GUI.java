@@ -2,8 +2,16 @@ package minimetro;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -22,7 +30,7 @@ public class GUI extends JFrame {
     JPanel speedToolbar;
     JPanel mainToolbar;
 
-    int windowWidth = 1900;
+    int windowWidth = 1100;
     int windowHeight = 1000;
 
     private World world;
@@ -42,7 +50,7 @@ public class GUI extends JFrame {
         mainToolbar.setLayout(new GridLayout(3, 1));
 
         topToolbar = new JPanel();
-        topToolbar.setLayout(new GridLayout(14, 1));
+        topToolbar.setLayout(new GridLayout(17, 1));
 
         JButton playPauseButton = new JButton("PlayPause");
         playPauseButton.addActionListener((e) -> {
@@ -126,42 +134,69 @@ public class GUI extends JFrame {
         });
         topToolbar.add(generatePassengersButton);
 
+        JButton saveButton = new JButton("Save");
+        saveButton.addActionListener((e) -> {
+            save();
+        });
+        topToolbar.add(saveButton);
+
+        JButton loadButton = new JButton("Load");
+        loadButton.addActionListener((e) -> {
+            load();
+        });
+        topToolbar.add(loadButton);
+
         mainToolbar.add(topToolbar);
 
         locoToolbar = new JPanel();
-        locoToolbar.setLayout(new GridLayout(4, 2));
+        locoToolbar.setLayout(new GridBagLayout());
 
         JButton startLocoButton = new JButton("Start Locos");
         startLocoButton.addActionListener((e) -> {
             w.startLocos();
         });
-        locoToolbar.add(startLocoButton);
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        locoToolbar.add(startLocoButton, c);
 
         JButton stopLocoButton = new JButton("Stop Locos");
         stopLocoButton.addActionListener((e) -> {
             w.stopLocos();
         });
-        locoToolbar.add(stopLocoButton);
-
-        mainToolbar.add(locoToolbar);
+        c.gridx = 1;
+        c.gridy = 0;
+        locoToolbar.add(stopLocoButton, c);
 
         JButton worldMapButton = new JButton("Display World Map");
-        locoToolbar.add(worldMapButton);
+        c.gridx = 0;
+        c.gridy = 1;
+        locoToolbar.add(worldMapButton, c);
+
+        JLabel worldMapLabel = new JLabel();
+        worldMapButton.addActionListener((e) -> {
+            World.map.computeWalkways();
+            worldMapLabel.setText(World.map.toFormattedString());
+        });
+        JScrollPane mapScrollPane = new JScrollPane(worldMapLabel,
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+        mapScrollPane.setPreferredSize(new Dimension(200, 250));
+        c.gridx = 0;
+        c.gridy = 2;
+        c.gridwidth = 2;
+        locoToolbar.add(mapScrollPane, c);
 
         JButton clearMapButton = new JButton("Clear Map");
         clearMapButton.addActionListener((e) -> {
             w.clearMap();
         });
+        c.gridx = 1;
+        c.gridy = 1;
+        locoToolbar.add(clearMapButton, c);
 
-        locoToolbar.add(clearMapButton);
-        JLabel worldMapLabel = new JLabel();
-        worldMapButton.addActionListener((e) -> {
-            worldMapLabel.setText(World.map.toFormattedString());
-        });
-        JScrollPane scrollMapLabel = new JScrollPane(worldMapLabel,
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        locoToolbar.add(scrollMapLabel);
+        mainToolbar.add(locoToolbar);
 
         this.add(mainToolbar, BorderLayout.WEST);
 
@@ -270,6 +305,51 @@ public class GUI extends JFrame {
             world.setStopTimerDuration(value);
         } catch (NumberFormatException e) {
             System.out.println("Value incorrect, stop timer unchanged.");
+        }
+    }
+
+    protected void save() {
+        System.out.println("Saving to file");
+
+        // Read the config file to know where to look
+        File configFile = new File("config.txt");
+        try {
+            Scanner scanner = new Scanner(configFile);
+            String text = "";
+            while (scanner.hasNextLine()) {
+                text = scanner.nextLine();
+            }
+            JFileChooser fileChooser = new JFileChooser(text);
+            int returnVal = fileChooser.showOpenDialog(this);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                world.save(file);
+            }
+        } catch (FileNotFoundException ex) {
+            // No config file, maybe create it here.
+            System.out.println("Cannot save, no config file.");
+        }
+    }
+
+    protected void load() {
+
+        // Read the config file to know where to look
+        File configFile = new File("config.txt");
+        try {
+            Scanner scanner = new Scanner(configFile);
+            String text = "";
+            while (scanner.hasNextLine()) {
+                text = scanner.nextLine();
+            }
+            JFileChooser fileChooser = new JFileChooser(text);
+            int returnVal = fileChooser.showOpenDialog(this);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                world.load(file);
+            }
+        } catch (FileNotFoundException ex) {
+            // No config file, maybe create it here.
+            System.out.println("Cannot load, no config file.");
         }
     }
 }

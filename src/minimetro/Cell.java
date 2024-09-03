@@ -31,11 +31,12 @@ public class Cell {
 
     protected Point2D.Double absolutePosition; // This point is the center of the cell.
 
+    // Directions with which this cell shares a railroad.
     private ArrayList<CardinalPoint> links;
 
-    private double speedLimit; // Integer.MAX_VALUE if not set, -1 for end of limit, >0 for actual limit.
+    protected double speedLimit; // Integer.MAX_VALUE if not set, -1 for end of limit, >0 for actual limit.
     // StopTimer: -1: no stopping required; >0: brake and stop for that many seconds.
-    private double stopTimerDuration;
+    protected double stopTimerDuration;
 
     // The TrainElements that are currently stopped or have already stopped in
     // this cell and started moving again, and still are in this cell.
@@ -52,14 +53,13 @@ public class Cell {
         nbRails = 20;
         absolutePosition = new Point2D.Double();
         links = new ArrayList<>();
-        links.add(CardinalPoint.CENTER);
-        links.add(CardinalPoint.CENTER);
         speedLimit = Integer.MAX_VALUE;
     }
 
     public Cell(Cell previousCell) {
         this();
         this.absolutePosition = previousCell.absolutePosition;
+        this.links = previousCell.links;
         this.rails = previousCell.rails;
         this.nbRails = previousCell.nbRails;
         this.speedLimit = previousCell.speedLimit;
@@ -117,6 +117,8 @@ public class Cell {
 
         if (stopTimerDuration > 0) {
             g.setColor(Color.black);
+            Font font = new Font("helvetica", Font.PLAIN, 10);
+            g.setFont(font);
             String text = "Stop for " + stopTimerDuration + " seconds";
             g.drawString(text, (int) (xApp - appSize / 2 + 5), (int) (yApp - appSize / 2 + 15));
         }
@@ -464,7 +466,7 @@ public class Cell {
         }
     }
 
-    private String getLinks() {
+    protected String getLinks() {
         String result = "";
         for (CardinalPoint link : links) {
             result += link + " ";
@@ -480,16 +482,16 @@ public class Cell {
      */
     void addLink(CardinalPoint newLinkDirection) {
 
-        // If the cell is already linked to two other cells, remove the oldest connection.
-        if (links.size() > 2) {
-            links.remove(2);
-        }
-
         // The new direction must be placed in first position in the list (as the most recent one).
         if (links.contains(newLinkDirection)) {
             links.remove(newLinkDirection);
         }
-        links.add(0, newLinkDirection);
+        links.add(newLinkDirection);
+
+        // If the cell is already linked to two other cells, remove the oldest connection.
+        if (links.size() > 2) {
+            links.remove(0);
+        }
 
         updateTracks();
     }
@@ -794,7 +796,11 @@ public class Cell {
      */
     protected boolean isLinked(CardinalPoint cardinalPoint) {
         try {
-            return links.get(0) == cardinalPoint || links.get(1) == cardinalPoint;
+            if (links.isEmpty()) {
+                return false;
+            }
+            return (links.size() >= 1 && links.get(0) == cardinalPoint
+                    || links.size() >= 2 && links.get(1) == cardinalPoint);
         } catch (ArrayIndexOutOfBoundsException e) {
             return false;
         }
@@ -803,6 +809,7 @@ public class Cell {
     protected void removeTracks() {
         if (!hasTrain()) {
             rails.clear();
+            links.clear();
         }
     }
 
@@ -938,5 +945,17 @@ public class Cell {
         } else {
             return links.get(0);
         }
+    }
+
+    /**
+     * Only StationCells do that.
+     */
+    protected void movePassengers(double dt) {
+    }
+
+    /**
+     * Only StationCells do that.
+     */
+    protected void addWalkwayDirection(StationCell cell, CardinalPoint cardinalPoint) {
     }
 }

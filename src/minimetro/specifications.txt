@@ -4,6 +4,7 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
+Wagons are not perfectly centered, especially when comparing 90 and 270 degrees heading.
 TEs are not snapped onto the correct RailSegment.
 A Locomotive does not brake hard enough at low speed.
 Passengers shall only board a wagon at zero speed.
@@ -12,9 +13,15 @@ Passengers shall only board a wagon at zero speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Passengers shall walk along a walkway to reach another station.
+Tracks, trains and stations shall be saved to file and loaded from file.
+Locomotives shall be numbered independantly from the wagons.
+Long-range 45° or 90° turns, that link two distant squares with a track independant from the other squares it crosses.
+Wagons shall be created and linked together by click and drag over a track.
+Stations names shall be selected from a list made of real-life subway stations of cities.
 Passengers on the platform shall be positioned away from the tracks.
 A tool shall be available to place straight tracks overs long distances, horizontally, vertically or diagonally.
-Passengers shall use the logical map to find their way.
+Rain makes braking distances longer.
 The world shall be stored as a sparse matrix but still painted the same way.
 The grid shall show one in ten lines at large enough scales.
 The world shall contain water areas.
@@ -26,7 +33,6 @@ TrainElements shall turn smoothly in curves.
 Tracks and trains shall have a simplified drawing version for large-scale visualization.
 Speed limits and stop signs shall spread to the whole tile at large scales.
 Display only visible tiles.
-Tracks shall be saved to file and loaded from file.
 Cells shall be drawn as sprites.
 A TrainLink shall be connected to a point close to either end of the TrainElement, not to its center.
 A new TrainLink shall be created or severed between two existing TrainElements, without any TE being created or deleted.
@@ -50,6 +56,8 @@ Add portal cells.
 Tools:
 
 Display a list radio buttons for locomotives in a panel; a selected radio button will focus the view on the loco.
+Focus from static view to loco view shall be smoothed.
+Focus on a full train, a loco and everything linked to it.
 Display the current speed of each loco if a radio button is checked.
 
 Create passengers with destination.
@@ -70,7 +78,9 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Passengers shall use the logical map to find their way.
 A logical map of the tracks shall be updated when locos drive into stations.
+The links between two neighboring stations is made upon world map computation.
 Stations shall have unique colors.
 Passengers shall have the same color as their target station.
 A station cell may be crossed by a railway.

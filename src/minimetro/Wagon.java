@@ -104,9 +104,10 @@ public class Wagon extends TrainElement {
 
         // Add passengers to the 'getting off now' list.
         for (Passenger p : this.passengersList) {
-            if (p.getTargetStationId() == stationNumber) {
+            if (p.getLastPathStep() == stationNumber || p.getLastPathStep() == Integer.MAX_VALUE) {
                 // This passenger gets off here.
                 removedPassengers.add(p);
+                p.validateFirstPathStep();
             }
         }
         // Remove those passengers from the wagon.

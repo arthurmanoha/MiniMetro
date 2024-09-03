@@ -4,9 +4,14 @@ import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.SwingUtilities;
@@ -19,6 +24,16 @@ import static minimetro.CardinalPoint.*;
  * @author arthu
  */
 public class World implements PropertyChangeListener {
+
+    private static final String RAIL_LINK = "rail_link";
+    private static final String STATION = "station";
+    private static final String SPEED_LIMIT = "speed_limit";
+    private static final String STOP_TIMER = "stop_timer";
+
+    private static final boolean IS_TESTING_PASSENGERS = false;
+    private static final int TEST_TARGET_STATION_NUMBER = 7;
+    private static final int TEST_NB_PASSENGERS = 1;
+    private static final int TEST_STARTING_STATION = -1;
 
     private int nbRows, nbCols;
     protected ArrayList<ArrayList<Cell>> cells;
@@ -48,8 +63,16 @@ public class World implements PropertyChangeListener {
     private ArrayList<StationCell> stationList;
 
     public World() {
-        nbRows = 200;
-        nbCols = 200;
+        this(200, 200);
+    }
+
+    public World(int newNbRows, int newNbCols) {
+        nbRows = newNbRows;
+        nbCols = newNbCols;
+        initializeGrid();
+    }
+
+    private void initializeGrid() {
         cells = new ArrayList<>();
         for (int row = 0; row < nbRows; row++) {
             double yCell = (nbRows - row - 1) * Cell.cellSize;
@@ -129,6 +152,12 @@ public class World implements PropertyChangeListener {
         for (ArrayList<Cell> row : cells) {
             for (Cell c : row) {
                 c.moveTrains(dt);
+            }
+        }
+
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                c.movePassengers(dt);
             }
         }
 
@@ -662,53 +691,57 @@ public class World implements PropertyChangeListener {
     }
 
     protected void generatePassengers() {
-        int nbNewPassengers = new Random().nextInt(30);
+        int nbNewPassengers;
+        if (IS_TESTING_PASSENGERS) {
+            nbNewPassengers = TEST_NB_PASSENGERS;
+        } else {
+            nbNewPassengers = new Random().nextInt(30);
+        }
         int nbPassengersGenerated = 0;
         while (nbPassengersGenerated < nbNewPassengers) {
 
             // Choose one station at random
-            int startingRank = new Random().nextInt(stationList.size());
+            int startingRank;
+            if (IS_TESTING_PASSENGERS && TEST_STARTING_STATION != -1) {
+                startingRank = TEST_STARTING_STATION;
+            } else {
+                startingRank = new Random().nextInt(stationList.size());
+            }
             StationCell startingStation = stationList.get(startingRank);
 
             // Set the target of the passenger
-            int targetRank = new Random().nextInt(stationList.size());
-            if (targetRank == startingRank) { // Target station must be different from start station.
-                targetRank = (targetRank + 1) % (stationList.size());
+            int targetStationNumber;
+            if (IS_TESTING_PASSENGERS) {
+                targetStationNumber = TEST_TARGET_STATION_NUMBER;
+            } else {
+                int targetRank = new Random().nextInt(stationList.size());
+                if (targetRank == startingRank) { // Target station must be different from start station.
+                    targetRank = (targetRank + 1) % (stationList.size());
+                }
+                targetStationNumber = stationList.get(targetRank).getId();
             }
-            int targetStationNumber = stationList.get(targetRank).getId();
             Passenger newPassenger = new Passenger();
             newPassenger.setTargetStationId(targetStationNumber);
             // Add the passenger to the station
             startingStation.addPassenger(newPassenger);
             nbPassengersGenerated++;
         }
-        computePaths();
-    }
 
-    private Iterable<StationCell> getStations() {
-        ArrayList<StationCell> allStations = new ArrayList<>();
+        World.map.computeWalkways();
         for (ArrayList<Cell> row : cells) {
             for (Cell c : row) {
                 if (c instanceof StationCell) {
-                    allStations.add((StationCell) c);
+                    StationCell station = (StationCell) c;
+                    for (Passenger p : station.passengerList) {
+                        World.map.computePath(station.getId(), p);
+                    }
                 }
-            }
-        }
-        return allStations;
-    }
-
-    /**
-     * Compute all passengers paths to their destinations.
-     */
-    protected void computePaths() {
-        for (StationCell station : stationList) {
-            for (Passenger p : station.passengerList) {
-                p.computePath(this, station);
             }
         }
     }
 
     protected void boardPassengers() {
+        System.out.println("World.boardPassengers()");
         for (ArrayList<Cell> row : cells) {
             for (Cell c : row) {
                 c.boardPassengers();
@@ -730,5 +763,105 @@ public class World implements PropertyChangeListener {
     protected void clearMap() {
         System.out.println("Reset world map");
         map = new WorldMap(this);
+    }
+
+    protected void save(File file) {
+        try {
+            FileWriter writer = new FileWriter(file);
+            writer.write(nbRows + " " + nbCols + "\n");
+
+            int row = 0;
+            for (ArrayList<Cell> rowList : cells) {
+                int col = 0;
+                for (Cell c : rowList) {
+
+                    // Save rails
+                    String cellLinks = c.getLinks();
+                    if (!cellLinks.isEmpty()) {
+                        for (String singleLink : cellLinks.split(" ")) {
+                            writer.write(RAIL_LINK + " " + row + " " + col + " " + singleLink + "\n");
+                        }
+                    }
+
+                    // Save stations
+                    if (c instanceof StationCell) {
+                        String text = STATION + " " + row + " " + col + "\n";
+                        writer.write(text);
+                    }
+
+                    // Save speed limits
+                    if (c.speedLimit != Integer.MAX_VALUE) {
+                        writer.write(SPEED_LIMIT + " " + row + " " + col + " " + c.speedLimit + "\n");
+                    }
+
+                    // Save stop timers
+                    if (c.stopTimerDuration > 0) {
+                        writer.write(STOP_TIMER + " " + row + " " + col + " " + c.stopTimerDuration + "\n");
+                    }
+
+                    col++;
+                }
+                row++;
+            }
+
+            writer.close();
+
+        } catch (IOException ex) {
+            System.out.println("World: error occured when saving to file.");
+        }
+
+    }
+
+    protected void load(File file) {
+        try {
+            Scanner scanner = new Scanner(file);
+            System.out.println("Loading from file " + file.getAbsolutePath());
+            String text = "";
+
+            // Grid dimensions
+            if (scanner.hasNextLine()) {
+                text = scanner.nextLine();
+                String split[] = text.split(" ");
+                nbRows = Integer.valueOf(split[0]);
+                nbCols = Integer.valueOf(split[1]);
+                initializeGrid();
+                updateListeners();
+                StationCell.resetNbStationsCreated();
+            }
+
+            while (scanner.hasNextLine()) {
+                text = scanner.nextLine();
+                String split[] = text.split(" ");
+                int row, col;
+
+                row = Integer.valueOf(split[1]);
+                col = Integer.valueOf(split[2]);
+                Cell c = getCell(row, col);
+
+                switch (split[0]) {
+                case STATION:
+                    toggleStation(row, col);
+                    break;
+                case RAIL_LINK:
+                    CardinalPoint direction = CardinalPoint.valueOf(split[3]);
+                    c.addLink(direction);
+                    break;
+                case SPEED_LIMIT:
+                    double limit = Double.valueOf(split[3]);
+                    c.setSpeedIndicator(limit);
+                    break;
+                case STOP_TIMER:
+                    double stopDuration = Double.valueOf(split[3]);
+                    c.setStopTimer(stopDuration);
+                    break;
+                default:
+                    System.out.println("Error in file parsing. Text is " + text);
+                }
+            }
+
+            System.out.println("End load.");
+        } catch (FileNotFoundException e) {
+            System.out.println("Could not load, file not found.");
+        }
     }
 }
