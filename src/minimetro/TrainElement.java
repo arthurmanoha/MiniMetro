@@ -8,6 +8,8 @@ import java.awt.Image;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.ImageObserver;
+import java.io.FileWriter;
+import java.io.IOException;
 import static java.lang.Math.PI;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
@@ -70,11 +72,6 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         stopTimerDuration = -1;
         spriteWidth = 0;
         spriteHeight = 0;
-    }
-
-    @Override
-    public String toString() {
-        return "TE_" + id;
     }
 
     @Override
@@ -294,5 +291,30 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
 
     protected void addStationToLine(StationCell newStation) {
         World.map.addStation(newStation, this.id);
+    }
+
+    @Override
+    public String toString() {
+        String elemClass = "" + getClass();
+        elemClass = elemClass.substring(elemClass.indexOf(".") + 1);
+        return elemClass
+                + " " + this.absolutePosition.x
+                + " " + this.absolutePosition.y
+                + " " + this.headingDegrees
+                + " " + this.linearSpeed
+                + " " + this.currentSpeedLimit;
+    }
+
+    protected void save(FileWriter writer) {
+        try {
+            String text = toString();
+            writer.write(text + "\n");
+        } catch (IOException ex) {
+            System.out.println("Error writing TrainElement to file");
+        }
+    }
+
+    void setLinearSpeed(double newLinearSpeed) {
+        linearSpeed = newLinearSpeed;
     }
 }

@@ -26,7 +26,6 @@ public class Locomotive extends TrainElement {
 
     public Locomotive(Point2D.Double newAbsolutePosition) {
         this();
-//        System.out.println(newAbsolutePosition.x + ", " + newAbsolutePosition.y);
         this.absolutePosition = newAbsolutePosition;
     }
 
@@ -106,5 +105,13 @@ public class Locomotive extends TrainElement {
         isEngineActive = false;
         isBraking = true;
         System.out.println("Loco " + id + " stopped");
+    }
+
+    @Override
+    public String toString() {
+        String text = super.toString();
+        text += isEngineActive ? " engine_active" : " engine_inactive";
+        text += isBraking ? " is_braking" : " is_not_braking";
+        return text;
     }
 }

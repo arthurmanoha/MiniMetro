@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.geom.Point2D;
+import java.io.FileWriter;
 import static java.lang.Math.PI;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
@@ -957,5 +958,11 @@ public class Cell {
      * Only StationCells do that.
      */
     protected void addWalkwayDirection(StationCell cell, CardinalPoint cardinalPoint) {
+    }
+
+    protected void saveTrains(FileWriter writer) {
+        for (TrainElement te : trainElements) {
+            te.save(writer);
+        }
     }
 }
