@@ -1,13 +1,17 @@
 package minimetro;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
-import static java.awt.GridBagConstraints.BOTH;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -26,7 +30,7 @@ public class GUI extends JFrame {
     JPanel speedToolbar;
     JPanel mainToolbar;
 
-    int windowWidth = 1300;
+    int windowWidth = 1100;
     int windowHeight = 1000;
 
     private World world;
@@ -46,7 +50,7 @@ public class GUI extends JFrame {
         mainToolbar.setLayout(new GridLayout(3, 1));
 
         topToolbar = new JPanel();
-        topToolbar.setLayout(new GridLayout(14, 1));
+        topToolbar.setLayout(new GridLayout(17, 1));
 
         JButton playPauseButton = new JButton("PlayPause");
         playPauseButton.addActionListener((e) -> {
@@ -129,6 +133,18 @@ public class GUI extends JFrame {
             w.generatePassengers();
         });
         topToolbar.add(generatePassengersButton);
+
+        JButton saveButton = new JButton("Save");
+        saveButton.addActionListener((e) -> {
+            save();
+        });
+        topToolbar.add(saveButton);
+
+        JButton loadButton = new JButton("Load");
+        loadButton.addActionListener((e) -> {
+            load();
+        });
+        topToolbar.add(loadButton);
 
         mainToolbar.add(topToolbar);
 
@@ -289,6 +305,51 @@ public class GUI extends JFrame {
             world.setStopTimerDuration(value);
         } catch (NumberFormatException e) {
             System.out.println("Value incorrect, stop timer unchanged.");
+        }
+    }
+
+    protected void save() {
+        System.out.println("Saving to file");
+
+        // Read the config file to know where to look
+        File configFile = new File("config.txt");
+        try {
+            Scanner scanner = new Scanner(configFile);
+            String text = "";
+            while (scanner.hasNextLine()) {
+                text = scanner.nextLine();
+            }
+            JFileChooser fileChooser = new JFileChooser(text);
+            int returnVal = fileChooser.showOpenDialog(this);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                world.save(file);
+            }
+        } catch (FileNotFoundException ex) {
+            // No config file, maybe create it here.
+            System.out.println("Cannot save, no config file.");
+        }
+    }
+
+    protected void load() {
+
+        // Read the config file to know where to look
+        File configFile = new File("config.txt");
+        try {
+            Scanner scanner = new Scanner(configFile);
+            String text = "";
+            while (scanner.hasNextLine()) {
+                text = scanner.nextLine();
+            }
+            JFileChooser fileChooser = new JFileChooser(text);
+            int returnVal = fileChooser.showOpenDialog(this);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                world.load(file);
+            }
+        } catch (FileNotFoundException ex) {
+            // No config file, maybe create it here.
+            System.out.println("Cannot load, no config file.");
         }
     }
 }

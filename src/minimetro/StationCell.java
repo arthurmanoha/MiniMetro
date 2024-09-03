@@ -51,6 +51,10 @@ public class StationCell extends Cell {
         return id;
     }
 
+    public static void resetNbStationsCreated() {
+        NB_STATIONS_CREATED = 0;
+    }
+
     protected static Color getStationColor(int stationNumber) {
         return colorList.get(stationNumber % colorList.size());
     }
