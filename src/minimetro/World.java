@@ -4,8 +4,6 @@ import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -807,9 +805,8 @@ public class World implements PropertyChangeListener {
         map = new WorldMap(this);
     }
 
-    protected void save(File file) {
+    protected void save(FileWriter writer) {
         try {
-            FileWriter writer = new FileWriter(file);
             writer.write(nbRows + " " + nbCols + "\n");
 
             writer.write("isRunning " + (isRunning ? YES : NO) + "\n");
@@ -850,7 +847,7 @@ public class World implements PropertyChangeListener {
                 row++;
             }
 
-            writer.close();
+            map.save(writer);
 
         } catch (IOException ex) {
             System.out.println("World: error occured when saving to file.");
@@ -858,13 +855,11 @@ public class World implements PropertyChangeListener {
 
     }
 
-    protected void load(File file) {
-        try {
-            Scanner scanner = new Scanner(file);
-            System.out.println("Loading from file " + file.getAbsolutePath());
-            String text = "";
+    protected void load(Scanner scanner) {
+        String text = "";
 
-            // Grid dimensions
+        // Grid dimensions
+        try {
             if (scanner.hasNextLine()) {
                 text = scanner.nextLine();
                 String split[] = text.split(" ");
@@ -874,77 +869,86 @@ public class World implements PropertyChangeListener {
                 updateListeners();
                 StationCell.resetNbStationsCreated();
             }
-
-            // Is the game running ?
-            if (scanner.hasNextLine()) {
-                text = scanner.nextLine();
-                String split[] = text.split(" ");
-                isRunning = split[1].equals(YES);
-                if (isRunning) {
-                    startTimer();
-                }
-            }
-
-            while (scanner.hasNextLine()) {
-                text = scanner.nextLine();
-                String split[] = text.split(" ");
-                int row, col;
-                Cell c;
-                double x, y, headingDegrees, linearSpeed, currentSpeedLimit;
-                boolean isEngineActive, isBraking;
-
-                switch (split[0]) {
-                case STATION:
-                    row = Integer.valueOf(split[1]);
-                    col = Integer.valueOf(split[2]);
-                    toggleStation(row, col);
-                    break;
-                case RAIL_LINK:
-                    row = Integer.valueOf(split[1]);
-                    col = Integer.valueOf(split[2]);
-                    c = getCell(row, col);
-                    CardinalPoint direction = CardinalPoint.valueOf(split[3]);
-                    c.addLink(direction);
-                    break;
-                case SPEED_LIMIT:
-                    row = Integer.valueOf(split[1]);
-                    col = Integer.valueOf(split[2]);
-                    c = getCell(row, col);
-                    double limit = Double.valueOf(split[3]);
-                    c.setSpeedIndicator(limit);
-                    break;
-                case STOP_TIMER:
-                    row = Integer.valueOf(split[1]);
-                    col = Integer.valueOf(split[2]);
-                    c = getCell(row, col);
-                    double stopDuration = Double.valueOf(split[3]);
-                    c.setStopTimer(stopDuration);
-                    break;
-                case LOCOMOTIVE:
-                    x = Double.valueOf(split[1]);
-                    y = Double.valueOf(split[2]);
-                    headingDegrees = Double.valueOf(split[3]);
-                    linearSpeed = Double.valueOf(split[4]);
-                    currentSpeedLimit = Double.valueOf(split[5]);
-                    isEngineActive = split[6].equals("engine_active");
-                    isBraking = split[7].equals("is_braking");
-                    addLoco(x, y, headingDegrees, linearSpeed, isEngineActive, isBraking, currentSpeedLimit);
-                    break;
-                case WAGON:
-                    x = Double.valueOf(split[1]);
-                    y = Double.valueOf(split[2]);
-                    headingDegrees = Double.valueOf(split[3]);
-                    linearSpeed = Double.valueOf(split[4]);
-                    addWagon(x, y, headingDegrees, linearSpeed);
-                    break;
-                default:
-                    System.out.println("Error in file parsing. Text is " + text);
-                }
-            }
-
-            System.out.println("End load.");
-        } catch (FileNotFoundException e) {
-            System.out.println("Could not load, file not found.");
+        } catch (NumberFormatException e) {
+            System.out.println("Error during file loading, text is " + text);
         }
+
+        // Is the game running ?
+        if (scanner.hasNextLine()) {
+            text = scanner.nextLine();
+            String split[] = text.split(" ");
+            isRunning = split[1].equals(YES);
+            if (isRunning) {
+                startTimer();
+            }
+        }
+
+        text = scanner.nextLine();
+        while (scanner.hasNextLine() && !text.equals("map")) {
+            String split[] = text.split(" ");
+            int row, col;
+            Cell c;
+            double x, y, headingDegrees, linearSpeed, currentSpeedLimit;
+            boolean isEngineActive, isBraking;
+
+            switch (split[0]) {
+            case STATION:
+                row = Integer.valueOf(split[1]);
+                col = Integer.valueOf(split[2]);
+                toggleStation(row, col);
+                break;
+            case RAIL_LINK:
+                row = Integer.valueOf(split[1]);
+                col = Integer.valueOf(split[2]);
+                c = getCell(row, col);
+                CardinalPoint direction = CardinalPoint.valueOf(split[3]);
+                c.addLink(direction);
+                break;
+            case SPEED_LIMIT:
+                row = Integer.valueOf(split[1]);
+                col = Integer.valueOf(split[2]);
+                c = getCell(row, col);
+                double limit = Double.valueOf(split[3]);
+                c.setSpeedIndicator(limit);
+                break;
+            case STOP_TIMER:
+                row = Integer.valueOf(split[1]);
+                col = Integer.valueOf(split[2]);
+                c = getCell(row, col);
+                double stopDuration = Double.valueOf(split[3]);
+                c.setStopTimer(stopDuration);
+                break;
+            case LOCOMOTIVE:
+                x = Double.valueOf(split[1]);
+                y = Double.valueOf(split[2]);
+                headingDegrees = Double.valueOf(split[3]);
+                linearSpeed = Double.valueOf(split[4]);
+                currentSpeedLimit = Double.valueOf(split[5]);
+                isEngineActive = split[6].equals("engine_active");
+                isBraking = split[7].equals("is_braking");
+                addLoco(x, y, headingDegrees, linearSpeed, isEngineActive, isBraking, currentSpeedLimit);
+                break;
+            case WAGON:
+                x = Double.valueOf(split[1]);
+                y = Double.valueOf(split[2]);
+                headingDegrees = Double.valueOf(split[3]);
+                linearSpeed = Double.valueOf(split[4]);
+                addWagon(x, y, headingDegrees, linearSpeed);
+                break;
+            default:
+                System.out.println("Error in file parsing. Text is " + text);
+            }
+            text = scanner.nextLine();
+        }
+        map.load(scanner);
+    }
+
+    protected StationCell getStation(int stationId) {
+        for (StationCell station : stationList) {
+            if (station.getId() == stationId) {
+                return station;
+            }
+        }
+        return null;
     }
 }

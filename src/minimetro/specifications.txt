@@ -15,6 +15,7 @@ TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 
 Simulate only cells that have trains or passengers.
 Display only visible tiles.
+Splitscreen shall allow the player to view different parts of the world in sub-panels.
 Passengers shall walk along a walkway to reach another station.
 Locomotives shall be numbered independantly from the wagons.
 Long-range 45° or 90° turns, that link two distant squares with a track independant from the other squares it crosses.
@@ -78,6 +79,8 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Panel view and zoom shall be saved to file and loaded from file.
+WorldMap with its train lines for each loco shall be saved to file and loaded from file.
 Tracks, trains and stations shall be saved to file and loaded from file.
 Speed limits and stop signs shall be saved to file and loaded from file.
 Passengers shall use the logical map to find their way.

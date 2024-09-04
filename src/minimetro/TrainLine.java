@@ -27,11 +27,13 @@ public class TrainLine {
      * position.
      */
     protected void addCell(StationCell c) {
-        if (cells.contains(c)) {
-            cells.remove(c);
+        if (c != null) {
+            if (cells.contains(c)) {
+                cells.remove(c);
+            }
+            int index = cells.size();
+            cells.add(index, c);
         }
-        int index = cells.size();
-        cells.add(index, c);
     }
 
     protected boolean containsCell(StationCell candidate) {
@@ -81,5 +83,16 @@ public class TrainLine {
 
     protected ArrayList<StationCell> getAllStations() {
         return cells;
+    }
+
+    @Override
+    public String toString() {
+        String text = "L_" + locoId + "";
+        for (Cell c : cells) {
+            if (c instanceof StationCell) {
+                text += " " + ((StationCell) c).getId();
+            }
+        }
+        return text;
     }
 }

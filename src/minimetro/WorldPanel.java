@@ -10,6 +10,10 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Scanner;
 import javax.swing.JPanel;
 
 /**
@@ -301,5 +305,38 @@ public class WorldPanel extends JPanel implements MouseListener,
         boolean result = (dCol < cornerMargin | dCol > 1 - cornerMargin)
                 && (dRow < cornerMargin | dRow > 1 - cornerMargin);
         return result;
+    }
+
+    protected void save(FileWriter writer) {
+        try {
+            writer.write("zoom " + zoomLevel + "\n");
+            writer.write("x0 " + x0 + "\n");
+            writer.write("y0 " + y0 + "\n");
+        } catch (IOException e) {
+            System.out.println("WorldPanel: error occured when saving to file.");
+        }
+    }
+
+    protected void load(Scanner scanner) {
+        String text;
+        String split[];
+
+        text = scanner.nextLine();
+        split = text.split(" ");
+        if (split[0].equals("zoom")) {
+            zoomLevel = Double.valueOf(split[1]);
+        }
+
+        text = scanner.nextLine();
+        split = text.split(" ");
+        if (split[0].equals("x0")) {
+            x0 = Double.valueOf(split[1]);
+        }
+
+        text = scanner.nextLine();
+        split = text.split(" ");
+        if (split[0].equals("y0")) {
+            y0 = Double.valueOf(split[1]);
+        }
     }
 }

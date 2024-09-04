@@ -7,9 +7,9 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -29,6 +29,7 @@ public class GUI extends JFrame {
     JPanel locoToolbar;
     JPanel speedToolbar;
     JPanel mainToolbar;
+    JLabel worldMapLabel;
 
     int windowWidth = 1100;
     int windowHeight = 1000;
@@ -173,7 +174,7 @@ public class GUI extends JFrame {
         c.gridy = 1;
         locoToolbar.add(worldMapButton, c);
 
-        JLabel worldMapLabel = new JLabel();
+        worldMapLabel = new JLabel();
         worldMapButton.addActionListener((e) -> {
             World.map.computeWalkways();
             worldMapLabel.setText(World.map.toFormattedString());
@@ -309,7 +310,7 @@ public class GUI extends JFrame {
     }
 
     protected void save() {
-        System.out.println("Saving to file");
+        System.out.println("GUI Saving to file.");
 
         // Read the config file to know where to look
         File configFile = new File("config.txt");
@@ -323,7 +324,15 @@ public class GUI extends JFrame {
             int returnVal = fileChooser.showOpenDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
-                world.save(file);
+
+                try {
+                    FileWriter writer = new FileWriter(file);
+                    panel.save(writer);
+                    world.save(writer);
+                    writer.close();
+                } catch (IOException e) {
+                    System.out.println("Error writing to file.");
+                }
             }
         } catch (FileNotFoundException ex) {
             // No config file, maybe create it here.
@@ -345,11 +354,16 @@ public class GUI extends JFrame {
             int returnVal = fileChooser.showOpenDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
-                world.load(file);
+                System.out.println("GUI Loading from file " + file.getAbsolutePath());
+
+                scanner = new Scanner(file);
+                panel.load(scanner);
+                world.load(scanner);
             }
         } catch (FileNotFoundException ex) {
             // No config file, maybe create it here.
             System.out.println("Cannot load, no config file.");
         }
+        worldMapLabel.setText(World.map.toFormattedString());
     }
 }
