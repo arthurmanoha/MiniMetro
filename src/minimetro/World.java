@@ -4,8 +4,6 @@ import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,6 +27,10 @@ public class World implements PropertyChangeListener {
     private static final String STATION = "station";
     private static final String SPEED_LIMIT = "speed_limit";
     private static final String STOP_TIMER = "stop_timer";
+    public static final String LOCOMOTIVE = "Locomotive";
+    public static final String WAGON = "Wagon";
+    public static final String YES = "yes";
+    public static final String NO = "no";
 
     private static final boolean IS_TESTING_PASSENGERS = false;
     private static final int TEST_TARGET_STATION_NUMBER = 7;
@@ -278,6 +280,19 @@ public class World implements PropertyChangeListener {
     }
 
     /**
+     * Add a locomotive with a specified heading
+     *
+     * @param xReal
+     * @param yReal
+     * @param headingDegrees
+     * @param linearSpeed
+     */
+    protected void addLoco(double xReal, double yReal, double headingDegrees,
+            double linearSpeed, boolean isEngineActive, boolean isBraking, double currentSpeedLimit) {
+        this.addTrainElement(xReal, yReal, headingDegrees, linearSpeed, true, isEngineActive, isBraking, currentSpeedLimit);
+    }
+
+    /**
      * Add a wagon
      *
      * @param xReal
@@ -288,13 +303,29 @@ public class World implements PropertyChangeListener {
     }
 
     /**
+     * Add a wagon with a specified heading
+     *
+     * @param xReal
+     * @param yReal
+     * @param headingDegrees
+     */
+    protected void addWagon(double xReal, double yReal, double headingDegrees, double linearSpeed) {
+        this.addTrainElement(xReal, yReal, headingDegrees, linearSpeed, false, false, false, -1);
+    }
+
+    private void addTrainElement(double xReal, double yReal, boolean isLoco) {
+        this.addTrainElement(xReal, yReal, 0, 0, isLoco, false, false, -1);
+    }
+
+    /**
      * Add a loco or wagon at a specific location within a cell.
      *
      * @param xReal
      * @param yReal
      * @param isLoco when true, add a loco, otherwise add a wagon
      */
-    private void addTrainElement(double xReal, double yReal, boolean isLoco) {
+    private void addTrainElement(double xReal, double yReal, double headingDegrees, double linearSpeed,
+            boolean isLoco, boolean isEngineActive, boolean isBraking, double currentSpeedLimit) {
 
         int col = getCol(xReal);
         int row = getRow(yReal);
@@ -307,6 +338,15 @@ public class World implements PropertyChangeListener {
         } else {
             newElement = new Wagon(newAbsolutePosition);
         }
+
+        if (isEngineActive) {
+            newElement.isEngineActive = isEngineActive;
+            newElement.isBraking = isBraking;
+        }
+
+        newElement.setHeadingDegrees(headingDegrees);
+        newElement.setLinearSpeed(linearSpeed);
+        newElement.setSpeedLimit(currentSpeedLimit);
 
         Cell cell = getCell(row, col);
         if (cell != null && cell.hasRails()) {
@@ -765,10 +805,11 @@ public class World implements PropertyChangeListener {
         map = new WorldMap(this);
     }
 
-    protected void save(File file) {
+    protected void save(FileWriter writer) {
         try {
-            FileWriter writer = new FileWriter(file);
             writer.write(nbRows + " " + nbCols + "\n");
+
+            writer.write("isRunning " + (isRunning ? YES : NO) + "\n");
 
             int row = 0;
             for (ArrayList<Cell> rowList : cells) {
@@ -782,6 +823,8 @@ public class World implements PropertyChangeListener {
                             writer.write(RAIL_LINK + " " + row + " " + col + " " + singleLink + "\n");
                         }
                     }
+
+                    c.saveTrains(writer);
 
                     // Save stations
                     if (c instanceof StationCell) {
@@ -804,7 +847,7 @@ public class World implements PropertyChangeListener {
                 row++;
             }
 
-            writer.close();
+            map.save(writer);
 
         } catch (IOException ex) {
             System.out.println("World: error occured when saving to file.");
@@ -812,13 +855,11 @@ public class World implements PropertyChangeListener {
 
     }
 
-    protected void load(File file) {
-        try {
-            Scanner scanner = new Scanner(file);
-            System.out.println("Loading from file " + file.getAbsolutePath());
-            String text = "";
+    protected void load(Scanner scanner) {
+        String text = "";
 
-            // Grid dimensions
+        // Grid dimensions
+        try {
             if (scanner.hasNextLine()) {
                 text = scanner.nextLine();
                 String split[] = text.split(" ");
@@ -828,40 +869,86 @@ public class World implements PropertyChangeListener {
                 updateListeners();
                 StationCell.resetNbStationsCreated();
             }
+        } catch (NumberFormatException e) {
+            System.out.println("Error during file loading, text is " + text);
+        }
 
-            while (scanner.hasNextLine()) {
-                text = scanner.nextLine();
-                String split[] = text.split(" ");
-                int row, col;
+        // Is the game running ?
+        if (scanner.hasNextLine()) {
+            text = scanner.nextLine();
+            String split[] = text.split(" ");
+            isRunning = split[1].equals(YES);
+            if (isRunning) {
+                startTimer();
+            }
+        }
 
+        text = scanner.nextLine();
+        while (scanner.hasNextLine() && !text.equals("map")) {
+            String split[] = text.split(" ");
+            int row, col;
+            Cell c;
+            double x, y, headingDegrees, linearSpeed, currentSpeedLimit;
+            boolean isEngineActive, isBraking;
+
+            switch (split[0]) {
+            case STATION:
                 row = Integer.valueOf(split[1]);
                 col = Integer.valueOf(split[2]);
-                Cell c = getCell(row, col);
-
-                switch (split[0]) {
-                case STATION:
-                    toggleStation(row, col);
-                    break;
-                case RAIL_LINK:
-                    CardinalPoint direction = CardinalPoint.valueOf(split[3]);
-                    c.addLink(direction);
-                    break;
-                case SPEED_LIMIT:
-                    double limit = Double.valueOf(split[3]);
-                    c.setSpeedIndicator(limit);
-                    break;
-                case STOP_TIMER:
-                    double stopDuration = Double.valueOf(split[3]);
-                    c.setStopTimer(stopDuration);
-                    break;
-                default:
-                    System.out.println("Error in file parsing. Text is " + text);
-                }
+                toggleStation(row, col);
+                break;
+            case RAIL_LINK:
+                row = Integer.valueOf(split[1]);
+                col = Integer.valueOf(split[2]);
+                c = getCell(row, col);
+                CardinalPoint direction = CardinalPoint.valueOf(split[3]);
+                c.addLink(direction);
+                break;
+            case SPEED_LIMIT:
+                row = Integer.valueOf(split[1]);
+                col = Integer.valueOf(split[2]);
+                c = getCell(row, col);
+                double limit = Double.valueOf(split[3]);
+                c.setSpeedIndicator(limit);
+                break;
+            case STOP_TIMER:
+                row = Integer.valueOf(split[1]);
+                col = Integer.valueOf(split[2]);
+                c = getCell(row, col);
+                double stopDuration = Double.valueOf(split[3]);
+                c.setStopTimer(stopDuration);
+                break;
+            case LOCOMOTIVE:
+                x = Double.valueOf(split[1]);
+                y = Double.valueOf(split[2]);
+                headingDegrees = Double.valueOf(split[3]);
+                linearSpeed = Double.valueOf(split[4]);
+                currentSpeedLimit = Double.valueOf(split[5]);
+                isEngineActive = split[6].equals("engine_active");
+                isBraking = split[7].equals("is_braking");
+                addLoco(x, y, headingDegrees, linearSpeed, isEngineActive, isBraking, currentSpeedLimit);
+                break;
+            case WAGON:
+                x = Double.valueOf(split[1]);
+                y = Double.valueOf(split[2]);
+                headingDegrees = Double.valueOf(split[3]);
+                linearSpeed = Double.valueOf(split[4]);
+                addWagon(x, y, headingDegrees, linearSpeed);
+                break;
+            default:
+                System.out.println("Error in file parsing. Text is " + text);
             }
-
-            System.out.println("End load.");
-        } catch (FileNotFoundException e) {
-            System.out.println("Could not load, file not found.");
+            text = scanner.nextLine();
         }
+        map.load(scanner);
+    }
+
+    protected StationCell getStation(int stationId) {
+        for (StationCell station : stationList) {
+            if (station.getId() == stationId) {
+                return station;
+            }
+        }
+        return null;
     }
 }

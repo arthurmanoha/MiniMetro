@@ -1,7 +1,10 @@
 package minimetro;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Scanner;
 
 /**
  * This class is a logical representation of the train lines.
@@ -176,6 +179,44 @@ public class WorldMap {
             }
         }
         return result;
+    }
+
+    protected void save(FileWriter writer) {
+        try {
+            writer.write("map\n");
+            for (Walkway w : walkwayList) {
+                writer.write(w.toString() + "\n");
+            }
+
+            for (int key : linesList.keySet()) {
+                writer.write(linesList.get(key).toString() + "\n");
+            }
+
+        } catch (IOException e) {
+            System.out.println("Error in saving worldmap.");
+        }
+    }
+
+    protected void load(Scanner scanner) {
+        String text = "";
+        while (scanner.hasNextLine()) {
+            text = scanner.nextLine();
+            String split[] = text.split(" |_");
+            if (split[0].equals("w")) {
+                int station1 = Integer.valueOf(split[1]);
+                int station2 = Integer.valueOf(split[2]);
+                walkwayList.add(new Walkway(station1, station2));
+            } else {
+                int locoId = Integer.valueOf(split[1]);
+                TrainLine newLine = new TrainLine(locoId);
+                for (int rank = 2; rank < split.length; rank++) {
+                    int stationId = Integer.valueOf(split[rank]);
+                    StationCell station = w.getStation(stationId);
+                    newLine.addCell(station);
+                }
+                linesList.put(locoId, newLine);
+            }
+        }
     }
 
 }

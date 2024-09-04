@@ -13,8 +13,10 @@ Passengers shall only board a wagon at zero speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Simulate only cells that have trains or passengers.
+Display only visible tiles.
+Splitscreen shall allow the player to view different parts of the world in sub-panels.
 Passengers shall walk along a walkway to reach another station.
-Tracks, trains and stations shall be saved to file and loaded from file.
 Locomotives shall be numbered independantly from the wagons.
 Long-range 45° or 90° turns, that link two distant squares with a track independant from the other squares it crosses.
 Wagons shall be created and linked together by click and drag over a track.
@@ -32,7 +34,6 @@ Dampen springs between TrainElements: a spring has less force when shrinking.
 TrainElements shall turn smoothly in curves.
 Tracks and trains shall have a simplified drawing version for large-scale visualization.
 Speed limits and stop signs shall spread to the whole tile at large scales.
-Display only visible tiles.
 Cells shall be drawn as sprites.
 A TrainLink shall be connected to a point close to either end of the TrainElement, not to its center.
 A new TrainLink shall be created or severed between two existing TrainElements, without any TE being created or deleted.
@@ -78,6 +79,10 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Panel view and zoom shall be saved to file and loaded from file.
+WorldMap with its train lines for each loco shall be saved to file and loaded from file.
+Tracks, trains and stations shall be saved to file and loaded from file.
+Speed limits and stop signs shall be saved to file and loaded from file.
 Passengers shall use the logical map to find their way.
 A logical map of the tracks shall be updated when locos drive into stations.
 The links between two neighboring stations is made upon world map computation.

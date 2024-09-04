@@ -45,4 +45,9 @@ public class Walkway {
             return firstStationId;
         }
     }
+
+    @Override
+    public String toString() {
+        return "w " + firstStationId + " " + secondStationId;
+    }
 }
