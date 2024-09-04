@@ -79,6 +79,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Bug fixed: Walkways may be saved too many times on file.
 Panel view and zoom shall be saved to file and loaded from file.
 WorldMap with its train lines for each loco shall be saved to file and loaded from file.
 Tracks, trains and stations shall be saved to file and loaded from file.
