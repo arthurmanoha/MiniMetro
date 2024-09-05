@@ -15,7 +15,6 @@ TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 
 Simulate only cells that have trains or passengers.
 Display info about locos in small stickers next to them.
-Setting a stop timer on a cell that already has the same timer shall deactivate it.
 Splitscreen shall allow the player to view different parts of the world in sub-panels.
 Passengers shall walk along a walkway to reach another station.
 Locomotives shall be numbered independantly from the wagons.
@@ -79,6 +78,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Setting a stop timer or a speed limit on a cell that already has the same timer or limit shall deactivate it.
 Display only visible tiles.
 Dampen springs between TrainElements: increased strength, decreased damping.
 Bug fixed: Walkways may be saved too many times on file.

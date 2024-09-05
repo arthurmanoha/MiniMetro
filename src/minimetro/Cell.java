@@ -831,12 +831,34 @@ public class Cell {
         }
     }
 
+    /**
+     * Set the speed limit for that cell.
+     * Setting the same limit as the cell already has shall deactivate the
+     * limit.
+     *
+     * @param speedIndicatorValue
+     */
     protected void setSpeedIndicator(double speedIndicatorValue) {
-        speedLimit = speedIndicatorValue;
+        if (speedLimit == speedIndicatorValue) {
+            speedLimit = Integer.MAX_VALUE;
+        } else {
+            speedLimit = speedIndicatorValue;
+        }
     }
 
+    /**
+     * Set how long locos have to remain stopped at this cell.
+     * Setting the same value as the cell already has shall deactivate the stop
+     * timer.
+     *
+     * @param newStopTimerDuration
+     */
     protected void setStopTimer(double newStopTimerDuration) {
-        stopTimerDuration = newStopTimerDuration;
+        if (stopTimerDuration == newStopTimerDuration) {
+            stopTimerDuration = -1;
+        } else {
+            stopTimerDuration = newStopTimerDuration;
+        }
     }
 
     /**
