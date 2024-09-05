@@ -71,9 +71,9 @@ public class WorldPanel extends JPanel implements MouseListener,
         g.fillRect(0, 0, gWidth, graphicsCurrentHeight);
 
         int colMinVisible = (int) (max(0, getCol(0)));
-        int colMaxVisible = (int) min(world.getNbCols(), getCol(gWidth));
+        int colMaxVisible = (int) min(world.getNbCols() - 1, getCol(gWidth));
         int rowMinVisible = (int) (max(0, getRow(0)));
-        int rowMaxVisible = (int) min(world.getNbRows(), getRow(graphicsCurrentHeight));
+        int rowMaxVisible = (int) min(world.getNbRows() - 1, getRow(graphicsCurrentHeight));
 
         // Paint the background
         for (int row = rowMinVisible; row <= rowMaxVisible; row++) {
