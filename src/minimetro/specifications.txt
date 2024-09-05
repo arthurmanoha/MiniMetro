@@ -14,7 +14,8 @@ TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
 Simulate only cells that have trains or passengers.
-Display only visible tiles.
+Display info about locos in small stickers next to them.
+Setting a stop timer on a cell that already has the same timer shall deactivate it.
 Splitscreen shall allow the player to view different parts of the world in sub-panels.
 Passengers shall walk along a walkway to reach another station.
 Locomotives shall be numbered independantly from the wagons.
@@ -30,7 +31,6 @@ The world shall contain water areas.
 Water areas can be crossed by bridges.
 The world shall contain mountains of different altitudes.
 A railroad on a slope shall have an impact on the speed of any TrainElement that drives on it.
-Dampen springs between TrainElements: a spring has less force when shrinking.
 TrainElements shall turn smoothly in curves.
 Tracks and trains shall have a simplified drawing version for large-scale visualization.
 Speed limits and stop signs shall spread to the whole tile at large scales.
@@ -79,6 +79,8 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Display only visible tiles.
+Dampen springs between TrainElements: increased strength, decreased damping.
 Bug fixed: Walkways may be saved too many times on file.
 Panel view and zoom shall be saved to file and loaded from file.
 WorldMap with its train lines for each loco shall be saved to file and loaded from file.

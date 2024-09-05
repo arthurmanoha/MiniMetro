@@ -53,7 +53,7 @@ public class World implements PropertyChangeListener {
     private static int NB_TRAINS_CREATED = 0;
 
     // Maximum distance between TEs for a link to be created.
-    private static double distanceMax = 25;
+    private static double distanceMax = 26;
 
     // Tell observers that our state has changed.
     private final PropertyChangeSupport support = new PropertyChangeSupport(this);
