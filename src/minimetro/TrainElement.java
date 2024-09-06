@@ -55,9 +55,21 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
     protected int trainNumber; // This value is the same for elements linked together; -1 for non-linked elements.
     protected static int NB_TRAIN_ELEMENTS_CREATED = 0;
 
-    public TrainElement() {
-        id = NB_TRAIN_ELEMENTS_CREATED;
-        NB_TRAIN_ELEMENTS_CREATED++;
+    /**
+     * Create TE with a specific id.
+     *
+     * @param newId
+     */
+    public TrainElement(int newId) {
+        if (newId == -1) {
+            // Default numbering
+            id = NB_TRAIN_ELEMENTS_CREATED;
+            NB_TRAIN_ELEMENTS_CREATED++;
+        } else {
+            // Specific numbering
+            id = newId;
+            NB_TRAIN_ELEMENTS_CREATED = Math.max(NB_TRAIN_ELEMENTS_CREATED, newId + 1);
+        }
         trainNumber = -1;
         isLeading = false;
         currentForce = new Point2D.Double();
@@ -72,6 +84,13 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         stopTimerDuration = -1;
         spriteWidth = 0;
         spriteHeight = 0;
+    }
+
+    /**
+     * Create TE with automatic id.
+     */
+    public TrainElement() {
+        this(-1);
     }
 
     @Override
@@ -298,6 +317,7 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         String elemClass = "" + getClass();
         elemClass = elemClass.substring(elemClass.indexOf(".") + 1);
         return elemClass
+                + " " + this.id
                 + " " + this.absolutePosition.x
                 + " " + this.absolutePosition.y
                 + " " + this.headingDegrees

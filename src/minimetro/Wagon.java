@@ -17,8 +17,8 @@ public class Wagon extends TrainElement {
     private int maxCapacity;
     private int nbPassengerPerRow;
 
-    public Wagon() {
-        super();
+    public Wagon(int newId) {
+        super(newId);
         maxSpeed = 10;
         color = Color.blue;
         imagePath = "src\\img\\Wagon.png";
@@ -29,7 +29,11 @@ public class Wagon extends TrainElement {
     }
 
     public Wagon(Point2D.Double newAbsolutePosition) {
-        this();
+        this(-1, newAbsolutePosition);
+    }
+
+    public Wagon(int newId, Point2D.Double newAbsolutePosition) {
+        this(newId);
         this.absolutePosition = newAbsolutePosition;
     }
 

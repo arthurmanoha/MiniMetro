@@ -14,8 +14,8 @@ public class Locomotive extends TrainElement {
 
     protected double motorPower;
 
-    public Locomotive() {
-        super();
+    public Locomotive(int newId) {
+        super(newId);
         maxSpeed = 300.0;
         motorPower = 30.0;
         color = Color.red;
@@ -24,8 +24,23 @@ public class Locomotive extends TrainElement {
         loadImage();
     }
 
+    /**
+     * Automatic id assignment.
+     *
+     * @param newAbsolutePosition
+     */
     public Locomotive(Point2D.Double newAbsolutePosition) {
-        this();
+        this(-1, newAbsolutePosition);
+    }
+
+    /**
+     * Manual id assignment.
+     *
+     * @param newId
+     * @param newAbsolutePosition
+     */
+    public Locomotive(int newId, Point2D.Double newAbsolutePosition) {
+        this(newId);
         this.absolutePosition = newAbsolutePosition;
     }
 
@@ -43,7 +58,7 @@ public class Locomotive extends TrainElement {
         } else {
             linearSpeedText = "0";
         }
-        String text = "v " + linearSpeedText;
+        String text = "L_" + this.id + "_, v " + linearSpeedText;
         if (stopTimerDuration > 0) {
             text += (" STOP " + (int) stopTimerDuration);
         }
