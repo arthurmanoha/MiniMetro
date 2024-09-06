@@ -32,10 +32,10 @@ public class World implements PropertyChangeListener {
     public static final String YES = "yes";
     public static final String NO = "no";
 
-    private static final boolean IS_TESTING_PASSENGERS = false;
-    private static final int TEST_TARGET_STATION_NUMBER = 7;
+    private static final boolean IS_TESTING_PASSENGERS = true;
+    private static final int TEST_TARGET_STATION_NUMBER = 2;
     private static final int TEST_NB_PASSENGERS = 1;
-    private static final int TEST_STARTING_STATION = -1;
+    private static final int TEST_STARTING_STATION = 6;
 
     private int nbRows, nbCols;
     protected ArrayList<ArrayList<Cell>> cells;
@@ -49,8 +49,6 @@ public class World implements PropertyChangeListener {
     private boolean isRunning;
     private int periodMillisec; // Time elapsed in real world between two simulation steps.
     private int step;
-
-    private static int NB_TRAINS_CREATED = 0;
 
     // Maximum distance between TEs for a link to be created.
     private static double distanceMax = 26;
@@ -160,6 +158,12 @@ public class World implements PropertyChangeListener {
         for (ArrayList<Cell> row : cells) {
             for (Cell c : row) {
                 c.movePassengers(dt);
+            }
+        }
+
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                c.boardPassengers();
             }
         }
 
@@ -287,9 +291,9 @@ public class World implements PropertyChangeListener {
      * @param headingDegrees
      * @param linearSpeed
      */
-    protected void addLoco(double xReal, double yReal, double headingDegrees,
+    protected void addLoco(int id, double xReal, double yReal, double headingDegrees,
             double linearSpeed, boolean isEngineActive, boolean isBraking, double currentSpeedLimit) {
-        this.addTrainElement(xReal, yReal, headingDegrees, linearSpeed, true, isEngineActive, isBraking, currentSpeedLimit);
+        this.addTrainElement(id, xReal, yReal, headingDegrees, linearSpeed, true, isEngineActive, isBraking, currentSpeedLimit);
     }
 
     /**
@@ -310,11 +314,11 @@ public class World implements PropertyChangeListener {
      * @param headingDegrees
      */
     protected void addWagon(double xReal, double yReal, double headingDegrees, double linearSpeed) {
-        this.addTrainElement(xReal, yReal, headingDegrees, linearSpeed, false, false, false, -1);
+        this.addTrainElement(-1, xReal, yReal, headingDegrees, linearSpeed, false, false, false, -1);
     }
 
     private void addTrainElement(double xReal, double yReal, boolean isLoco) {
-        this.addTrainElement(xReal, yReal, 0, 0, isLoco, false, false, -1);
+        this.addTrainElement(-1, xReal, yReal, 0, 0, isLoco, false, false, -1);
     }
 
     /**
@@ -324,7 +328,7 @@ public class World implements PropertyChangeListener {
      * @param yReal
      * @param isLoco when true, add a loco, otherwise add a wagon
      */
-    private void addTrainElement(double xReal, double yReal, double headingDegrees, double linearSpeed,
+    private void addTrainElement(int id, double xReal, double yReal, double headingDegrees, double linearSpeed,
             boolean isLoco, boolean isEngineActive, boolean isBraking, double currentSpeedLimit) {
 
         int col = getCol(xReal);
@@ -334,9 +338,9 @@ public class World implements PropertyChangeListener {
 
         TrainElement newElement;
         if (isLoco) {
-            newElement = new Locomotive(newAbsolutePosition);
+            newElement = new Locomotive(id, newAbsolutePosition);
         } else {
-            newElement = new Wagon(newAbsolutePosition);
+            newElement = new Wagon(id, newAbsolutePosition);
         }
 
         if (isEngineActive) {
@@ -856,6 +860,7 @@ public class World implements PropertyChangeListener {
     }
 
     protected void load(Scanner scanner) {
+        TrainElement.NB_TRAIN_ELEMENTS_CREATED = 0;
         String text = "";
 
         // Grid dimensions
@@ -919,14 +924,15 @@ public class World implements PropertyChangeListener {
                 c.setStopTimer(stopDuration);
                 break;
             case LOCOMOTIVE:
-                x = Double.valueOf(split[1]);
-                y = Double.valueOf(split[2]);
-                headingDegrees = Double.valueOf(split[3]);
-                linearSpeed = Double.valueOf(split[4]);
-                currentSpeedLimit = Double.valueOf(split[5]);
-                isEngineActive = split[6].equals("engine_active");
-                isBraking = split[7].equals("is_braking");
-                addLoco(x, y, headingDegrees, linearSpeed, isEngineActive, isBraking, currentSpeedLimit);
+                int id = Integer.valueOf(split[1]);
+                x = Double.valueOf(split[2]);
+                y = Double.valueOf(split[3]);
+                headingDegrees = Double.valueOf(split[4]);
+                linearSpeed = Double.valueOf(split[5]);
+                currentSpeedLimit = Double.valueOf(split[6]);
+                isEngineActive = split[7].equals("engine_active");
+                isBraking = split[8].equals("is_braking");
+                addLoco(id, x, y, headingDegrees, linearSpeed, isEngineActive, isBraking, currentSpeedLimit);
                 break;
             case WAGON:
                 x = Double.valueOf(split[1]);
