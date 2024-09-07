@@ -132,6 +132,7 @@ public class GUI extends JFrame {
         JButton generatePassengersButton = new JButton("Generate Passengers");
         generatePassengersButton.addActionListener((e) -> {
             w.generatePassengers();
+            panel.repaint();
         });
         topToolbar.add(generatePassengersButton);
 
@@ -192,6 +193,7 @@ public class GUI extends JFrame {
         JButton clearMapButton = new JButton("Clear Map");
         clearMapButton.addActionListener((e) -> {
             w.clearMap();
+            worldMapLabel.setText(World.map.toFormattedString());
         });
         c.gridx = 1;
         c.gridy = 1;
@@ -251,7 +253,7 @@ public class GUI extends JFrame {
 
         speedIndicatorTextField = new JTextField();
         speedIndicatorTextField.setPreferredSize(new Dimension(80, 27));
-        speedIndicatorTextField.setText("0.0");
+        speedIndicatorTextField.setText("30.0");
         speedIndicatorTextField.addActionListener((e) -> {
             readSpeedLimit();
             panel.setTool(GuiTool.SPEED_INDICATOR);

@@ -114,36 +114,25 @@ public class StationCell extends Cell {
 
     @Override
     protected void boardPassengers() {
-        ArrayList<Passenger> boardingPassengers = new ArrayList<>();
 
-        for (Passenger p : passengerList) {
-            World.map.computePath(this.getId(), p);
-        }
+        WorldMap map = World.map;
 
-        if (hasPassengers()) {
-            for (Passenger p : passengerList) {
-                if (p.getTargetStationId() != this.id) {
+        Iterator<Passenger> iter = passengerList.iterator();
+        while (iter.hasNext()) {
+            Passenger p = iter.next();
+            map.computePath(this.getId(), p);
 
-                    // Try to fit the current passenger into the first non-full wagon.
-                    boolean passengerStillOnPlatform = true;
-                    for (TrainElement te : trainElements) {
-                        if (passengerStillOnPlatform) {
-                            if (te instanceof Wagon && te.isStopped()) {
-                                Wagon wagon = (Wagon) te;
-                                if (wagon.hasRoom()) {
-                                    wagon.receivePassenger(p);
-                                    passengerStillOnPlatform = false;
-                                    boardingPassengers.add(p);
-                                    p.removeStationFromPath(this.getId());
-                                }
-                            }
-                        }
-                    }
+            int currentTargetId = p.getLastPathStep();
+            TrainLine line = map.findCurrentLine(this.getId());
+            if (line != null && line.containsStation(currentTargetId)) {
+                // This is the appropriate line for this passenger.
+                Wagon w = this.findStoppedWagonWithRoom();
+                if (w != null) {
+                    // Passenger gets on board.
+                    w.receivePassenger(p);
+                    iter.remove();
                 }
             }
-        }
-        for (Passenger p : boardingPassengers) {
-            passengerList.remove(p);
         }
     }
 
@@ -222,5 +211,17 @@ public class StationCell extends Cell {
     protected void addWalkwayDirection(StationCell connectedStation, CardinalPoint cardinalPoint
     ) {
         this.walkways.put(cardinalPoint, connectedStation);
+    }
+
+    private Wagon findStoppedWagonWithRoom() {
+        for (TrainElement te : trainElements) {
+            if (te instanceof Wagon) {
+                Wagon w = (Wagon) te;
+                if (w.hasRoom() && w.isStopped()) {
+                    return w;
+                }
+            }
+        }
+        return null;
     }
 }

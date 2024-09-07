@@ -32,7 +32,7 @@ public class World implements PropertyChangeListener {
     public static final String YES = "yes";
     public static final String NO = "no";
 
-    private static final boolean IS_TESTING_PASSENGERS = true;
+    private static final boolean IS_TESTING_PASSENGERS = false;
     private static final int TEST_TARGET_STATION_NUMBER = 2;
     private static final int TEST_NB_PASSENGERS = 1;
     private static final int TEST_STARTING_STATION = 6;
@@ -161,11 +161,8 @@ public class World implements PropertyChangeListener {
             }
         }
 
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                c.boardPassengers();
-            }
-        }
+        getPassengersOff();
+        boardPassengers();
 
         // Transfert trains between cells when necessary
         int rowIndex = 0;
@@ -313,8 +310,8 @@ public class World implements PropertyChangeListener {
      * @param yReal
      * @param headingDegrees
      */
-    protected void addWagon(double xReal, double yReal, double headingDegrees, double linearSpeed) {
-        this.addTrainElement(-1, xReal, yReal, headingDegrees, linearSpeed, false, false, false, -1);
+    protected void addWagon(int id, double xReal, double yReal, double headingDegrees, double linearSpeed) {
+        this.addTrainElement(id, xReal, yReal, headingDegrees, linearSpeed, false, false, false, -1);
     }
 
     private void addTrainElement(double xReal, double yReal, boolean isLoco) {
@@ -785,7 +782,6 @@ public class World implements PropertyChangeListener {
     }
 
     protected void boardPassengers() {
-        System.out.println("World.boardPassengers()");
         for (ArrayList<Cell> row : cells) {
             for (Cell c : row) {
                 c.boardPassengers();
@@ -892,6 +888,7 @@ public class World implements PropertyChangeListener {
         while (scanner.hasNextLine() && !text.equals("map")) {
             String split[] = text.split(" ");
             int row, col;
+            int id;
             Cell c;
             double x, y, headingDegrees, linearSpeed, currentSpeedLimit;
             boolean isEngineActive, isBraking;
@@ -924,7 +921,7 @@ public class World implements PropertyChangeListener {
                 c.setStopTimer(stopDuration);
                 break;
             case LOCOMOTIVE:
-                int id = Integer.valueOf(split[1]);
+                id = Integer.valueOf(split[1]);
                 x = Double.valueOf(split[2]);
                 y = Double.valueOf(split[3]);
                 headingDegrees = Double.valueOf(split[4]);
@@ -935,11 +932,12 @@ public class World implements PropertyChangeListener {
                 addLoco(id, x, y, headingDegrees, linearSpeed, isEngineActive, isBraking, currentSpeedLimit);
                 break;
             case WAGON:
-                x = Double.valueOf(split[1]);
-                y = Double.valueOf(split[2]);
-                headingDegrees = Double.valueOf(split[3]);
-                linearSpeed = Double.valueOf(split[4]);
-                addWagon(x, y, headingDegrees, linearSpeed);
+                id = Integer.valueOf(split[1]);
+                x = Double.valueOf(split[2]);
+                y = Double.valueOf(split[3]);
+                headingDegrees = Double.valueOf(split[4]);
+                linearSpeed = Double.valueOf(split[5]);
+                addWagon(id, x, y, headingDegrees, linearSpeed);
                 break;
             default:
                 System.out.println("Error in file parsing. Text is " + text);
