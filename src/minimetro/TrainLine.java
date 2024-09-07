@@ -46,12 +46,13 @@ public class TrainLine {
     }
 
     protected boolean containsStation(int stationId) {
+        boolean res = false;
         for (StationCell c : cells) {
             if (c.getId() == stationId) {
-                return true;
+                res = true;
             }
         }
-        return false;
+        return res;
     }
 
     public int getLocoId() {

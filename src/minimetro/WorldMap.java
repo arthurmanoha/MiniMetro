@@ -97,6 +97,7 @@ public class WorldMap {
      */
     protected void computePath(int currentStationId, Passenger p) {
 
+//        System.out.println("Map.computePath(" + currentStationId + " for " + p.toString());
         ArrayList<PathTree> openList = new ArrayList<>();
         ArrayList<PathTree> closedList = new ArrayList<>();
 
@@ -170,7 +171,7 @@ public class WorldMap {
         return neighbors;
     }
 
-    private TrainLine findCurrentLine(int currentStationId) {
+    protected TrainLine findCurrentLine(int currentStationId) {
         TrainLine result = null;
         for (int lineNumber : linesList.keySet()) {
             TrainLine line = linesList.get(lineNumber);
