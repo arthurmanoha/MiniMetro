@@ -35,9 +35,9 @@ public class World implements PropertyChangeListener {
     public static final String NO = "no";
 
     private static final boolean IS_TESTING_PASSENGERS = false;
-    private static final int TEST_TARGET_STATION_NUMBER = 1;
-    private static final int TEST_NB_PASSENGERS = 10;
-    private static final int TEST_STARTING_STATION = 0;
+    private static final int TEST_STARTING_STATION = 1;
+    private static final int TEST_TARGET_STATION_NUMBER = 4;
+    private static final int TEST_NB_PASSENGERS = 1;
 
     private int nbRows, nbCols;
     protected ArrayList<ArrayList<Cell>> cells;
@@ -166,6 +166,47 @@ public class World implements PropertyChangeListener {
         getPassengersOff();
         boardPassengers();
 
+        // Reinsert moving passengers
+        for (int row = 0; row < nbRows; row++) {
+            for (int col = 0; col < nbCols; col++) {
+                Cell c = getCell(row, col);
+                if (c instanceof StationCell) {
+                    StationCell station = (StationCell) c;
+                    for (Passenger p : station.passengersLeavingCell) {
+                        int newRow = row;
+                        int newCol = col;
+
+                        double xLocal = p.getX() - ((StationCell) c).absolutePosition.x;
+                        double yLocal = p.getY() - ((StationCell) c).absolutePosition.y;
+                        // Which neighbor the passenger is walking to depends on which quadrant he is.
+                        if (xLocal > yLocal) {
+                            // South or East
+                            if (xLocal > -yLocal) {
+                                // Reinsert East
+                                newCol = col + 1;
+                            } else {
+                                // Reinsert South
+                                newRow = row + 1;
+                            }
+                        } else {
+                            // West or North
+                            if (xLocal > -yLocal) {
+                                // Reinsert North
+                                newRow = row - 1;
+                            } else {
+                                // Reinsert West
+                                newCol = col - 1;
+                            }
+                        }
+                        Cell newCell = getCell(newRow, newCol);
+                        if (newCell instanceof StationCell) {
+                            ((StationCell) newCell).addPassenger(p);
+                        }
+                    }
+                    station.flushMovingPassengers();
+                }
+            }
+        }
         // Transfert trains between cells when necessary
         int rowIndex = 0;
         for (ArrayList<Cell> row : cells) {
@@ -1026,6 +1067,22 @@ public class World implements PropertyChangeListener {
                 if (w != null) {
                     w.receivePassenger(newP);
                 }
+            }
+        }
+    }
+
+    /**
+     * Add this many passengers to the specified station.
+     *
+     * @param nbPassengers
+     * @param startStationId
+     */
+    void createPassengers(int nbPassengers, int startStationId, int endStationId) {
+        StationCell s = getStation(startStationId);
+        if (s != null) {
+            for (int rank = 0; rank < nbPassengers; rank++) {
+                Passenger newPassenger = new Passenger(endStationId);
+                s.addPassenger(newPassenger);
             }
         }
     }

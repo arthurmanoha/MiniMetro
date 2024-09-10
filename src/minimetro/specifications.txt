@@ -4,7 +4,7 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
-Passengers walking through 2 connections (through 3 stations) disappear and keep walking when they enter the third station.
+World map is not properly updated on station removal.
 Wagons are not perfectly centered, especially when comparing 90 and 270 degrees heading.
 TEs are not snapped onto the correct RailSegment.
 A Locomotive does not brake hard enough at low speed.
@@ -13,6 +13,8 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Allow tracks to join two non-opposite corners of a cell, i.e. NE to SE.
+Allow a single cell to contain two sets of non-crossing tracks, i.e. N-SE and S-NW.
 Simulate only cells that have trains or passengers.
 Display info about locos in small stickers next to them.
 Splitscreen shall allow the player to view different parts of the world in sub-panels.
@@ -77,6 +79,9 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Fixed: Passengers are lost when moving diagonally through cells.
+Added tool to generate passengers with start and target stations.
+Fixed: Passengers walking through 2 connections (through 3 stations) disappear and keep walking when they enter the third station.
 Passengers shall walk along a walkway to reach another station.
 Passengers now only board a wagon at zero speed.
 Setting a stop timer or a speed limit on a cell that already has the same timer or limit shall deactivate it.

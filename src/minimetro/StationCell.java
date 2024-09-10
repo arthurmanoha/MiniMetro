@@ -17,11 +17,12 @@ import java.util.Random;
 public class StationCell extends Cell {
 
     private static int NB_STATIONS_CREATED = 0;
-    private double LATERAL_MARGIN_PERCENTAGE = 10;
+    private double LATERAL_MARGIN_PERCENTAGE = 25;
 
     private static ArrayList<Color> colorList;
     private int id;
     protected ArrayList<Passenger> passengerList;
+    protected ArrayList<Passenger> passengersLeavingCell;
 
     // Directions of the connected stations.
     private HashMap<CardinalPoint, StationCell> walkways;
@@ -44,6 +45,7 @@ public class StationCell extends Cell {
             NB_STATIONS_CREATED = max(NB_STATIONS_CREATED, newId) + 1;
         }
         passengerList = new ArrayList<>();
+        passengersLeavingCell = new ArrayList<>();
         walkways = new HashMap<>();
         color = getStationColor(id);
     }
@@ -96,21 +98,26 @@ public class StationCell extends Cell {
         g.drawString(id + "",
                 (int) (xApp - appSize / 2 + 1),
                 (int) (yApp - appSize / 2 + textHeight));
-        int passengerRank = 0;
         for (Passenger p : passengerList) {
             p.paint(g, x0, y0, zoom);
-            passengerRank++;
         }
     }
 
     protected void addPassenger(Passenger passenger) {
+        this.addPassenger(passenger, false);
+    }
+
+    protected void addPassenger(Passenger passenger, boolean shouldStopWalking) {
 
         if (passenger.getX() == Double.MAX_VALUE) {
             double newX = this.absolutePosition.x + (new Random().nextDouble() - 0.5) * cellSize;
             double newY = this.absolutePosition.y + (new Random().nextDouble() - 0.5) * cellSize;
             passenger.setCoordinates(newX, newY);
         }
-        passenger.stopWalking();
+
+        if (shouldStopWalking) {
+            passenger.stopWalking();
+        }
 
         this.passengerList.add(passenger);
     }
@@ -194,7 +201,8 @@ public class StationCell extends Cell {
             p.move(dt);
             if (hasLeftCell(p) && neighborCell != null) {
                 iter.remove();
-                neighborCell.addPassenger(p);
+                passengersLeavingCell.add(p);
+                p.validateFirstPathStep();
             }
         }
     }
@@ -236,19 +244,19 @@ public class StationCell extends Cell {
 
         double cellX = this.absolutePosition.x;
         double cellY = this.absolutePosition.y;
-        double margin = LATERAL_MARGIN_PERCENTAGE * Cell.cellSize;
+        double margin = Cell.cellSize * LATERAL_MARGIN_PERCENTAGE / 100;
 
-        if (p.getY() > cellY + cellSize / 2 - LATERAL_MARGIN_PERCENTAGE) {
+        if (p.getY() > cellY + cellSize / 2 - margin) {
             p.setVy(-0.5); // Move away from north wall.
-        } else if (p.getY() < cellY - cellSize / 2 + LATERAL_MARGIN_PERCENTAGE) {
+        } else if (p.getY() < cellY - cellSize / 2 + margin) {
             p.setVy(0.5);  // Move away from south wall.
         } else {
             p.setVy(0);
         }
 
-        if (p.getX() > cellX + cellSize / 2 - LATERAL_MARGIN_PERCENTAGE) {
+        if (p.getX() > cellX + cellSize / 2 - margin) {
             p.setVx(-0.5); // Move away from east wall.
-        } else if (p.getX() < cellX - cellSize / 2 + LATERAL_MARGIN_PERCENTAGE) {
+        } else if (p.getX() < cellX - cellSize / 2 + margin) {
             p.setVx(0.5); // Move away from west wall.
         } else {
             p.setVx(0);
@@ -291,5 +299,18 @@ public class StationCell extends Cell {
     protected void removePassengers() {
         super.removePassengers();
         passengerList.clear();
+    }
+
+    @Override
+    protected int getNbPassengers() {
+        if (passengerList != null) {
+            return passengerList.size();
+        } else {
+            return 0;
+        }
+    }
+
+    protected void flushMovingPassengers() {
+        passengersLeavingCell.clear();
     }
 }

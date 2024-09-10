@@ -1008,4 +1008,8 @@ public class Cell {
             }
         }
     }
+
+    protected int getNbPassengers() {
+        return 0;
+    }
 }
