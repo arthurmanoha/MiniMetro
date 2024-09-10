@@ -3,6 +3,7 @@ package minimetro;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.io.FileWriter;
 import static java.lang.Math.max;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +17,8 @@ import java.util.Random;
 public class StationCell extends Cell {
 
     private static int NB_STATIONS_CREATED = 0;
+    private double LATERAL_MARGIN_PERCENTAGE = 10;
+
     private static ArrayList<Color> colorList;
     private int id;
     protected ArrayList<Passenger> passengerList;
@@ -23,28 +26,30 @@ public class StationCell extends Cell {
     // Directions of the connected stations.
     private HashMap<CardinalPoint, StationCell> walkways;
 
-    public StationCell(Cell previousCell) {
+    /**
+     *
+     * @param previousCell the cell we replace, so that we know the tracks, row,
+     * col, ...
+     * @param newId specify an iD or set -1 to let the program choose the first
+     * available number
+     */
+    public StationCell(Cell previousCell, int newId) {
         super(previousCell);
         this.color = Color.yellow;
-        id = NB_STATIONS_CREATED;
-        NB_STATIONS_CREATED++;
+        if (newId == -1) {
+            id = NB_STATIONS_CREATED;
+            NB_STATIONS_CREATED++;
+        } else {
+            id = newId;
+            NB_STATIONS_CREATED = max(NB_STATIONS_CREATED, newId) + 1;
+        }
         passengerList = new ArrayList<>();
         walkways = new HashMap<>();
+        color = getStationColor(id);
+    }
 
-        colorList = new ArrayList<>();
-        colorList.add(Color.red.darker().darker());
-        colorList.add(Color.red);
-        colorList.add(Color.green);
-        colorList.add(Color.green.darker().darker());
-        colorList.add(Color.blue.darker().darker());
-        colorList.add(Color.blue);
-        colorList.add(Color.CYAN);
-        colorList.add(Color.yellow);
-        colorList.add(Color.orange);
-        colorList.add(Color.MAGENTA);
-        colorList.add(Color.gray.darker());
-        int colorIndex = id % colorList.size();
-        color = colorList.get(colorIndex);
+    public StationCell(Cell previousCell) {
+        this(previousCell, -1);
     }
 
     public int getId() {
@@ -56,6 +61,23 @@ public class StationCell extends Cell {
     }
 
     protected static Color getStationColor(int stationNumber) {
+        if (stationNumber == -1) {
+            return Color.white;
+        } else if (colorList == null) {
+
+            colorList = new ArrayList<>();
+            colorList.add(Color.red.darker().darker());
+            colorList.add(Color.red);
+            colorList.add(Color.green);
+            colorList.add(Color.green.darker().darker());
+            colorList.add(Color.blue.darker().darker());
+            colorList.add(Color.blue);
+            colorList.add(Color.CYAN);
+            colorList.add(Color.yellow);
+            colorList.add(Color.orange);
+            colorList.add(Color.MAGENTA);
+            colorList.add(Color.gray.darker());
+        }
         return colorList.get(stationNumber % colorList.size());
     }
 
@@ -74,16 +96,18 @@ public class StationCell extends Cell {
         g.drawString(id + "",
                 (int) (xApp - appSize / 2 + 1),
                 (int) (yApp - appSize / 2 + textHeight));
+        int passengerRank = 0;
         for (Passenger p : passengerList) {
             p.paint(g, x0, y0, zoom);
+            passengerRank++;
         }
     }
 
     protected void addPassenger(Passenger passenger) {
 
         if (passenger.getX() == Double.MAX_VALUE) {
-            double newX = this.absolutePosition.x + (new Random().nextDouble() - 0.5) * cellSize / 2;
-            double newY = this.absolutePosition.y + (new Random().nextDouble() - 0.5) * cellSize / 2;
+            double newX = this.absolutePosition.x + (new Random().nextDouble() - 0.5) * cellSize;
+            double newY = this.absolutePosition.y + (new Random().nextDouble() - 0.5) * cellSize;
             passenger.setCoordinates(newX, newY);
         }
         passenger.stopWalking();
@@ -100,10 +124,8 @@ public class StationCell extends Cell {
         // Find a stopped Wagon
         for (TrainElement te : trainElements) {
             if (te instanceof Wagon) {
-                if (te.isStopped()) {
-                    Wagon wagon = (Wagon) te;
-                    this.passengerList.addAll(wagon.dropPassengers(this.id));
-                }
+                Wagon wagon = (Wagon) te;
+                this.passengerList.addAll(wagon.dropPassengers(this.id));
             }
         }
 
@@ -167,36 +189,69 @@ public class StationCell extends Cell {
         Iterator<Passenger> iter = passengerList.iterator();
         while (iter.hasNext()) {
             Passenger p = iter.next();
-            int otherStationId = p.getLastPathStep();
-
-            StationCell neighborCell = null;
-            for (CardinalPoint direction : walkways.keySet()) {
-                neighborCell = walkways.get(direction);
-                if (neighborCell != null && neighborCell.getId() == otherStationId) {
-                    // Passenger wants to go to neighborCell.
-                    switch (direction) {
-                    case NORTH:
-                        p.setSpeed(0, 1);
-                        break;
-                    case EAST:
-                        p.setSpeed(1, 0);
-                        break;
-                    case SOUTH:
-                        p.setSpeed(0, -1);
-                        break;
-                    case WEST:
-                        p.setSpeed(-1, 0);
-                        break;
-                    default:
-                        p.setSpeed(0, 0);
-                    }
-                }
-            }
+            computeSpeedToWalkAwayFromWalls(p);
+            StationCell neighborCell = computeSpeedToWalkToNextStation(p);
             p.move(dt);
             if (hasLeftCell(p) && neighborCell != null) {
                 iter.remove();
                 neighborCell.addPassenger(p);
             }
+        }
+    }
+
+    private StationCell computeSpeedToWalkToNextStation(Passenger p) {
+        int otherStationId = p.getLastPathStep();
+        StationCell neighborCell = null;
+        for (CardinalPoint direction : walkways.keySet()) {
+            neighborCell = walkways.get(direction);
+            if (neighborCell != null && neighborCell.getId() == otherStationId) {
+                // Passenger wants to go to neighborCell.
+                switch (direction) {
+                case NORTH:
+                    p.setVy(1);
+                    break;
+                case EAST:
+                    p.setVx(1);
+                    break;
+                case SOUTH:
+                    p.setVy(-1);
+                    break;
+                case WEST:
+                    p.setVx(-1);
+                    break;
+                default:
+                }
+            }
+        }
+        return neighborCell;
+    }
+
+    /**
+     * Move a passenger away from the walls, but not from one specific wall if
+     * the passenger is walking toward another cell.
+     *
+     * @param p
+     */
+    private void computeSpeedToWalkAwayFromWalls(Passenger p) {
+
+        double cellX = this.absolutePosition.x;
+        double cellY = this.absolutePosition.y;
+        double margin = LATERAL_MARGIN_PERCENTAGE * Cell.cellSize;
+
+        if (p.getY() > cellY + cellSize / 2 - LATERAL_MARGIN_PERCENTAGE) {
+            p.setVy(-0.5); // Move away from north wall.
+        } else if (p.getY() < cellY - cellSize / 2 + LATERAL_MARGIN_PERCENTAGE) {
+            p.setVy(0.5);  // Move away from south wall.
+        } else {
+            p.setVy(0);
+        }
+
+        if (p.getX() > cellX + cellSize / 2 - LATERAL_MARGIN_PERCENTAGE) {
+            p.setVx(-0.5); // Move away from east wall.
+        } else if (p.getX() < cellX - cellSize / 2 + LATERAL_MARGIN_PERCENTAGE) {
+            p.setVx(0.5); // Move away from west wall.
+        } else {
+            p.setVx(0);
         }
     }
 
@@ -223,5 +278,18 @@ public class StationCell extends Cell {
             }
         }
         return null;
+    }
+
+    @Override
+    protected void savePassengers(FileWriter writer) {
+        for (Passenger p : passengerList) {
+            p.save(writer);
+        }
+    }
+
+    @Override
+    protected void removePassengers() {
+        super.removePassengers();
+        passengerList.clear();
     }
 }

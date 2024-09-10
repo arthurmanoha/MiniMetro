@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -17,29 +19,41 @@ public class Passenger {
     private double vMax;
     private int targetStationId;
     private double size = 10;
-    private Color color = Color.blue;
+    private Color color;
     private static int NB_PASSENGERS_CREATED = 0;
-    private int id;
-    private ArrayList<Integer> path;
+    protected int id;
+    private ArrayList<Integer> path; // First entry is the destination, last entry is the next stop.
 
     public Passenger() {
-        id = NB_PASSENGERS_CREATED;
-        NB_PASSENGERS_CREATED++;
+        this(-1, Double.MAX_VALUE, Double.MAX_VALUE);
+    }
+
+    public Passenger(int newId, double newX, double newY) {
+        this(newId, -1, newX, newY);
+    }
+
+    public Passenger(int targetStationId) {
+        this(-1, targetStationId, Double.MAX_VALUE, Double.MAX_VALUE);
+    }
+
+    public Passenger(int newId, int newTargetStationId, double newX, double newY) {
+        if (newId > NB_PASSENGERS_CREATED) {
+            id = newId;
+            NB_PASSENGERS_CREATED = newId;
+        } else {
+            id = NB_PASSENGERS_CREATED;
+            NB_PASSENGERS_CREATED++;
+        }
         path = new ArrayList<>();
-        x = Double.MAX_VALUE;
-        y = Double.MAX_VALUE;
+        x = newX;
+        y = newY;
+        if (newTargetStationId >= 0) {
+            setTargetStationId(newTargetStationId);
+        }
         vx = 0;
         vy = 0;
         vMax = 10;
-    }
-
-    @Override
-    public String toString() {
-        String result = "P_ " + id;
-        for (Integer step : path) {
-            result += " " + step;
-        }
-        return result;
+        this.color = StationCell.getStationColor(newTargetStationId);
     }
 
     protected void paint(Graphics g, double x0, double y0, double zoom) {
@@ -55,18 +69,17 @@ public class Passenger {
         g.setColor(Color.black);
         g.drawOval((int) (xApp - appSize / 2), (int) (yApp - appSize / 2),
                 (int) appSize, (int) appSize);
-        g.setColor(Color.black);
         String text = "";
         for (int step : path) {
             text += step + " ";
         }
         if (path.isEmpty()) {
-            text += "_no_path_";
+            text += "_";
         }
-        Font font = new Font("helvetica", Font.PLAIN, (int) appSize);
+        Font font = new Font("helvetica", Font.PLAIN, (int) appSize / 2);
         g.setFont(font);
         FontMetrics metrics = g.getFontMetrics(font);
-        g.setColor(Color.gray.darker());
+        g.setColor(Color.black);
         g.drawString(text,
                 (int) (xApp - metrics.stringWidth(text) / 2),
                 (int) (yApp - metrics.getHeight() / 2 + metrics.getAscent()));
@@ -80,14 +93,26 @@ public class Passenger {
         return this.y;
     }
 
+    protected double getVx() {
+        return this.vx;
+    }
+
+    protected double getVy() {
+        return this.vy;
+    }
+
     protected void setCoordinates(double newX, double newY) {
         this.x = newX;
         this.y = newY;
     }
 
-    protected void setTargetStationId(int newTargetStation) {
+    protected final void setTargetStationId(int newTargetStation) {
         targetStationId = newTargetStation;
-        color = StationCell.getStationColor(targetStationId);
+        computeColor(newTargetStation);
+    }
+
+    private void computeColor(int stationId) {
+        color = StationCell.getStationColor(stationId);
     }
 
     protected int getTargetStationId() {
@@ -100,6 +125,7 @@ public class Passenger {
 
     protected void addPathStep(int newStep) {
         path.add(newStep);
+        computeColor(path.get(0));
     }
 
     protected int getFirstPathStep() {
@@ -144,6 +170,14 @@ public class Passenger {
         vy = newVy * vMax;
     }
 
+    protected void setVx(double newVx) {
+        vx = newVx * vMax;
+    }
+
+    protected void setVy(double newVy) {
+        vy = newVy * vMax;
+    }
+
     protected void move(double dt) {
         this.x += vx * dt;
         this.y += vy * dt;
@@ -152,5 +186,24 @@ public class Passenger {
     protected void stopWalking() {
         vx = 0;
         vy = 0;
+    }
+
+    @Override
+    public String toString() {
+        String result = World.PASSENGER + " " + id + " " + this.targetStationId
+                + " " + this.x + " " + this.y;
+        for (Integer step : path) {
+            result += " " + step;
+        }
+        return result;
+    }
+
+    protected void save(FileWriter writer) {
+        try {
+            String text = this.toString() + "\n";
+            writer.write(text);
+        } catch (IOException e) {
+            System.out.println("Error writing Passenger to file.");
+        }
     }
 }

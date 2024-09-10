@@ -253,7 +253,7 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
     }
 
     protected boolean isStopped() {
-        return getLinearSpeed() < MAX_SPEED_FOR_STOPPED;
+        return Math.abs(getLinearSpeed()) < MAX_SPEED_FOR_STOPPED;
     }
 
     @Override

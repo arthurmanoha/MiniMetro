@@ -135,6 +135,14 @@ public class GUI extends JFrame {
             panel.repaint();
         });
         topToolbar.add(generatePassengersButton);
+        topToolbar.add(getOffButton);
+
+        JButton removePassengersButton = new JButton("Remove Passengers");
+        removePassengersButton.addActionListener((e) -> {
+            w.removePassengers();
+            panel.repaint();
+        });
+        topToolbar.add(removePassengersButton);
 
         JButton saveButton = new JButton("Save");
         saveButton.addActionListener((e) -> {
@@ -361,6 +369,7 @@ public class GUI extends JFrame {
                 scanner = new Scanner(file);
                 panel.load(scanner);
                 world.load(scanner);
+                repaint();
             }
         } catch (FileNotFoundException ex) {
             // No config file, maybe create it here.
