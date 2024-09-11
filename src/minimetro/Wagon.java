@@ -24,8 +24,8 @@ public class Wagon extends TrainElement {
         imagePath = "src\\img\\Wagon.png";
         loadImage();
         passengersList = new ArrayList<>();
-        maxCapacity = 18;
-        nbPassengerPerRow = 3;
+        maxCapacity = 6;
+        nbPassengerPerRow = 2;
     }
 
     public Wagon(Point2D.Double newAbsolutePosition) {
@@ -60,15 +60,16 @@ public class Wagon extends TrainElement {
     @Override
     protected void move(double dt) {
         super.move(dt);
-        double margin = 2.6;
+        double rowMargin = 10.5;
+        double colMargin = 8.0;
         int nbRows = maxCapacity / nbPassengerPerRow;
         int nbCols = maxCapacity / nbRows;
         int passengerRank = 0;
         for (Passenger p : passengersList) {
             double row = passengerRank / nbPassengerPerRow + (isEven(nbCols) ? 0.0 : 0.5);
             double col = passengerRank % nbPassengerPerRow + (isEven(nbRows) ? 0.0 : 0.5);
-            double passengerX = (row - nbRows / 2) * margin;
-            double passengerY = (col - nbCols / 2) * margin;
+            double passengerX = (row - nbRows / 2) * rowMargin;
+            double passengerY = (col - nbCols / 2) * colMargin;
             double headingRad = degToRad(headingDegrees);
             double xRotated = this.getX() + passengerX * cos(headingRad) - passengerY * sin(headingRad);
             double yRotated = this.getY() + passengerY * cos(headingRad) + passengerX * sin(headingRad);
@@ -77,16 +78,32 @@ public class Wagon extends TrainElement {
         }
     }
 
+    /**
+     * Receive a passenger. Only if the wagon is stopped.
+     *
+     * @param p the boarding passenger
+     * @return true if the passenger was accepted, false otherwise
+     */
     protected boolean receivePassenger(Passenger p) {
-        if (passengersList.size() < maxCapacity) {
-            passengersList.add(p);
-            return true;
-        }
-        return false;
+        return receivePassenger(p, false);
     }
 
-    protected void dropPassenger(Passenger p) {
-        passengersList.remove(p);
+    /**
+     * Receive a passenger. Only is the wagon is stopped or if we circumvent the
+     * speed check (used for adding passengers when loading a file).
+     *
+     * @param p
+     * @param forceReceive
+     * @return
+     */
+    protected boolean receivePassenger(Passenger p, boolean forceReceive) {
+        if (isStopped() || forceReceive) {
+            if (passengersList.size() < maxCapacity) {
+                passengersList.add(p);
+                return true;
+            }
+        }
+        return false;
     }
 
     protected ArrayList<Passenger> dropAllPassengers() {
@@ -105,23 +122,35 @@ public class Wagon extends TrainElement {
      */
     protected ArrayList<Passenger> dropPassengers(int stationNumber) {
         ArrayList<Passenger> removedPassengers = new ArrayList<>();
+        if (isStopped() && !passengersList.isEmpty()) {
 
-        // Add passengers to the 'getting off now' list.
-        for (Passenger p : this.passengersList) {
-            if (p.getLastPathStep() == stationNumber || p.getLastPathStep() == Integer.MAX_VALUE) {
-                // This passenger gets off here.
-                removedPassengers.add(p);
-                p.validateFirstPathStep();
+            // Add passengers to the 'getting off now' list.
+            for (Passenger p : this.passengersList) {
+                if (p.getLastPathStep() == stationNumber || p.getLastPathStep() == Integer.MAX_VALUE) {
+                    // This passenger gets off here.
+                    removedPassengers.add(p);
+                    p.validateFirstPathStep();
+                }
             }
-        }
-        // Remove those passengers from the wagon.
-        for (Passenger p : removedPassengers) {
-            this.passengersList.remove(p);
+            // Remove those passengers from the wagon.
+            for (Passenger p : removedPassengers) {
+                this.passengersList.remove(p);
+            }
         }
         return removedPassengers;
     }
 
     protected boolean hasRoom() {
         return passengersList.size() < maxCapacity;
+    }
+
+    @Override
+    public String toString() {
+        String text = super.toString();
+
+        for (Passenger p : passengersList) {
+            text += "\n" + World.ONBOARD + " " + this.id + " " + p.toString();
+        }
+        return text;
     }
 }

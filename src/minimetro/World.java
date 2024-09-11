@@ -29,13 +29,15 @@ public class World implements PropertyChangeListener {
     private static final String STOP_TIMER = "stop_timer";
     public static final String LOCOMOTIVE = "Locomotive";
     public static final String WAGON = "Wagon";
+    public static final String PASSENGER = "Passenger";
+    public static final String ONBOARD = "Onboard";
     public static final String YES = "yes";
     public static final String NO = "no";
 
     private static final boolean IS_TESTING_PASSENGERS = false;
-    private static final int TEST_TARGET_STATION_NUMBER = 2;
+    private static final int TEST_STARTING_STATION = 1;
+    private static final int TEST_TARGET_STATION_NUMBER = 4;
     private static final int TEST_NB_PASSENGERS = 1;
-    private static final int TEST_STARTING_STATION = 6;
 
     private int nbRows, nbCols;
     protected ArrayList<ArrayList<Cell>> cells;
@@ -164,6 +166,47 @@ public class World implements PropertyChangeListener {
         getPassengersOff();
         boardPassengers();
 
+        // Reinsert moving passengers
+        for (int row = 0; row < nbRows; row++) {
+            for (int col = 0; col < nbCols; col++) {
+                Cell c = getCell(row, col);
+                if (c instanceof StationCell) {
+                    StationCell station = (StationCell) c;
+                    for (Passenger p : station.passengersLeavingCell) {
+                        int newRow = row;
+                        int newCol = col;
+
+                        double xLocal = p.getX() - ((StationCell) c).absolutePosition.x;
+                        double yLocal = p.getY() - ((StationCell) c).absolutePosition.y;
+                        // Which neighbor the passenger is walking to depends on which quadrant he is.
+                        if (xLocal > yLocal) {
+                            // South or East
+                            if (xLocal > -yLocal) {
+                                // Reinsert East
+                                newCol = col + 1;
+                            } else {
+                                // Reinsert South
+                                newRow = row + 1;
+                            }
+                        } else {
+                            // West or North
+                            if (xLocal > -yLocal) {
+                                // Reinsert North
+                                newRow = row - 1;
+                            } else {
+                                // Reinsert West
+                                newCol = col - 1;
+                            }
+                        }
+                        Cell newCell = getCell(newRow, newCol);
+                        if (newCell instanceof StationCell) {
+                            ((StationCell) newCell).addPassenger(p);
+                        }
+                    }
+                    station.flushMovingPassengers();
+                }
+            }
+        }
         // Transfert trains between cells when necessary
         int rowIndex = 0;
         for (ArrayList<Cell> row : cells) {
@@ -247,8 +290,9 @@ public class World implements PropertyChangeListener {
      *
      * @param row
      * @param col
+     * @param id
      */
-    protected void toggleStation(int row, int col) {
+    protected void toggleStation(int row, int col, int id) {
         Cell oldCell = this.getCell(row, col);
         if (oldCell != null) {
             Cell newCell;
@@ -260,7 +304,7 @@ public class World implements PropertyChangeListener {
                 newCell = new Cell(oldCell);
                 stationList.remove((StationCell) oldCell);
             } else {
-                newCell = new StationCell(oldCell);
+                newCell = new StationCell(oldCell, id);
                 stationList.add((StationCell) newCell);
             }
             this.setCell(row, col, newCell);
@@ -268,6 +312,10 @@ public class World implements PropertyChangeListener {
                 newCell.addTrainElement(oldTrain);
             }
         }
+    }
+
+    protected void toggleStation(int row, int col) {
+        toggleStation(row, col, -1);
     }
 
     /**
@@ -310,8 +358,8 @@ public class World implements PropertyChangeListener {
      * @param yReal
      * @param headingDegrees
      */
-    protected void addWagon(int id, double xReal, double yReal, double headingDegrees, double linearSpeed) {
-        this.addTrainElement(id, xReal, yReal, headingDegrees, linearSpeed, false, false, false, -1);
+    protected Wagon addWagon(int id, double xReal, double yReal, double headingDegrees, double linearSpeed) {
+        return (Wagon) this.addTrainElement(id, xReal, yReal, headingDegrees, linearSpeed, false, false, false, -1);
     }
 
     private void addTrainElement(double xReal, double yReal, boolean isLoco) {
@@ -325,7 +373,7 @@ public class World implements PropertyChangeListener {
      * @param yReal
      * @param isLoco when true, add a loco, otherwise add a wagon
      */
-    private void addTrainElement(int id, double xReal, double yReal, double headingDegrees, double linearSpeed,
+    private TrainElement addTrainElement(int id, double xReal, double yReal, double headingDegrees, double linearSpeed,
             boolean isLoco, boolean isEngineActive, boolean isBraking, double currentSpeedLimit) {
 
         int col = getCol(xReal);
@@ -354,6 +402,7 @@ public class World implements PropertyChangeListener {
             cell.addTrainElement(newElement);
             updateTrainLinks(newElement, row, col);
         }
+        return newElement;
     }
 
     /**
@@ -761,7 +810,7 @@ public class World implements PropertyChangeListener {
                 }
                 targetStationNumber = stationList.get(targetRank).getId();
             }
-            Passenger newPassenger = new Passenger();
+            Passenger newPassenger = new Passenger(targetStationNumber);
             newPassenger.setTargetStationId(targetStationNumber);
             // Add the passenger to the station
             startingStation.addPassenger(newPassenger);
@@ -777,6 +826,17 @@ public class World implements PropertyChangeListener {
                         World.map.computePath(station.getId(), p);
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Remove all passengers from all stations and all trains.
+     */
+    protected void removePassengers() {
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                c.removePassengers();
             }
         }
     }
@@ -828,9 +888,10 @@ public class World implements PropertyChangeListener {
 
                     // Save stations
                     if (c instanceof StationCell) {
-                        String text = STATION + " " + row + " " + col + "\n";
+                        String text = STATION + " " + ((StationCell) c).getId() + " " + row + " " + col + "\n";
                         writer.write(text);
                     }
+                    c.savePassengers(writer);
 
                     // Save speed limits
                     if (c.speedLimit != Integer.MAX_VALUE) {
@@ -888,16 +949,19 @@ public class World implements PropertyChangeListener {
         while (scanner.hasNextLine() && !text.equals("map")) {
             String split[] = text.split(" ");
             int row, col;
-            int id;
+            int id, wagonId;
             Cell c;
             double x, y, headingDegrees, linearSpeed, currentSpeedLimit;
             boolean isEngineActive, isBraking;
+            int rank, targetStationId;
+            Passenger newPassenger;
 
             switch (split[0]) {
             case STATION:
-                row = Integer.valueOf(split[1]);
-                col = Integer.valueOf(split[2]);
-                toggleStation(row, col);
+                id = Integer.valueOf(split[1]);
+                row = Integer.valueOf(split[2]);
+                col = Integer.valueOf(split[3]);
+                toggleStation(row, col, id);
                 break;
             case RAIL_LINK:
                 row = Integer.valueOf(split[1]);
@@ -939,11 +1003,45 @@ public class World implements PropertyChangeListener {
                 linearSpeed = Double.valueOf(split[5]);
                 addWagon(id, x, y, headingDegrees, linearSpeed);
                 break;
+            case ONBOARD:
+                // Onboard wagonId Passenger passId targetStation xPass yPass lastStep (...) firstStep
+                wagonId = Integer.valueOf(split[1]);
+                Wagon w = getWagon(wagonId);
+                id = Integer.valueOf(split[3]);
+                targetStationId = Integer.valueOf(split[4]);
+                x = Double.valueOf(split[5]);
+                y = Double.valueOf(split[6]);
+                newPassenger = new Passenger(id, targetStationId, x, y);
+                for (rank = 7; rank < split.length; rank++) {
+                    int newItineraryStep = Integer.valueOf(split[rank]);
+                    newPassenger.addPathStep(newItineraryStep);
+                }
+                w.receivePassenger(newPassenger, true);
+                break;
+            case PASSENGER:
+                // Passenger id targetId x y pathsteps
+                id = Integer.valueOf(split[1]);
+                targetStationId = Integer.valueOf(split[2]);
+                x = Double.valueOf(split[3]);
+                y = Double.valueOf(split[4]);
+                newPassenger = new Passenger(id, targetStationId, x, y);
+                for (rank = 6; rank < split.length; rank++) {
+                    int newItineraryStep = Integer.valueOf(split[rank]);
+                    newPassenger.addPathStep(newItineraryStep);
+                }
+                col = getCol(x);
+                row = getRow(y);
+                Cell receivingCell = getCell(row, col);
+                if (receivingCell != null && receivingCell instanceof StationCell) {
+                    ((StationCell) receivingCell).addPassenger(newPassenger);
+                }
+                break;
             default:
                 System.out.println("Error in file parsing. Text is " + text);
             }
             text = scanner.nextLine();
         }
+
         map.load(scanner);
     }
 
@@ -951,6 +1049,58 @@ public class World implements PropertyChangeListener {
         for (StationCell station : stationList) {
             if (station.getId() == stationId) {
                 return station;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Add a passenger to a specific wagon.
+     *
+     * @param newP the Passenger
+     * @param id the (int)id of the chosen wagon
+     */
+    private void addPassenger(Passenger newP, int id) {
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                Wagon w = c.getWagon(id);
+                if (w != null) {
+                    w.receivePassenger(newP);
+                }
+            }
+        }
+    }
+
+    /**
+     * Add this many passengers to the specified station.
+     *
+     * @param nbPassengers
+     * @param startStationId
+     */
+    void createPassengers(int nbPassengers, int startStationId, int endStationId) {
+        StationCell s = getStation(startStationId);
+        if (s != null) {
+            for (int rank = 0; rank < nbPassengers; rank++) {
+                Passenger newPassenger = new Passenger(endStationId);
+                s.addPassenger(newPassenger);
+            }
+        }
+    }
+
+    /**
+     * Find and return the wagon with the given id.
+     *
+     * @param wagonId
+     * @return the wagon with that id, or null if not found.
+     */
+    private Wagon getWagon(int wagonId) {
+        Wagon w = null;
+        for (ArrayList<Cell> row : cells) {
+            for (Cell c : row) {
+                w = c.getWagon(wagonId);
+                if (w != null) {
+                    return w;
+                }
             }
         }
         return null;

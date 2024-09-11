@@ -135,6 +135,14 @@ public class GUI extends JFrame {
             panel.repaint();
         });
         topToolbar.add(generatePassengersButton);
+        topToolbar.add(getOffButton);
+
+        JButton removePassengersButton = new JButton("Remove Passengers");
+        removePassengersButton.addActionListener((e) -> {
+            w.removePassengers();
+            panel.repaint();
+        });
+        topToolbar.add(removePassengersButton);
 
         JButton saveButton = new JButton("Save");
         saveButton.addActionListener((e) -> {
@@ -179,6 +187,7 @@ public class GUI extends JFrame {
         worldMapButton.addActionListener((e) -> {
             World.map.computeWalkways();
             worldMapLabel.setText(World.map.toFormattedString());
+            System.out.println("Map: " + World.map.toFormattedString());
         });
         JScrollPane mapScrollPane = new JScrollPane(worldMapLabel,
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
@@ -195,9 +204,59 @@ public class GUI extends JFrame {
             w.clearMap();
             worldMapLabel.setText(World.map.toFormattedString());
         });
+        c.gridwidth = 1;
         c.gridx = 1;
         c.gridy = 1;
         locoToolbar.add(clearMapButton, c);
+
+        JLabel startStationIdLabel = new JLabel("Start station");
+        c.gridx = 0;
+        c.gridy = 3;
+        startStationIdLabel.setMinimumSize(new Dimension(100, 20));
+        locoToolbar.add(startStationIdLabel, c);
+
+        JTextField startStationIdTextField = new JTextField("0");
+        c.gridx = 0;
+        c.gridy = 4;
+        startStationIdTextField.setMinimumSize(new Dimension(100, 20));
+        locoToolbar.add(startStationIdTextField, c);
+
+        JLabel endStationIdLabel = new JLabel("End station");
+        c.gridx = 1;
+        c.gridy = 3;
+        endStationIdLabel.setMinimumSize(new Dimension(100, 20));
+        locoToolbar.add(endStationIdLabel, c);
+
+        JTextField endStationIdTextField = new JTextField("0");
+        c.gridx = 1;
+        c.gridy = 4;
+        endStationIdTextField.setMinimumSize(new Dimension(100, 20));
+        locoToolbar.add(endStationIdTextField, c);
+
+        JLabel nbPassengersLabel = new JLabel("Nb passengers");
+        c.gridx = 2;
+        c.gridy = 3;
+        nbPassengersLabel.setMinimumSize(new Dimension(100, 20));
+        locoToolbar.add(nbPassengersLabel, c);
+
+        JTextField nbPassengersTextField = new JTextField("1");
+        c.gridy = 4;
+        nbPassengersTextField.setMinimumSize(new Dimension(100, 20));
+        locoToolbar.add(nbPassengersTextField, c);
+
+        JButton createPassengersButton = new JButton("Go");
+        createPassengersButton.addActionListener((e) -> {
+            int startStationId = Integer.valueOf(startStationIdTextField.getText());
+            int endStationId = Integer.valueOf(endStationIdTextField.getText());
+            int nbPassengers = Integer.valueOf(nbPassengersTextField.getText());
+            w.createPassengers(nbPassengers, startStationId, endStationId);
+            repaint();
+        });
+        c.gridx = 0;
+        c.gridy = 5;
+        c.gridwidth = 3;
+        createPassengersButton.setMinimumSize(new Dimension(150, 20));
+        locoToolbar.add(createPassengersButton, c);
 
         mainToolbar.add(locoToolbar);
 
@@ -361,6 +420,7 @@ public class GUI extends JFrame {
                 scanner = new Scanner(file);
                 panel.load(scanner);
                 world.load(scanner);
+                repaint();
             }
         } catch (FileNotFoundException ex) {
             // No config file, maybe create it here.

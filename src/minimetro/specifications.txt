@@ -4,19 +4,20 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
+World map is not properly updated on station removal.
 Wagons are not perfectly centered, especially when comparing 90 and 270 degrees heading.
 TEs are not snapped onto the correct RailSegment.
 A Locomotive does not brake hard enough at low speed.
-Passengers shall only board a wagon at zero speed.
 
 ---------------------------------------------------------------------------------------------------
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Allow tracks to join two non-opposite corners of a cell, i.e. NE to SE.
+Allow a single cell to contain two sets of non-crossing tracks, i.e. N-SE and S-NW.
 Simulate only cells that have trains or passengers.
 Display info about locos in small stickers next to them.
 Splitscreen shall allow the player to view different parts of the world in sub-panels.
-Passengers shall walk along a walkway to reach another station.
 Locomotives shall be numbered independantly from the wagons.
 Long-range 45° or 90° turns, that link two distant squares with a track independant from the other squares it crosses.
 Wagons shall be created and linked together by click and drag over a track.
@@ -78,6 +79,11 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Fixed: Passengers are lost when moving diagonally through cells.
+Added tool to generate passengers with start and target stations.
+Fixed: Passengers walking through 2 connections (through 3 stations) disappear and keep walking when they enter the third station.
+Passengers shall walk along a walkway to reach another station.
+Passengers now only board a wagon at zero speed.
 Setting a stop timer or a speed limit on a cell that already has the same timer or limit shall deactivate it.
 Display only visible tiles.
 Dampen springs between TrainElements: increased strength, decreased damping.

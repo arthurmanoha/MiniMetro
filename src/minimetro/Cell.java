@@ -987,4 +987,29 @@ public class Cell {
             te.save(writer);
         }
     }
+
+    protected void savePassengers(FileWriter writer) {
+    }
+
+    protected Wagon getWagon(int requestedId) {
+        for (TrainElement te : trainElements) {
+            if (te instanceof Wagon && te.id == requestedId) {
+                Wagon w = (Wagon) te;
+                return w;
+            }
+        }
+        return null;
+    }
+
+    protected void removePassengers() {
+        for (TrainElement te : trainElements) {
+            if (te instanceof Wagon) {
+                ((Wagon) te).dropAllPassengers();
+            }
+        }
+    }
+
+    protected int getNbPassengers() {
+        return 0;
+    }
 }
