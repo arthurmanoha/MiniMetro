@@ -319,13 +319,16 @@ public class World implements PropertyChangeListener {
             if (oldCell instanceof StationCell) {
                 newCell = new Cell(oldCell);
                 stationList.remove((StationCell) oldCell);
+                cells.remove(oldCell);
             } else {
                 newCell = new StationCell(oldCell, id);
                 stationList.add((StationCell) newCell);
             }
-            this.setCell(row, col, newCell);
-            for (TrainElement oldTrain : oldTrains) {
-                newCell.addTrainElement(oldTrain);
+            if (!newCell.isEmpty()) {
+                this.setCell(row, col, newCell);
+                for (TrainElement oldTrain : oldTrains) {
+                    newCell.addTrainElement(oldTrain);
+                }
             }
         }
     }
@@ -689,8 +692,12 @@ public class World implements PropertyChangeListener {
 
     protected void removeTrack(int row, int col) {
         Cell c = getCell(row, col);
-        c.removeTracks();
-//        map.computeMap();
+        if (c != null) {
+            c.removeTracks();
+            if (c.isEmpty()) {
+                cells.remove(c);
+            }
+        }
     }
 
     protected void removeTrains(int row, int col) {

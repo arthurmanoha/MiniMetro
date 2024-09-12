@@ -65,6 +65,16 @@ public class SparseMatrix<T> implements Iterable<T> {
         containerForNewElem.element = newElem;
     }
 
+    public void remove(T toBeRemoved) {
+        Iterator iter = containers.iterator();
+        while (iter.hasNext()) {
+            SparseMatrixContainer container = (SparseMatrixContainer) iter.next();
+            if (container.element.equals(toBeRemoved)) {
+                iter.remove();
+            }
+        }
+    }
+
     public int getMaxRow() {
         int max = Integer.MIN_VALUE;
         for (SparseMatrixContainer container : containers) {
@@ -138,6 +148,10 @@ public class SparseMatrix<T> implements Iterable<T> {
             text += "}";
         }
         return text;
+    }
+
+    public int getNbElements() {
+        return containers.size();
     }
 
     private class SparseMatrixIterator<T> implements Iterator<T> {

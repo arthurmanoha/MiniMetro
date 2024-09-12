@@ -783,6 +783,16 @@ public class Cell {
     }
 
     /**
+     * Tell if a cell is completely empty.
+     *
+     * @return true when the cell contains no rails, loco, wagon, passengers,
+     * and is not a station; false otherwise.
+     */
+    protected boolean isEmpty() {
+        return trainElements.isEmpty() && rails.isEmpty();
+    }
+
+    /**
      * Return true when the cell has a link in the specified direction.
      *
      * @param cardinalPoint
