@@ -12,8 +12,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.FileWriter;
 import java.io.IOException;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
 import java.util.Scanner;
 import javax.swing.JPanel;
 
@@ -70,28 +68,16 @@ public class WorldPanel extends JPanel implements MouseListener,
         g.setColor(Color.gray);
         g.fillRect(0, 0, gWidth, graphicsCurrentHeight);
 
-        int colMinVisible = (int) (max(0, getCol(0)));
-        int colMaxVisible = (int) min(world.getNbCols() - 1, getCol(gWidth));
-        int rowMinVisible = (int) (max(0, getRow(0)));
-        int rowMaxVisible = (int) min(world.getNbRows() - 1, getRow(graphicsCurrentHeight));
-
-        // Paint the background
-        for (int row = rowMinVisible; row <= rowMaxVisible; row++) {
-            for (int col = colMinVisible; col <= colMaxVisible; col++) {
-                Cell c = world.getCell(row, col);
-                c.paint(g, x0, y0, zoomLevel);
-            }
+        for (Cell c : world.getAllCells()) {
+            c.paint(g, x0, y0, zoomLevel);
         }
 
         // Paint the train links
         paintTrainLinks(g, x0, y0, zoomLevel);
 
         // Paint the trains
-        for (int row = rowMinVisible; row <= rowMaxVisible; row++) {
-            for (int col = colMinVisible; col <= colMaxVisible; col++) {
-                Cell c = world.getCell(row, col);
-                c.paintTrains(g, x0, y0, zoomLevel);
-            }
+        for (Cell c : world.getAllCells()) {
+            c.paintTrains(g, x0, y0, zoomLevel);
         }
 
         // Draw outer border

@@ -427,5 +427,6 @@ public class GUI extends JFrame {
             System.out.println("Cannot load, no config file.");
         }
         worldMapLabel.setText(World.map.toFormattedString());
+        System.out.println("GUI end load.");
     }
 }

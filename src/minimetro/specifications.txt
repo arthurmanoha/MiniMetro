@@ -5,6 +5,7 @@ KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNO
 ---------------------------------------------------------------------------------------------------
 
 World map is not properly updated on station removal.
+A train that crosses itself in an intersection is not loaded properly.
 Wagons are not perfectly centered, especially when comparing 90 and 270 degrees heading.
 TEs are not snapped onto the correct RailSegment.
 A Locomotive does not brake hard enough at low speed.
@@ -13,6 +14,8 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+The world as a sparse matrix shall still be painted the same way.
+Text on the "save file" popup should be adapted.
 Allow tracks to join two non-opposite corners of a cell, i.e. NE to SE.
 Allow a single cell to contain two sets of non-crossing tracks, i.e. N-SE and S-NW.
 Simulate only cells that have trains or passengers.
@@ -79,6 +82,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+The world shall be stored as a sparse matrix.
 Fixed: Passengers are lost when moving diagonally through cells.
 Added tool to generate passengers with start and target stations.
 Fixed: Passengers walking through 2 connections (through 3 stations) disappear and keep walking when they enter the third station.
