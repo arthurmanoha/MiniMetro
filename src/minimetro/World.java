@@ -702,18 +702,20 @@ public class World implements PropertyChangeListener {
 
     protected void removeTrains(int row, int col) {
         Cell c = getCell(row, col);
-        ArrayList<TrainElement> list = c.getAllElements();
-        // Before we remove elem, we must remove any TrainLink involved.
-        for (TrainElement elem : list) {
-            Iterator<TrainLink> iterator = links.iterator();
-            while (iterator.hasNext()) {
-                TrainLink link = iterator.next();
-                if (link.getElement(0).equals(elem) || link.getElement(1).equals(elem)) {
-                    iterator.remove();
+        if (c != null) {
+            ArrayList<TrainElement> list = c.getAllElements();
+            // Before we remove elem, we must remove any TrainLink involved.
+            for (TrainElement elem : list) {
+                Iterator<TrainLink> iterator = links.iterator();
+                while (iterator.hasNext()) {
+                    TrainLink link = iterator.next();
+                    if (link.getElement(0).equals(elem) || link.getElement(1).equals(elem)) {
+                        iterator.remove();
+                    }
                 }
             }
+            c.removeTrains();
         }
-        c.removeTrains();
     }
 
     protected void addTestTrain(double xStart, double yStart, int nbWagons) {

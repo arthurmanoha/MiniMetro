@@ -14,6 +14,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import static java.lang.Double.max;
 import static java.lang.Double.min;
+import static java.lang.Math.abs;
 import java.util.Scanner;
 import javax.swing.JPanel;
 
@@ -38,14 +39,19 @@ public class WorldPanel extends JPanel implements MouseListener,
 
     private int graphicsCurrentHeight;
 
+    private boolean ctrlIsPressed;
+    private CardinalPoint currentDirection;
+    private int straightOriginRow;
+    private int straightOriginCol;
+
     public WorldPanel(World w) {
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = 1.209;
+        zoomLevel = .31;
         zoomLevelFactor = 1.1;
-        x0 = 123;
-        y0 = -23246;
+        x0 = 42;
+        y0 = 50;
         currentTool = GuiTool.NO_TOOL;
         prevMouseX = 0;
         prevMouseY = 0;
@@ -54,6 +60,8 @@ public class WorldPanel extends JPanel implements MouseListener,
         cornerMargin = 0.1;
 
         graphicsCurrentHeight = 0;
+        ctrlIsPressed = false;
+        currentDirection = null;
 
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
@@ -227,10 +235,32 @@ public class WorldPanel extends JPanel implements MouseListener,
             int currentColInt = (int) currentCol;
             int currentRowInt = (int) currentRow;
 
+            if (ctrlIsPressed && currentDirection != null) {
+
+                // Project the current mouse position onto the initial movement line
+                switch (currentDirection) {
+                case EAST, WEST:
+                    currentRowInt = straightOriginRow;
+                    prevRow = straightOriginRow;
+                    break;
+                case NORTH, SOUTH:
+                    currentColInt = straightOriginCol;
+                    prevCol = straightOriginCol;
+                    break;
+                }
+            }
             // Detect a change in cell
             if (!isInCorner(currentRow, currentCol)) {
                 if (prevRow != Integer.MAX_VALUE && prevCol != Integer.MAX_VALUE
                         && (prevCol != currentColInt || prevRow != currentRowInt)) {
+
+                    // Choose or follow a direction when CTRL is pressed.
+                    if (ctrlIsPressed && currentDirection == null) {
+                        // We decide here how the straight line will be oriented.
+                        straightOriginRow = currentRowInt;
+                        straightOriginCol = currentColInt;
+                        currentDirection = computeMovementDirection(currentRowInt, currentColInt, prevRow, prevCol);
+                    }
 
                     // Each cell develops a link to the other one.
                     world.setNewTrack(prevRow, prevCol, currentRowInt, currentColInt);
@@ -364,6 +394,50 @@ public class WorldPanel extends JPanel implements MouseListener,
         split = text.split(" ");
         if (split[0].equals("y0")) {
             y0 = Double.valueOf(split[1]);
+        }
+    }
+
+    protected void setControlState(boolean b) {
+        ctrlIsPressed = b;
+        if (!ctrlIsPressed) {
+            currentDirection = null;
+        }
+    }
+
+    private CardinalPoint computeMovementDirection(int currentRow, int currentCol, int prevRow, int prevCol) {
+        if (currentRow < prevRow) {
+            if (currentCol < prevCol) {
+                // Moving north-west
+                return CardinalPoint.NORTHWEST;
+            } else if (currentCol == prevCol) {
+                // Moving north
+                return CardinalPoint.NORTH;
+            } else {
+                // Moving north-east
+                return CardinalPoint.NORTHEAST;
+            }
+        } else if (currentRow == prevRow) {
+            if (currentCol > prevCol) {
+                // Moving east
+                return CardinalPoint.EAST;
+            } else if (currentCol == prevCol) {
+                // Not moving
+                return CardinalPoint.CENTER;
+            } else {
+                // Moving west
+                return CardinalPoint.WEST;
+            }
+        } else {
+            if (currentCol < prevCol) {
+                // Moving south-west
+                return CardinalPoint.SOUTHWEST;
+            } else if (currentCol == prevCol) {
+                // Moving south
+                return CardinalPoint.SOUTH;
+            } else {
+                // Moving south-east
+                return CardinalPoint.SOUTHEAST;
+            }
         }
     }
 }
