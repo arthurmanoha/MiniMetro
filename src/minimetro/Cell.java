@@ -100,18 +100,11 @@ public class Cell {
         g.setColor(this.color);
         g.fillRect((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) (appSize), (int) (appSize));
 
-        // Draw borders
-        g.setColor(Color.black);
-        g.drawLine((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) (xApp + appSize / 2), (int) (yApp - appSize / 2));
-        g.drawLine((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) (xApp - appSize / 2), (int) (yApp + appSize / 2));
-
-        int i = 0;
         if (rails != null && !rails.isEmpty()) {
             for (RailSegment railSegment : rails) {
                 if (railSegment != null) {
                     railSegment.paint(g, x0, y0, zoom);
                 }
-                i++;
             }
         }
         paintSpeedLimitSign(g, xApp, yApp, appSize);
@@ -787,6 +780,16 @@ public class Cell {
                 }
             }
         }
+    }
+
+    /**
+     * Tell if a cell is completely empty.
+     *
+     * @return true when the cell contains no rails, loco, wagon, passengers,
+     * and is not a station; false otherwise.
+     */
+    protected boolean isEmpty() {
+        return trainElements.isEmpty() && rails.isEmpty();
     }
 
     /**

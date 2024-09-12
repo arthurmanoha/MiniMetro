@@ -12,8 +12,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.FileWriter;
 import java.io.IOException;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+import static java.lang.Double.max;
+import static java.lang.Double.min;
 import java.util.Scanner;
 import javax.swing.JPanel;
 
@@ -70,28 +70,18 @@ public class WorldPanel extends JPanel implements MouseListener,
         g.setColor(Color.gray);
         g.fillRect(0, 0, gWidth, graphicsCurrentHeight);
 
-        int colMinVisible = (int) (max(0, getCol(0)));
-        int colMaxVisible = (int) min(world.getNbCols() - 1, getCol(gWidth));
-        int rowMinVisible = (int) (max(0, getRow(0)));
-        int rowMaxVisible = (int) min(world.getNbRows() - 1, getRow(graphicsCurrentHeight));
-
-        // Paint the background
-        for (int row = rowMinVisible; row <= rowMaxVisible; row++) {
-            for (int col = colMinVisible; col <= colMaxVisible; col++) {
-                Cell c = world.getCell(row, col);
-                c.paint(g, x0, y0, zoomLevel);
-            }
+        for (Cell c : world.getAllCells()) {
+            c.paint(g, x0, y0, zoomLevel);
         }
+
+        paintCellBorders(g);
 
         // Paint the train links
         paintTrainLinks(g, x0, y0, zoomLevel);
 
         // Paint the trains
-        for (int row = rowMinVisible; row <= rowMaxVisible; row++) {
-            for (int col = colMinVisible; col <= colMaxVisible; col++) {
-                Cell c = world.getCell(row, col);
-                c.paintTrains(g, x0, y0, zoomLevel);
-            }
+        for (Cell c : world.getAllCells()) {
+            c.paintTrains(g, x0, y0, zoomLevel);
         }
 
         // Draw outer border
@@ -102,6 +92,37 @@ public class WorldPanel extends JPanel implements MouseListener,
                 (int) (graphicsCurrentHeight - (y0 + world.getNbRows() * appCellSize - appCellSize / 2)),
                 (int) (world.getNbCols() * Cell.cellSize * zoomLevel),
                 (int) (world.getNbRows() * Cell.cellSize * zoomLevel));
+    }
+
+    protected void paintCellBorders(Graphics g) {
+        int gWidth = g.getClipBounds().width;
+        int colMinVisible = (int) (max(0, getCol(0)));
+        int colMaxVisible = (int) min(world.getNbCols() - 1, getCol(gWidth));
+        int rowMinVisible = (int) (max(0, getRow(0)));
+        int rowMaxVisible = (int) min(world.getNbRows() - 1, getRow(graphicsCurrentHeight));
+        int xApp, yApp;
+
+        // The vertical and horizontal lines shall not extend beyond the borders of the world.
+        int xMin = (int) (x0 - 0.5 * Cell.cellSize * zoomLevel);
+        int xMax = (int) (x0 + (world.getNbCols() - 0.5) * Cell.cellSize * zoomLevel);
+        int yMin = (int) (graphicsCurrentHeight - (-0.5 * Cell.cellSize * zoomLevel + y0));
+        int yMax = (int) (graphicsCurrentHeight - ((world.getNbRows() - 0.5) * Cell.cellSize * zoomLevel + y0));
+
+        g.setColor(Color.black);
+
+        // Vertical lines
+        for (int col = colMinVisible; col <= colMaxVisible; col++) {
+            double xCol = (col - 0.5) * Cell.cellSize;
+            xApp = (int) (x0 + xCol * zoomLevel);
+            g.drawLine(xApp, (int) max(0, yMin), xApp, (int) max(0, yMax));
+        }
+
+        // Horizontal lines
+        for (int row = rowMinVisible; row <= rowMaxVisible; row++) {
+            double yRow = (world.getNbRows() - row - 0.5) * Cell.cellSize;
+            yApp = (int) (graphicsCurrentHeight - (y0 + yRow * zoomLevel));
+            g.drawLine((int) max(0, xMin), yApp, (int) min(xMax, gWidth), yApp);
+        }
     }
 
     void paintTrainLinks(Graphics g, double x0, double y0, double zoom) {

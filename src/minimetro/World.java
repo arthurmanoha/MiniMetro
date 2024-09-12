@@ -40,10 +40,8 @@ public class World implements PropertyChangeListener {
     private static final int TEST_NB_PASSENGERS = 1;
 
     private int nbRows, nbCols;
-    protected ArrayList<ArrayList<Cell>> cells;
+    protected SparseMatrix<Cell> cells;
     private double dt; // Time elapsed in world during one simulation step.
-
-    private ArrayList<TrainElement> trainsInTransition;
 
     protected ArrayList<TrainLink> links;
 
@@ -74,21 +72,20 @@ public class World implements PropertyChangeListener {
         initializeGrid();
     }
 
+    private void addNewCell(int row, int col) {
+
+        double xCell = col * Cell.cellSize;
+        double yCell = (nbRows - row - 1) * Cell.cellSize;
+        Point2D.Double newAbsPos = new Point2D.Double(xCell, yCell);
+        cells.set(new Cell(newAbsPos), row, col);
+    }
+
     private void initializeGrid() {
-        cells = new ArrayList<>();
-        for (int row = 0; row < nbRows; row++) {
-            double yCell = (nbRows - row - 1) * Cell.cellSize;
-            cells.add(new ArrayList<>());
-            for (int col = 0; col < nbCols; col++) {
-                double xCell = col * Cell.cellSize;
-                Point2D.Double newAbsPos = new Point2D.Double(xCell, yCell);
-                cells.get(row).add(new Cell(newAbsPos));
-            }
-        }
-        trainsInTransition = new ArrayList<>();
+        System.out.println("World.initializeGrid()");
+        cells = new SparseMatrix<>();
         links = new ArrayList<>();
         step = 0;
-        isRunning = true;
+        isRunning = false;
         dt = 0.03;
         periodMillisec = (int) (1000 * dt);
         startTimer();
@@ -106,12 +103,47 @@ public class World implements PropertyChangeListener {
         return nbCols;
     }
 
+    /**
+     * Retrieve the cell at specified row and col, or null if no such cell
+     * exists.
+     *
+     * @param row
+     * @param col
+     * @return
+     */
     public Cell getCell(int row, int col) {
         try {
-            return cells.get(row).get(col);
+            return cells.get(row, col);
         } catch (IndexOutOfBoundsException e) {
             return null;
         }
+    }
+
+    /**
+     * Retrieve the cell at specified row and col, and create it if it does not
+     * exist.
+     *
+     * @param row
+     * @param col
+     * @return
+     */
+    private Cell getCellOrCreateIfNull(int row, int col) {
+        Cell c = getCell(row, col);
+        if (c == null) {
+            addNewCell(row, col);
+        }
+        return getCell(row, col);
+    }
+
+    /**
+     * Get all the cells in the form of an ArrayList.
+     *
+     * @return a list containing all the cells.
+     */
+    protected ArrayList<Cell> getAllCells() {
+        ArrayList<Cell> allCells = new ArrayList<>();
+        allCells.addAll(cells.toList());
+        return allCells;
     }
 
     public void togglePlayPause() {
@@ -126,44 +158,34 @@ public class World implements PropertyChangeListener {
 
     public void step() {
 
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                c.resetForces();
-            }
+        for (Cell c : getAllCells()) {
+            c.resetForces();
         }
 
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                c.computeMotorForces(dt); // Set the force applied on each loco
-            }
+        for (Cell c : getAllCells()) {
+            c.computeMotorForces(dt); // Set the force applied on each loco
         }
 
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                c.snapToRail();
-            }
+        for (Cell c : getAllCells()) {
+            c.snapToRail();
         }
+
         applyLinkForces();
 
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                c.computeNewSpeeds(dt);
-            }
+        for (Cell c : getAllCells()) {
+            c.computeNewSpeeds(dt);
         }
 
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                c.moveTrains(dt);
-            }
+        for (Cell c : getAllCells()) {
+            c.moveTrains(dt);
         }
 
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                c.movePassengers(dt);
-            }
+        for (Cell c : getAllCells()) {
+            c.movePassengers(dt);
         }
 
         getPassengersOff();
+
         boardPassengers();
 
         // Reinsert moving passengers
@@ -208,56 +230,50 @@ public class World implements PropertyChangeListener {
             }
         }
         // Transfert trains between cells when necessary
-        int rowIndex = 0;
-        for (ArrayList<Cell> row : cells) {
-            int colIndex = 0;
-            for (Cell c : row) {
-                for (TransferringTrain transferringTrain : c.trainsLeavingCell) {
-                    TrainElement movingTrain = transferringTrain.getTrainElement();
-                    CardinalPoint direction = transferringTrain.getDirection();
-                    int newRow = rowIndex, newCol = colIndex;
-                    switch (direction) {
-                    case NORTH:
-                        newRow = rowIndex - 1;
-                        break;
-                    case NORTHEAST:
-                        newRow = rowIndex - 1;
-                        newCol = colIndex + 1;
-                        break;
-                    case EAST:
-                        newCol = colIndex + 1;
-                        break;
-                    case SOUTHEAST:
-                        newRow = rowIndex + 1;
-                        newCol = colIndex + 1;
-                        break;
-                    case SOUTH:
-                        newRow = rowIndex + 1;
-                        break;
-                    case SOUTHWEST:
-                        newRow = rowIndex + 1;
-                        newCol = colIndex - 1;
-                        break;
-                    case WEST:
-                        newCol = colIndex - 1;
-                        break;
-                    case NORTHWEST:
-                        newRow = rowIndex - 1;
-                        newCol = colIndex - 1;
-                        break;
-                    }
-                    reinsertTrain(movingTrain, newRow, newCol);
+        for (Cell c : getAllCells()) {
+            int rowIndex = cells.getRow(c);
+            int colIndex = cells.getCol(c);
+            for (TransferringTrain transferringTrain : c.trainsLeavingCell) {
+                TrainElement movingTrain = transferringTrain.getTrainElement();
+                CardinalPoint direction = transferringTrain.getDirection();
+                int newRow = rowIndex, newCol = colIndex;
+                switch (direction) {
+                case NORTH:
+                    newRow = rowIndex - 1;
+                    break;
+                case NORTHEAST:
+                    newRow = rowIndex - 1;
+                    newCol = colIndex + 1;
+                    break;
+                case EAST:
+                    newCol = colIndex + 1;
+                    break;
+                case SOUTHEAST:
+                    newRow = rowIndex + 1;
+                    newCol = colIndex + 1;
+                    break;
+                case SOUTH:
+                    newRow = rowIndex + 1;
+                    break;
+                case SOUTHWEST:
+                    newRow = rowIndex + 1;
+                    newCol = colIndex - 1;
+                    break;
+                case WEST:
+                    newCol = colIndex - 1;
+                    break;
+                case NORTHWEST:
+                    newRow = rowIndex - 1;
+                    newCol = colIndex - 1;
+                    break;
                 }
-                colIndex++;
+                reinsertTrain(movingTrain, newRow, newCol);
             }
-            rowIndex++;
         }
 
         // Flush transfer lists
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                c.flushMovingTrains();
-            }
+        for (Cell c : getAllCells()) {
+            c.flushMovingTrains();
         }
 
         step++;
@@ -279,7 +295,7 @@ public class World implements PropertyChangeListener {
 
     protected void setCell(int row, int col, Cell newCell) {
         try {
-            cells.get(row).set(col, newCell);
+            cells.set(newCell, row, col);
         } catch (IndexOutOfBoundsException e) {
             System.out.println("World.setCell: error");
         }
@@ -293,7 +309,7 @@ public class World implements PropertyChangeListener {
      * @param id
      */
     protected void toggleStation(int row, int col, int id) {
-        Cell oldCell = this.getCell(row, col);
+        Cell oldCell = this.getCellOrCreateIfNull(row, col);
         if (oldCell != null) {
             Cell newCell;
 
@@ -303,13 +319,16 @@ public class World implements PropertyChangeListener {
             if (oldCell instanceof StationCell) {
                 newCell = new Cell(oldCell);
                 stationList.remove((StationCell) oldCell);
+                cells.remove(oldCell);
             } else {
                 newCell = new StationCell(oldCell, id);
                 stationList.add((StationCell) newCell);
             }
-            this.setCell(row, col, newCell);
-            for (TrainElement oldTrain : oldTrains) {
-                newCell.addTrainElement(oldTrain);
+            if (!newCell.isEmpty()) {
+                this.setCell(row, col, newCell);
+                for (TrainElement oldTrain : oldTrains) {
+                    newCell.addTrainElement(oldTrain);
+                }
             }
         }
     }
@@ -477,7 +496,7 @@ public class World implements PropertyChangeListener {
      */
     protected void setNewTrack(int row, int col, int rowNeighbor, int colNeighbor) {
 
-        Cell newTrackCell = getCell(rowNeighbor, colNeighbor);
+        Cell newTrackCell = getCellOrCreateIfNull(rowNeighbor, colNeighbor);
         CardinalPoint newLinkDirection;
 
         if (newTrackCell != null) {
@@ -596,25 +615,11 @@ public class World implements PropertyChangeListener {
     }
 
     private int getColumn(Cell cell0) {
-        for (int row = 0; row < nbRows; row++) {
-            for (int col = 0; col < nbCols; col++) {
-                if (getCell(row, col).equals(cell0)) {
-                    return col;
-                }
-            }
-        }
-        return -1;
+        return cells.getCol(cell0);
     }
 
     private int getLine(Cell cell0) {
-        for (int row = 0; row < nbRows; row++) {
-            for (int col = 0; col < nbCols; col++) {
-                if (getCell(row, col).equals(cell0)) {
-                    return row;
-                }
-            }
-        }
-        return -1;
+        return cells.getRow(cell0);
     }
 
     private void applyLinkForces() {
@@ -671,11 +676,9 @@ public class World implements PropertyChangeListener {
      * @return
      */
     private Cell getCell(TrainElement e0) {
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                if (c.containsTrainElement(e0)) {
-                    return c;
-                }
+        for (Cell c : getAllCells()) {
+            if (c.containsTrainElement(e0)) {
+                return c;
             }
         }
         return null;
@@ -689,8 +692,12 @@ public class World implements PropertyChangeListener {
 
     protected void removeTrack(int row, int col) {
         Cell c = getCell(row, col);
-        c.removeTracks();
-//        map.computeMap();
+        if (c != null) {
+            c.removeTracks();
+            if (c.isEmpty()) {
+                cells.remove(c);
+            }
+        }
     }
 
     protected void removeTrains(int row, int col) {
@@ -741,19 +748,16 @@ public class World implements PropertyChangeListener {
 
     protected void startLocos() {
         System.out.println("World start locos");
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                c.startLocos();
-            }
+
+        for (Cell c : getAllCells()) {
+            c.startLocos();
         }
     }
 
     protected void stopLocos() {
         System.out.println("World stop locos");
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                c.stopLocos();
-            }
+        for (Cell c : getAllCells()) {
+            c.stopLocos();
         }
     }
 
@@ -818,13 +822,11 @@ public class World implements PropertyChangeListener {
         }
 
         World.map.computeWalkways();
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                if (c instanceof StationCell) {
-                    StationCell station = (StationCell) c;
-                    for (Passenger p : station.passengerList) {
-                        World.map.computePath(station.getId(), p);
-                    }
+        for (Cell c : getAllCells()) {
+            if (c instanceof StationCell) {
+                StationCell station = (StationCell) c;
+                for (Passenger p : station.passengerList) {
+                    World.map.computePath(station.getId(), p);
                 }
             }
         }
@@ -834,26 +836,20 @@ public class World implements PropertyChangeListener {
      * Remove all passengers from all stations and all trains.
      */
     protected void removePassengers() {
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                c.removePassengers();
-            }
+        for (Cell c : getAllCells()) {
+            c.removePassengers();
         }
     }
 
     protected void boardPassengers() {
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                c.boardPassengers();
-            }
+        for (Cell c : getAllCells()) {
+            c.boardPassengers();
         }
     }
 
     protected void getPassengersOff() {
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                c.getPassengersOff();
-            }
+        for (Cell c : getAllCells()) {
+            c.getPassengersOff();
         }
     }
 
@@ -871,43 +867,37 @@ public class World implements PropertyChangeListener {
 
             writer.write("isRunning " + (isRunning ? YES : NO) + "\n");
 
-            int row = 0;
-            for (ArrayList<Cell> rowList : cells) {
-                int col = 0;
-                for (Cell c : rowList) {
+            for (Cell c : getAllCells()) {
+                int row = cells.getRow(c);
+                int col = cells.getCol(c);
 
-                    // Save rails
-                    String cellLinks = c.getLinks();
-                    if (!cellLinks.isEmpty()) {
-                        for (String singleLink : cellLinks.split(" ")) {
-                            writer.write(RAIL_LINK + " " + row + " " + col + " " + singleLink + "\n");
-                        }
+                // Save rails
+                String cellLinks = c.getLinks();
+                if (!cellLinks.isEmpty()) {
+                    for (String singleLink : cellLinks.split(" ")) {
+                        writer.write(RAIL_LINK + " " + row + " " + col + " " + singleLink + "\n");
                     }
-
-                    c.saveTrains(writer);
-
-                    // Save stations
-                    if (c instanceof StationCell) {
-                        String text = STATION + " " + ((StationCell) c).getId() + " " + row + " " + col + "\n";
-                        writer.write(text);
-                    }
-                    c.savePassengers(writer);
-
-                    // Save speed limits
-                    if (c.speedLimit != Integer.MAX_VALUE) {
-                        writer.write(SPEED_LIMIT + " " + row + " " + col + " " + c.speedLimit + "\n");
-                    }
-
-                    // Save stop timers
-                    if (c.stopTimerDuration > 0) {
-                        writer.write(STOP_TIMER + " " + row + " " + col + " " + c.stopTimerDuration + "\n");
-                    }
-
-                    col++;
                 }
-                row++;
-            }
 
+                c.saveTrains(writer);
+
+                // Save stations
+                if (c instanceof StationCell) {
+                    String text = STATION + " " + ((StationCell) c).getId() + " " + row + " " + col + "\n";
+                    writer.write(text);
+                }
+                c.savePassengers(writer);
+
+                // Save speed limits
+                if (c.speedLimit != Integer.MAX_VALUE) {
+                    writer.write(SPEED_LIMIT + " " + row + " " + col + " " + c.speedLimit + "\n");
+                }
+
+                // Save stop timers
+                if (c.stopTimerDuration > 0) {
+                    writer.write(STOP_TIMER + " " + row + " " + col + " " + c.stopTimerDuration + "\n");
+                }
+            }
             map.save(writer);
 
         } catch (IOException ex) {
@@ -966,7 +956,7 @@ public class World implements PropertyChangeListener {
             case RAIL_LINK:
                 row = Integer.valueOf(split[1]);
                 col = Integer.valueOf(split[2]);
-                c = getCell(row, col);
+                c = getCellOrCreateIfNull(row, col);
                 CardinalPoint direction = CardinalPoint.valueOf(split[3]);
                 c.addLink(direction);
                 break;
@@ -1061,12 +1051,10 @@ public class World implements PropertyChangeListener {
      * @param id the (int)id of the chosen wagon
      */
     private void addPassenger(Passenger newP, int id) {
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                Wagon w = c.getWagon(id);
-                if (w != null) {
-                    w.receivePassenger(newP);
-                }
+        for (Cell c : getAllCells()) {
+            Wagon w = c.getWagon(id);
+            if (w != null) {
+                w.receivePassenger(newP);
             }
         }
     }
@@ -1095,12 +1083,10 @@ public class World implements PropertyChangeListener {
      */
     private Wagon getWagon(int wagonId) {
         Wagon w = null;
-        for (ArrayList<Cell> row : cells) {
-            for (Cell c : row) {
-                w = c.getWagon(wagonId);
-                if (w != null) {
-                    return w;
-                }
+        for (Cell c : getAllCells()) {
+            w = c.getWagon(wagonId);
+            if (w != null) {
+                return w;
             }
         }
         return null;

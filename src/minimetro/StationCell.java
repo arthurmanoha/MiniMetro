@@ -313,4 +313,14 @@ public class StationCell extends Cell {
     protected void flushMovingPassengers() {
         passengersLeavingCell.clear();
     }
+
+    /**
+     * Tell if the station is empty.
+     *
+     * @return false. A station is never considered an empty cell.
+     */
+    @Override
+    protected boolean isEmpty() {
+        return false;
+    }
 }
