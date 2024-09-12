@@ -174,6 +174,7 @@ public class SparseMatrix<T> implements Iterable<T> {
         return result;
     }
 
+    @Override
     public Iterator<T> iterator() {
         return new SparseMatrixIterator<>();
     }

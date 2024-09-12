@@ -14,7 +14,9 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
-The world as a sparse matrix shall still be painted the same way.
+A tool shall be available to place straight tracks overs long distances, horizontally, vertically or diagonally.
+When a cell is emptied of everything, it shall be removed from the data stucture.
+When a new loco gets into a station, it shall register all the stations regististered by other locos on the same line.
 Text on the "save file" popup should be adapted.
 Allow tracks to join two non-opposite corners of a cell, i.e. NE to SE.
 Allow a single cell to contain two sets of non-crossing tracks, i.e. N-SE and S-NW.
@@ -26,7 +28,6 @@ Long-range 45° or 90° turns, that link two distant squares with a track indepe
 Wagons shall be created and linked together by click and drag over a track.
 Stations names shall be selected from a list made of real-life subway stations of cities.
 Passengers on the platform shall be positioned away from the tracks.
-A tool shall be available to place straight tracks overs long distances, horizontally, vertically or diagonally.
 Rain makes braking distances longer.
 The world shall be stored as a sparse matrix but still painted the same way.
 The grid shall show one in ten lines at large enough scales.
@@ -82,6 +83,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+The world as a sparse matrix shall still be painted the same way.
 The world shall be stored as a sparse matrix.
 Fixed: Passengers are lost when moving diagonally through cells.
 Added tool to generate passengers with start and target stations.
