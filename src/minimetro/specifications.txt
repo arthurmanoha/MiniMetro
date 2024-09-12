@@ -14,7 +14,6 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
-Pressing Controll shall allow tracks to be laid diagonally in a straight line.
 When tracks are being laid, a fast movement of the mouse shall still create a continuous set of tracks.
 Locomotives shall be displayed in a panel with their speed and direction, and the list of their next stations.
 When a new loco gets into a station, it shall register all the stations registered by other locos on the same line.
@@ -84,6 +83,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Pressing Control allows tracks to be laid diagonally in a straight line.
 Pressing Control allows to place straight tracks over long distances, horizontally or vertically.
 When a cell is emptied of everything, it shall be removed from the data stucture.
 The world as a sparse matrix shall still be painted the same way.

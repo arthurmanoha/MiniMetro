@@ -234,6 +234,7 @@ public class WorldPanel extends JPanel implements MouseListener,
             currentRow = getRow(e.getY());
             int currentColInt = (int) currentCol;
             int currentRowInt = (int) currentRow;
+            int delta;
 
             if (ctrlIsPressed && currentDirection != null) {
 
@@ -246,6 +247,44 @@ public class WorldPanel extends JPanel implements MouseListener,
                 case NORTH, SOUTH:
                     currentColInt = straightOriginCol;
                     prevCol = straightOriginCol;
+                    break;
+                case SOUTHEAST, NORTHWEST:
+                    delta = (currentColInt - currentRowInt) - (straightOriginCol - straightOriginRow);
+                    if (2 * (delta / 2) != delta) {
+                        // delta is odd
+                        currentColInt = prevCol;
+                        currentRowInt = prevRow;
+                    } else {
+                        while (delta >= 2) {
+                            currentColInt--;
+                            currentRowInt++;
+                            delta -= 2;
+                        }
+                        while (delta <= -2) {
+                            currentColInt++;
+                            currentRowInt--;
+                            delta += 2;
+                        }
+                    }
+                    break;
+                case NORTHEAST, SOUTHWEST:
+                    delta = (currentColInt + currentRowInt) - (straightOriginCol + straightOriginRow);
+                    if (2 * (delta / 2) != delta) {
+                        // delta is odd
+                        currentColInt = prevCol;
+                        currentRowInt = prevRow;
+                    } else {
+                        while (delta >= 2) {
+                            currentColInt--;
+                            currentRowInt--;
+                            delta -= 2;
+                        }
+                        while (delta <= -2) {
+                            currentColInt++;
+                            currentRowInt++;
+                            delta += 2;
+                        }
+                    }
                     break;
                 }
             }
