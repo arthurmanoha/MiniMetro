@@ -1,7 +1,6 @@
 package minimetro;
 
 import java.awt.geom.Point2D;
-import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.FileWriter;
@@ -21,7 +20,7 @@ import static minimetro.CardinalPoint.*;
  *
  * @author arthu
  */
-public class World implements PropertyChangeListener {
+public class World {
 
     private static final String RAIL_LINK = "rail_link";
     private static final String STATION = "station";
@@ -41,14 +40,21 @@ public class World implements PropertyChangeListener {
 
     private int nbRows, nbCols;
     protected SparseMatrix<Cell> cells;
-    private double dt; // Time elapsed in world during one simulation step.
+    private double simulationDt; // Time elapsed in world during one simulation step.
 
+    // Links between TrainElements;
     protected ArrayList<TrainLink> links;
+
+    private boolean isSettingLongDistanceTracks;
+    private int longTrackStartRow;
+    private int longTrackStartCol;
 
     private Timer timer;
     private boolean isRunning;
     private int periodMillisec; // Time elapsed in real world between two simulation steps.
     private int step;
+
+    private int timeCheckPeriod = 20;
 
     // Maximum distance between TEs for a link to be created.
     private static double distanceMax = 26;
@@ -70,6 +76,7 @@ public class World implements PropertyChangeListener {
         nbRows = newNbRows;
         nbCols = newNbCols;
         initializeGrid();
+        isSettingLongDistanceTracks = false;
     }
 
     private void addNewCell(int row, int col) {
@@ -86,8 +93,8 @@ public class World implements PropertyChangeListener {
         links = new ArrayList<>();
         step = 0;
         isRunning = false;
-        dt = 0.03;
-        periodMillisec = (int) (1000 * dt);
+        simulationDt = 0.03;
+        periodMillisec = 30;
         startTimer();
         speedIndicatorValue = 0;
         stopTimerValue = 5;
@@ -163,7 +170,7 @@ public class World implements PropertyChangeListener {
         }
 
         for (Cell c : getAllCells()) {
-            c.computeMotorForces(dt); // Set the force applied on each loco
+            c.computeMotorForces(simulationDt); // Set the force applied on each loco
         }
 
         for (Cell c : getAllCells()) {
@@ -173,21 +180,33 @@ public class World implements PropertyChangeListener {
         applyLinkForces();
 
         for (Cell c : getAllCells()) {
-            c.computeNewSpeeds(dt);
+            c.computeNewSpeeds(simulationDt);
         }
 
         for (Cell c : getAllCells()) {
-            c.moveTrains(dt);
+            c.moveTrains(simulationDt);
         }
 
         for (Cell c : getAllCells()) {
-            c.movePassengers(dt);
+            c.movePassengers(simulationDt);
         }
 
         getPassengersOff();
-
         boardPassengers();
+        reinsertMovingPassengers();
+        transferTrainsBetweenCells();
 
+        // Flush transfer lists
+        for (Cell c : getAllCells()) {
+            c.flushMovingTrains();
+        }
+
+        step++;
+
+        updateListeners();
+    }
+
+    private void reinsertMovingPassengers() {
         // Reinsert moving passengers
         for (int row = 0; row < nbRows; row++) {
             for (int col = 0; col < nbCols; col++) {
@@ -229,6 +248,9 @@ public class World implements PropertyChangeListener {
                 }
             }
         }
+    }
+
+    private void transferTrainsBetweenCells() {
         // Transfert trains between cells when necessary
         for (Cell c : getAllCells()) {
             int rowIndex = cells.getRow(c);
@@ -270,15 +292,6 @@ public class World implements PropertyChangeListener {
                 reinsertTrain(movingTrain, newRow, newCol);
             }
         }
-
-        // Flush transfer lists
-        for (Cell c : getAllCells()) {
-            c.flushMovingTrains();
-        }
-
-        step++;
-
-        updateListeners();
     }
 
     public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
@@ -525,7 +538,6 @@ public class World implements PropertyChangeListener {
             }
             newTrackCell.addLink(newLinkDirection);
         }
-//        map.computeMap();
     }
 
     /**
@@ -583,10 +595,6 @@ public class World implements PropertyChangeListener {
             setNewTrack(row, maxCol, row + 1, maxCol);
             setNewTrack(row + 1, maxCol, row, maxCol);
         }
-    }
-
-    @Override
-    public void propertyChange(PropertyChangeEvent evt) {
     }
 
     /**
@@ -702,18 +710,20 @@ public class World implements PropertyChangeListener {
 
     protected void removeTrains(int row, int col) {
         Cell c = getCell(row, col);
-        ArrayList<TrainElement> list = c.getAllElements();
-        // Before we remove elem, we must remove any TrainLink involved.
-        for (TrainElement elem : list) {
-            Iterator<TrainLink> iterator = links.iterator();
-            while (iterator.hasNext()) {
-                TrainLink link = iterator.next();
-                if (link.getElement(0).equals(elem) || link.getElement(1).equals(elem)) {
-                    iterator.remove();
+        if (c != null) {
+            ArrayList<TrainElement> list = c.getAllElements();
+            // Before we remove elem, we must remove any TrainLink involved.
+            for (TrainElement elem : list) {
+                Iterator<TrainLink> iterator = links.iterator();
+                while (iterator.hasNext()) {
+                    TrainLink link = iterator.next();
+                    if (link.getElement(0).equals(elem) || link.getElement(1).equals(elem)) {
+                        iterator.remove();
+                    }
                 }
             }
+            c.removeTrains();
         }
-        c.removeTrains();
     }
 
     protected void addTestTrain(double xStart, double yStart, int nbWagons) {
@@ -1090,5 +1100,63 @@ public class World implements PropertyChangeListener {
             }
         }
         return null;
+    }
+
+    protected void setLongDistanceTracks(int rowParam, int colParam) {
+        if (isSettingLongDistanceTracks) {
+            // We already have selected a starting point for this track segment.
+
+            int dRow = rowParam - longTrackStartRow;
+            int dCol = colParam - longTrackStartCol;
+            if (dRow == 0 || dCol == 0 || dRow == dCol || dRow == -dCol) {
+
+                // rowStep and rowCol are chosen in {-1,0,1}
+                int rowStep = getSign(dRow);
+                int colStep = getSign(dCol);
+
+                int currentRow = longTrackStartRow;
+                int currentCol = longTrackStartCol;
+                while (!(currentRow == rowParam && currentCol == colParam)) {
+                    // Place one segment
+                    setNewTrack(currentRow, currentCol, currentRow + rowStep, currentCol + colStep);
+                    setNewTrack(currentRow + rowStep, currentCol + colStep, currentRow, currentCol);
+                    currentRow += rowStep;
+                    currentCol += colStep;
+                }
+            }
+            isSettingLongDistanceTracks = false;
+        } else {
+            // We are choosing the origin of this track segment.
+            longTrackStartRow = rowParam;
+            longTrackStartCol = colParam;
+            isSettingLongDistanceTracks = true;
+        }
+    }
+
+    public boolean isSettingLongDistanceTracks() {
+        return isSettingLongDistanceTracks;
+    }
+
+    public void cancelLongDistanceTracks() {
+        isSettingLongDistanceTracks = false;
+    }
+
+    public int getLongDistanceTrackRow() {
+        return longTrackStartRow;
+    }
+
+    public int getLongDistanceTrackCol() {
+        return longTrackStartCol;
+    }
+
+    /**
+     * Sign of an integer.
+     *
+     * @param val
+     * @return +1 if the integer is greater than 0, -1 if it is less than 0, 0
+     * if it is equal to 0.
+     */
+    private int getSign(int val) {
+        return val > 0 ? 1 : (val < 0 ? -1 : 0);
     }
 }

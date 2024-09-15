@@ -1,6 +1,7 @@
 package minimetro;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -9,6 +10,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Scanner;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -39,151 +41,235 @@ public class GUI extends JFrame {
     private JTextField stopTimerTextField;
     double defaultStopTimerDuration = 5;
 
-    public GUI(World w) {
+    private CustomKeyListener keyListener;
+    private ArrayList<Component> allComponents;
+
+    public GUI(World newWorld) {
         super();
 
-        world = w;
+        world = newWorld;
+        allComponents = new ArrayList<>();
 
+        keyListener = new CustomKeyListener(this);
+        setLayoutAndButtons();
+        this.addKeyListener(keyListener);
+        allComponents.add(panel);
+        allComponents.add(topToolbar);
+        allComponents.add(locoToolbar);
+        allComponents.add(speedToolbar);
+    }
+
+    private void setLayoutAndButtons() {
+
+        allComponents = new ArrayList<>();
         // Add a layout with a toolbar and a jpanel
         this.setLayout(new BorderLayout());
 
         mainToolbar = new JPanel();
+        allComponents.add(mainToolbar);
         mainToolbar.setLayout(new GridLayout(3, 1));
 
         topToolbar = new JPanel();
-        topToolbar.setLayout(new GridLayout(17, 1));
+        allComponents.add(topToolbar);
+        topToolbar.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+
+        c.fill = GridBagConstraints.HORIZONTAL;
 
         JButton playPauseButton = new JButton("PlayPause");
+        allComponents.add(playPauseButton);
         playPauseButton.addActionListener((e) -> {
-            w.togglePlayPause();
+            world.togglePlayPause();
         });
-        topToolbar.add(playPauseButton);
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        c.gridx = 0;
+        c.gridy = 0;
+        topToolbar.add(playPauseButton, c);
 
         JButton stepButton = new JButton("Step");
+        allComponents.add(stepButton);
         stepButton.addActionListener((e) -> {
-            w.step();
+            world.step();
             repaint();
         });
-        topToolbar.add(stepButton);
+        c.gridx = 1;
+        topToolbar.add(stepButton, c);
 
         JButton trackButton = new JButton("Track");
+        allComponents.add(trackButton);
         trackButton.addActionListener((e) -> {
             System.out.println("Pressed track button");
             panel.setTool(GuiTool.TRACK);
         });
-        topToolbar.add(trackButton);
+        c.gridx = 0;
+        c.gridy = 1;
+        topToolbar.add(trackButton, c);
 
         JButton removeTrackButton = new JButton("Remove Track");
+        allComponents.add(removeTrackButton);
         removeTrackButton.addActionListener((e) -> {
             panel.setTool(GuiTool.TRACK_REMOVAL);
         });
-        topToolbar.add(removeTrackButton);
+        c.gridx = 1;
+        c.gridy = 1;
+        topToolbar.add(removeTrackButton, c);
+
+        JButton longDistanceTracksButton = new JButton("Long distance tracks");
+        allComponents.add(longDistanceTracksButton);
+        longDistanceTracksButton.addActionListener((e) -> {
+            panel.setTool(GuiTool.LONG_DISTANCE_TRACKS);
+        });
+        c.gridx = 0;
+        c.gridy = 2;
+        c.gridwidth = 2;
+        topToolbar.add(longDistanceTracksButton, c);
 
         JButton stationButton = new JButton("Station");
+        allComponents.add(stationButton);
         stationButton.addActionListener((e) -> {
             panel.setTool(GuiTool.STATION);
         });
-        topToolbar.add(stationButton);
+        c.gridx = 0;
+        c.gridy = 3;
+        c.gridwidth = 1;
+        topToolbar.add(stationButton, c);
 
         JButton locoButton = new JButton("Loco");
+        allComponents.add(locoButton);
         locoButton.addActionListener((e) -> {
             panel.setTool(GuiTool.LOCO);
         });
-        topToolbar.add(locoButton);
+        c.gridx = 1;
+        c.gridy = 3;
+        topToolbar.add(locoButton, c);
 
         JButton wagonButton = new JButton("Wagon");
+        allComponents.add(wagonButton);
         wagonButton.addActionListener((e) -> {
             panel.setTool(GuiTool.WAGON);
         });
-        topToolbar.add(wagonButton);
+        c.gridx = 0;
+        c.gridy = 4;
+        topToolbar.add(wagonButton, c);
 
         JButton removeTrainsButton = new JButton("Remove trains");
+        allComponents.add(removeTrainsButton);
         removeTrainsButton.addActionListener((e) -> {
             panel.setTool(GuiTool.TRAIN_REMOVAL);
         });
-        topToolbar.add(removeTrainsButton);
+        c.gridx = 1;
+        c.gridy = 4;
+        topToolbar.add(removeTrainsButton, c);
 
         JButton zoomInButton = new JButton("Zoom in");
+        allComponents.add(zoomInButton);
         zoomInButton.addActionListener((e) -> {
             panel.zoomIn();
             panel.repaint();
         });
-        topToolbar.add(zoomInButton);
+        c.gridx = 0;
+        c.gridy = 5;
+        topToolbar.add(zoomInButton, c);
 
         JButton zoomOutButton = new JButton("Zoom out");
+        allComponents.add(zoomOutButton);
         zoomOutButton.addActionListener((e) -> {
             panel.zoomOut();
             panel.repaint();
         });
-        topToolbar.add(zoomOutButton);
+        c.gridx = 1;
+        c.gridy = 5;
+        topToolbar.add(zoomOutButton, c);
 
         JButton boardButton = new JButton("Board");
+        allComponents.add(boardButton);
         boardButton.addActionListener((e) -> {
-            w.boardPassengers();
+            world.boardPassengers();
         });
-        topToolbar.add(boardButton);
+        c.gridx = 0;
+        c.gridy = 6;
+        topToolbar.add(boardButton, c);
 
         JButton getOffButton = new JButton("Get off");
+        allComponents.add(getOffButton);
         getOffButton.addActionListener((e) -> {
-            w.getPassengersOff();
+            world.getPassengersOff();
         });
-        topToolbar.add(getOffButton);
+        c.gridx = 1;
+        c.gridy = 6;
+        topToolbar.add(getOffButton, c);
 
         JButton generatePassengersButton = new JButton("Generate Passengers");
+        allComponents.add(generatePassengersButton);
         generatePassengersButton.addActionListener((e) -> {
-            w.generatePassengers();
+            world.generatePassengers();
             panel.repaint();
         });
-        topToolbar.add(generatePassengersButton);
-        topToolbar.add(getOffButton);
+        c.gridx = 0;
+        c.gridy = 7;
+        topToolbar.add(generatePassengersButton, c);
 
         JButton removePassengersButton = new JButton("Remove Passengers");
+        allComponents.add(removePassengersButton);
         removePassengersButton.addActionListener((e) -> {
-            w.removePassengers();
+            world.removePassengers();
             panel.repaint();
         });
-        topToolbar.add(removePassengersButton);
+        c.gridx = 1;
+        c.gridy = 7;
+        topToolbar.add(removePassengersButton, c);
 
         JButton saveButton = new JButton("Save");
+        allComponents.add(saveButton);
         saveButton.addActionListener((e) -> {
             save();
         });
-        topToolbar.add(saveButton);
+        c.gridx = 0;
+        c.gridy = 8;
+        topToolbar.add(saveButton, c);
 
         JButton loadButton = new JButton("Load");
+        allComponents.add(loadButton);
         loadButton.addActionListener((e) -> {
             load();
         });
-        topToolbar.add(loadButton);
+        c.gridx = 1;
+        c.gridy = 8;
+        topToolbar.add(loadButton, c);
 
         mainToolbar.add(topToolbar);
 
         locoToolbar = new JPanel();
+        allComponents.add(locoToolbar);
         locoToolbar.setLayout(new GridBagLayout());
 
         JButton startLocoButton = new JButton("Start Locos");
+        allComponents.add(startLocoButton);
         startLocoButton.addActionListener((e) -> {
-            w.startLocos();
+            world.startLocos();
         });
-        GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 0;
         locoToolbar.add(startLocoButton, c);
 
         JButton stopLocoButton = new JButton("Stop Locos");
+        allComponents.add(stopLocoButton);
         stopLocoButton.addActionListener((e) -> {
-            w.stopLocos();
+            world.stopLocos();
         });
         c.gridx = 1;
         c.gridy = 0;
         locoToolbar.add(stopLocoButton, c);
 
         JButton worldMapButton = new JButton("Display World Map");
+        allComponents.add(worldMapButton);
         c.gridx = 0;
         c.gridy = 1;
         locoToolbar.add(worldMapButton, c);
 
         worldMapLabel = new JLabel();
+        allComponents.add(worldMapLabel);
         worldMapButton.addActionListener((e) -> {
             World.map.computeWalkways();
             worldMapLabel.setText(World.map.toFormattedString());
@@ -192,16 +278,19 @@ public class GUI extends JFrame {
         JScrollPane mapScrollPane = new JScrollPane(worldMapLabel,
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        allComponents.add(mapScrollPane);
 
         mapScrollPane.setPreferredSize(new Dimension(200, 250));
+        mapScrollPane.setMinimumSize(new Dimension(200, 150));
         c.gridx = 0;
         c.gridy = 2;
         c.gridwidth = 2;
         locoToolbar.add(mapScrollPane, c);
 
         JButton clearMapButton = new JButton("Clear Map");
+        allComponents.add(clearMapButton);
         clearMapButton.addActionListener((e) -> {
-            w.clearMap();
+            world.clearMap();
             worldMapLabel.setText(World.map.toFormattedString());
         });
         c.gridwidth = 1;
@@ -210,46 +299,53 @@ public class GUI extends JFrame {
         locoToolbar.add(clearMapButton, c);
 
         JLabel startStationIdLabel = new JLabel("Start station");
+        allComponents.add(startStationIdLabel);
         c.gridx = 0;
         c.gridy = 3;
         startStationIdLabel.setMinimumSize(new Dimension(100, 20));
         locoToolbar.add(startStationIdLabel, c);
 
         JTextField startStationIdTextField = new JTextField("0");
+        allComponents.add(startStationIdTextField);
         c.gridx = 0;
         c.gridy = 4;
         startStationIdTextField.setMinimumSize(new Dimension(100, 20));
         locoToolbar.add(startStationIdTextField, c);
 
         JLabel endStationIdLabel = new JLabel("End station");
+        allComponents.add(endStationIdLabel);
         c.gridx = 1;
         c.gridy = 3;
         endStationIdLabel.setMinimumSize(new Dimension(100, 20));
         locoToolbar.add(endStationIdLabel, c);
 
         JTextField endStationIdTextField = new JTextField("0");
+        allComponents.add(endStationIdTextField);
         c.gridx = 1;
         c.gridy = 4;
         endStationIdTextField.setMinimumSize(new Dimension(100, 20));
         locoToolbar.add(endStationIdTextField, c);
 
         JLabel nbPassengersLabel = new JLabel("Nb passengers");
+        allComponents.add(nbPassengersLabel);
         c.gridx = 2;
         c.gridy = 3;
         nbPassengersLabel.setMinimumSize(new Dimension(100, 20));
         locoToolbar.add(nbPassengersLabel, c);
 
         JTextField nbPassengersTextField = new JTextField("1");
+        allComponents.add(nbPassengersTextField);
         c.gridy = 4;
         nbPassengersTextField.setMinimumSize(new Dimension(100, 20));
         locoToolbar.add(nbPassengersTextField, c);
 
         JButton createPassengersButton = new JButton("Go");
+        allComponents.add(createPassengersButton);
         createPassengersButton.addActionListener((e) -> {
             int startStationId = Integer.valueOf(startStationIdTextField.getText());
             int endStationId = Integer.valueOf(endStationIdTextField.getText());
             int nbPassengers = Integer.valueOf(nbPassengersTextField.getText());
-            w.createPassengers(nbPassengers, startStationId, endStationId);
+            world.createPassengers(nbPassengers, startStationId, endStationId);
             repaint();
         });
         c.gridx = 0;
@@ -262,55 +358,64 @@ public class GUI extends JFrame {
 
         this.add(mainToolbar, BorderLayout.WEST);
 
-        panel = new WorldPanel(w);
+        panel = new WorldPanel(world);
+
         this.add(panel, BorderLayout.CENTER);
 
         // Speed limit: positive value
         speedToolbar = new JPanel();
+        speedToolbar.setFocusable(true);
         speedToolbar.setLayout(new GridLayout(11, 1));
         speedToolbar.add(new JLabel("Speed limits: "));
         JButton limit01Button = new JButton("0.1");
+        allComponents.add(limit01Button);
         limit01Button.addActionListener((e) -> {
             panel.setTool(GuiTool.SPEED_INDICATOR);
-            w.setSpeedLimitValue(0.1);
+            world.setSpeedLimitValue(0.1);
         });
         speedToolbar.add(limit01Button);
         JButton limit2Button = new JButton("2");
+        allComponents.add(limit2Button);
         limit2Button.addActionListener((e) -> {
             panel.setTool(GuiTool.SPEED_INDICATOR);
-            w.setSpeedLimitValue(2);
+            world.setSpeedLimitValue(2);
         });
         speedToolbar.add(limit2Button);
         JButton limit5Button = new JButton("5");
+        allComponents.add(limit5Button);
         limit5Button.addActionListener((e) -> {
             panel.setTool(GuiTool.SPEED_INDICATOR);
-            w.setSpeedLimitValue(5);
+            world.setSpeedLimitValue(5);
         });
         speedToolbar.add(limit5Button);
         JButton limit10Button = new JButton("10");
+        allComponents.add(limit10Button);
         limit10Button.addActionListener((e) -> {
             panel.setTool(GuiTool.SPEED_INDICATOR);
-            w.setSpeedLimitValue(10);
+            world.setSpeedLimitValue(10);
         });
         speedToolbar.add(limit10Button);
 
         // End of limit: value -1
         JButton endOfLimitButton = new JButton("End of limit");
+        allComponents.add(endOfLimitButton);
         endOfLimitButton.addActionListener((e) -> {
             panel.setTool(GuiTool.SPEED_INDICATOR);
-            w.setSpeedLimitValue(-1);
+            world.setSpeedLimitValue(-1);
         });
         speedToolbar.add(endOfLimitButton);
 
         // No limit information in this cell: value Integer.MAX_VALUE
         JButton noLimitButton = new JButton("No limit");
+        allComponents.add(noLimitButton);
         noLimitButton.addActionListener((e) -> {
             panel.setTool(GuiTool.SPEED_INDICATOR);
-            w.setSpeedLimitValue(Integer.MAX_VALUE);
+            world.setSpeedLimitValue(Integer.MAX_VALUE);
         });
         speedToolbar.add(noLimitButton);
 
         speedIndicatorTextField = new JTextField();
+        allComponents.add(speedIndicatorTextField);
         speedIndicatorTextField.setPreferredSize(new Dimension(80, 27));
         speedIndicatorTextField.setText("30.0");
         speedIndicatorTextField.addActionListener((e) -> {
@@ -320,6 +425,7 @@ public class GUI extends JFrame {
         speedToolbar.add(speedIndicatorTextField);
 
         JButton speedCellButton = new JButton("Custom speed limit");
+        allComponents.add(speedCellButton);
         speedCellButton.addActionListener((e) -> {
             readSpeedLimit();
             panel.setTool(GuiTool.SPEED_INDICATOR);
@@ -327,6 +433,7 @@ public class GUI extends JFrame {
         speedToolbar.add(speedCellButton);
 
         stopTimerTextField = new JTextField();
+        allComponents.add(stopTimerTextField);
         stopTimerTextField.setPreferredSize(new Dimension(80, 27));
         stopTimerTextField.setText("" + defaultStopTimerDuration);
         stopTimerTextField.addActionListener((e) -> {
@@ -335,6 +442,7 @@ public class GUI extends JFrame {
         speedToolbar.add(stopTimerTextField);
 
         JButton stopTimerButton = new JButton("Stop Timer");
+        allComponents.add(stopTimerButton);
         stopTimerButton.addActionListener((e) -> {
             readStopTimer();
             panel.setTool(GuiTool.STOP_TIMER);
@@ -343,11 +451,16 @@ public class GUI extends JFrame {
 
         mainToolbar.add(speedToolbar);
 
-        w.addPropertyChangeListener("currentStep", panel);
+        for (Component comp : allComponents) {
+            comp.setFocusable(true);
+            comp.addKeyListener(keyListener);
+        }
 
+        world.addPropertyChangeListener("currentStep", panel);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(new Dimension(windowWidth, windowHeight));
         this.setVisible(true);
+
     }
 
     private void readSpeedLimit() {
@@ -428,5 +541,9 @@ public class GUI extends JFrame {
         }
         worldMapLabel.setText(World.map.toFormattedString());
         System.out.println("GUI end load.");
+    }
+
+    protected void setControlState(boolean b) {
+        panel.setControlState(b);
     }
 }

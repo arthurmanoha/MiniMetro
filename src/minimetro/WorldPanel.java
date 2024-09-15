@@ -14,6 +14,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import static java.lang.Double.max;
 import static java.lang.Double.min;
+import static java.lang.System.currentTimeMillis;
 import java.util.Scanner;
 import javax.swing.JPanel;
 
@@ -37,15 +38,21 @@ public class WorldPanel extends JPanel implements MouseListener,
     private double cornerMargin; // percentage of cell that is considered its corner
 
     private int graphicsCurrentHeight;
+    private int graphicsCurrentWidth;
+
+    private boolean ctrlIsPressed;
+    private CardinalPoint currentDirection;
+    private int straightOriginRow;
+    private int straightOriginCol;
 
     public WorldPanel(World w) {
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = 1.209;
+        zoomLevel = 0.804;
         zoomLevelFactor = 1.1;
-        x0 = 123;
-        y0 = -23246;
+        x0 = 101;
+        y0 = -15176;
         currentTool = GuiTool.NO_TOOL;
         prevMouseX = 0;
         prevMouseY = 0;
@@ -54,6 +61,9 @@ public class WorldPanel extends JPanel implements MouseListener,
         cornerMargin = 0.1;
 
         graphicsCurrentHeight = 0;
+        graphicsCurrentWidth = 0;
+        ctrlIsPressed = false;
+        currentDirection = null;
 
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
@@ -63,18 +73,20 @@ public class WorldPanel extends JPanel implements MouseListener,
     @Override
     public void paintComponent(Graphics g) {
 
-        int gWidth = g.getClipBounds().width;
+        graphicsCurrentWidth = g.getClipBounds().width;
         graphicsCurrentHeight = g.getClipBounds().height;
 
         // Erase the whole panel
         g.setColor(Color.gray);
-        g.fillRect(0, 0, gWidth, graphicsCurrentHeight);
+        g.fillRect(0, 0, graphicsCurrentWidth, graphicsCurrentHeight);
 
         for (Cell c : world.getAllCells()) {
             c.paint(g, x0, y0, zoomLevel);
         }
 
         paintCellBorders(g);
+
+        paintStraightTracksPossibilities(g);
 
         // Paint the train links
         paintTrainLinks(g, x0, y0, zoomLevel);
@@ -92,14 +104,68 @@ public class WorldPanel extends JPanel implements MouseListener,
                 (int) (graphicsCurrentHeight - (y0 + world.getNbRows() * appCellSize - appCellSize / 2)),
                 (int) (world.getNbCols() * Cell.cellSize * zoomLevel),
                 (int) (world.getNbRows() * Cell.cellSize * zoomLevel));
+
+    }
+
+    private void paintStraightTracksPossibilities(Graphics g) {
+        if (world.isSettingLongDistanceTracks()) {
+            int startRow = world.getLongDistanceTrackRow();
+            int startCol = world.getLongDistanceTrackCol();
+
+            int appSize = (int) (zoomLevel * Cell.cellSize);
+
+            g.setColor(Color.red);
+            // Paint the authorized row and the two authorized diagonals.
+            for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
+
+                int xApp = (int) (x0 + ((col - 0.5) * Cell.cellSize) * zoomLevel);
+
+                // Horizontal
+                int yApp = (int) (graphicsCurrentHeight - (y0 + (world.getNbRows() - startRow - 0.5) * Cell.cellSize * zoomLevel));
+                g.drawRect(xApp, yApp, appSize, appSize);
+
+                // First diagonal
+                int row = startRow - startCol + col;
+                yApp = (int) (graphicsCurrentHeight - (y0 + (world.getNbRows() - row - 0.5) * Cell.cellSize * zoomLevel));
+                g.drawRect(xApp, yApp, appSize, appSize);
+
+                // Second diagonal
+                row = startRow + startCol - col;
+                yApp = (int) (graphicsCurrentHeight - (y0 + (world.getNbRows() - row - 0.5) * Cell.cellSize * zoomLevel));
+                g.drawRect(xApp, yApp, appSize, appSize);
+            }
+            // Paint the authorized column.
+            for (int row = getMinVisibleRow(); row <= getMaxVisibleRow(); row++) {
+                int xApp = (int) (x0 + ((startCol - 0.5) * Cell.cellSize) * zoomLevel);
+                int yApp = (int) (graphicsCurrentHeight - (y0 + (world.getNbRows() - row - 0.5) * Cell.cellSize * zoomLevel));
+
+                g.drawRect(xApp, yApp, appSize, appSize);
+            }
+        }
+    }
+
+    private int getMinVisibleCol() {
+        return (int) max(0, getCol(0));
+    }
+
+    private int getMaxVisibleCol() {
+        return (int) min(world.getNbCols() - 1, getCol(graphicsCurrentWidth));
+    }
+
+    private int getMinVisibleRow() {
+        return (int) (max(0, getRow(0)));
+    }
+
+    private int getMaxVisibleRow() {
+        return (int) min(world.getNbRows() - 1, getRow(graphicsCurrentHeight));
     }
 
     protected void paintCellBorders(Graphics g) {
         int gWidth = g.getClipBounds().width;
-        int colMinVisible = (int) (max(0, getCol(0)));
-        int colMaxVisible = (int) min(world.getNbCols() - 1, getCol(gWidth));
-        int rowMinVisible = (int) (max(0, getRow(0)));
-        int rowMaxVisible = (int) min(world.getNbRows() - 1, getRow(graphicsCurrentHeight));
+        int colMinVisible = getMinVisibleCol();
+        int colMaxVisible = getMaxVisibleCol();
+        int rowMinVisible = getMinVisibleRow();
+        int rowMaxVisible = getMaxVisibleRow();
         int xApp, yApp;
 
         // The vertical and horizontal lines shall not extend beyond the borders of the world.
@@ -133,6 +199,10 @@ public class WorldPanel extends JPanel implements MouseListener,
 
     void setTool(GuiTool newTool) {
         currentTool = newTool;
+        if (currentTool != GuiTool.LONG_DISTANCE_TRACKS) {
+            world.cancelLongDistanceTracks();
+            repaint();
+        }
     }
 
     /**
@@ -157,6 +227,7 @@ public class WorldPanel extends JPanel implements MouseListener,
 
     @Override
     public void mousePressed(MouseEvent e) {
+        System.out.println("                WorldPanel: Mouse pressed.");
         int b1 = MouseEvent.BUTTON1_DOWN_MASK;
         if ((e.getModifiersEx() & b1) == b1) {
 
@@ -166,6 +237,7 @@ public class WorldPanel extends JPanel implements MouseListener,
             // Clicked first mouse button
             switch (currentTool) {
             case LOCO -> {
+                System.out.println("WorldPanel case LOCO");
                 world.addLoco(xReal, yReal);
             }
             case WAGON -> {
@@ -180,6 +252,15 @@ public class WorldPanel extends JPanel implements MouseListener,
             case TRACK -> {
                 prevCol = Integer.MAX_VALUE;
                 prevRow = Integer.MAX_VALUE;
+            }
+            case LONG_DISTANCE_TRACKS -> {
+                currentCol = getCol(e.getX());
+                currentRow = getRow(e.getY());
+                int currentColInt = (int) currentCol;
+                int currentRowInt = (int) currentRow;
+                System.out.println("WorldPanel.setLongDistanceTracks(" + currentRowInt + ", " + currentColInt);
+                world.setLongDistanceTracks(currentRowInt, currentColInt);
+                repaint();
             }
             case STATION -> {
                 world.toggleStation((int) currentRow, (int) currentCol);
@@ -226,11 +307,72 @@ public class WorldPanel extends JPanel implements MouseListener,
             currentRow = getRow(e.getY());
             int currentColInt = (int) currentCol;
             int currentRowInt = (int) currentRow;
+            int delta;
 
+            if (ctrlIsPressed && currentDirection != null) {
+
+                // Project the current mouse position onto the initial movement line
+                switch (currentDirection) {
+                case EAST, WEST:
+                    currentRowInt = straightOriginRow;
+                    prevRow = straightOriginRow;
+                    break;
+                case NORTH, SOUTH:
+                    currentColInt = straightOriginCol;
+                    prevCol = straightOriginCol;
+                    break;
+                case SOUTHEAST, NORTHWEST:
+                    delta = (currentColInt - currentRowInt) - (straightOriginCol - straightOriginRow);
+                    if (2 * (delta / 2) != delta) {
+                        // delta is odd
+                        currentColInt = prevCol;
+                        currentRowInt = prevRow;
+                    } else {
+                        while (delta >= 2) {
+                            currentColInt--;
+                            currentRowInt++;
+                            delta -= 2;
+                        }
+                        while (delta <= -2) {
+                            currentColInt++;
+                            currentRowInt--;
+                            delta += 2;
+                        }
+                    }
+                    break;
+                case NORTHEAST, SOUTHWEST:
+                    delta = (currentColInt + currentRowInt) - (straightOriginCol + straightOriginRow);
+                    if (2 * (delta / 2) != delta) {
+                        // delta is odd
+                        currentColInt = prevCol;
+                        currentRowInt = prevRow;
+                    } else {
+                        while (delta >= 2) {
+                            currentColInt--;
+                            currentRowInt--;
+                            delta -= 2;
+                        }
+                        while (delta <= -2) {
+                            currentColInt++;
+                            currentRowInt++;
+                            delta += 2;
+                        }
+                    }
+                    break;
+                }
+            }
             // Detect a change in cell
             if (!isInCorner(currentRow, currentCol)) {
                 if (prevRow != Integer.MAX_VALUE && prevCol != Integer.MAX_VALUE
                         && (prevCol != currentColInt || prevRow != currentRowInt)) {
+
+                    // Choose or follow a direction when CTRL is pressed.
+                    if (ctrlIsPressed && currentDirection == null) {
+                        // We decide here how the straight line will be oriented.
+                        straightOriginRow = currentRowInt;
+                        straightOriginCol = currentColInt;
+                        currentDirection = computeMovementDirection(currentRowInt, currentColInt, prevRow, prevCol);
+                    }
 
                     // Each cell develops a link to the other one.
                     world.setNewTrack(prevRow, prevCol, currentRowInt, currentColInt);
@@ -242,7 +384,6 @@ public class WorldPanel extends JPanel implements MouseListener,
                 prevCol = currentColInt;
                 prevRow = currentRowInt;
             }
-
         } else if (currentTool.equals(GuiTool.TRACK_REMOVAL)) {
             int currentColInt = (int) currentCol;
             int currentRowInt = (int) currentRow;
@@ -313,7 +454,6 @@ public class WorldPanel extends JPanel implements MouseListener,
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        /* Récupère l'objet source */
         repaint();
     }
 
@@ -364,6 +504,50 @@ public class WorldPanel extends JPanel implements MouseListener,
         split = text.split(" ");
         if (split[0].equals("y0")) {
             y0 = Double.valueOf(split[1]);
+        }
+    }
+
+    protected void setControlState(boolean b) {
+        ctrlIsPressed = b;
+        if (!ctrlIsPressed) {
+            currentDirection = null;
+        }
+    }
+
+    private CardinalPoint computeMovementDirection(int currentRow, int currentCol, int prevRow, int prevCol) {
+        if (currentRow < prevRow) {
+            if (currentCol < prevCol) {
+                // Moving north-west
+                return CardinalPoint.NORTHWEST;
+            } else if (currentCol == prevCol) {
+                // Moving north
+                return CardinalPoint.NORTH;
+            } else {
+                // Moving north-east
+                return CardinalPoint.NORTHEAST;
+            }
+        } else if (currentRow == prevRow) {
+            if (currentCol > prevCol) {
+                // Moving east
+                return CardinalPoint.EAST;
+            } else if (currentCol == prevCol) {
+                // Not moving
+                return CardinalPoint.CENTER;
+            } else {
+                // Moving west
+                return CardinalPoint.WEST;
+            }
+        } else {
+            if (currentCol < prevCol) {
+                // Moving south-west
+                return CardinalPoint.SOUTHWEST;
+            } else if (currentCol == prevCol) {
+                // Moving south
+                return CardinalPoint.SOUTH;
+            } else {
+                // Moving south-east
+                return CardinalPoint.SOUTHEAST;
+            }
         }
     }
 }

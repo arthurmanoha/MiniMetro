@@ -14,7 +14,10 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
-A tool shall be available to place straight tracks overs long distances, horizontally, vertically or diagonally.
+Pressing Control increases the zoom factor.
+Add a tool to automatically remove every non-connected piece of tracks.
+Splitscreen shall allow the player to view different parts of the world in sub-panels.
+When tracks are being laid, a fast movement of the mouse shall still create a continuous set of tracks.
 Locomotives shall be displayed in a panel with their speed and direction, and the list of their next stations.
 When a new loco gets into a station, it shall register all the stations registered by other locos on the same line.
 Text on the "save file" popup should be adapted.
@@ -22,7 +25,6 @@ Allow tracks to join two non-opposite corners of a cell, i.e. NE to SE.
 Allow a single cell to contain two sets of non-crossing tracks, i.e. N-SE and S-NW.
 Simulate only cells that have trains or passengers.
 Display info about locos in small stickers next to them.
-Splitscreen shall allow the player to view different parts of the world in sub-panels.
 Locomotives shall be numbered independantly from the wagons.
 Long-range 45° or 90° turns, that link two distant squares with a track independant from the other squares it crosses.
 Wagons shall be created and linked together by click and drag over a track.
@@ -83,6 +85,9 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Straight tracks: a GUI button allows to select one cell and choose another in the two axis or two diagonals, then link them.
+Straight tracks: in World.setLongDistanceTracks, check that the values correspond to a correct axis or diagonal.Pressing Control allows tracks to be laid diagonally in a straight line.
+Pressing Control allows to place straight tracks over long distances, horizontally or vertically.
 When a cell is emptied of everything, it shall be removed from the data stucture.
 The world as a sparse matrix shall still be painted the same way.
 The world shall be stored as a sparse matrix.
