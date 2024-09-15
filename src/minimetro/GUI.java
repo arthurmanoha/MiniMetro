@@ -71,14 +71,21 @@ public class GUI extends JFrame {
 
         topToolbar = new JPanel();
         allComponents.add(topToolbar);
-        topToolbar.setLayout(new GridLayout(17, 1));
+        topToolbar.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+
+        c.fill = GridBagConstraints.HORIZONTAL;
 
         JButton playPauseButton = new JButton("PlayPause");
         allComponents.add(playPauseButton);
         playPauseButton.addActionListener((e) -> {
             world.togglePlayPause();
         });
-        topToolbar.add(playPauseButton);
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        c.gridx = 0;
+        c.gridy = 0;
+        topToolbar.add(playPauseButton, c);
 
         JButton stepButton = new JButton("Step");
         allComponents.add(stepButton);
@@ -86,7 +93,8 @@ public class GUI extends JFrame {
             world.step();
             repaint();
         });
-        topToolbar.add(stepButton);
+        c.gridx = 1;
+        topToolbar.add(stepButton, c);
 
         JButton trackButton = new JButton("Track");
         allComponents.add(trackButton);
@@ -94,42 +102,65 @@ public class GUI extends JFrame {
             System.out.println("Pressed track button");
             panel.setTool(GuiTool.TRACK);
         });
-        topToolbar.add(trackButton);
+        c.gridx = 0;
+        c.gridy = 1;
+        topToolbar.add(trackButton, c);
 
         JButton removeTrackButton = new JButton("Remove Track");
         allComponents.add(removeTrackButton);
         removeTrackButton.addActionListener((e) -> {
             panel.setTool(GuiTool.TRACK_REMOVAL);
         });
-        topToolbar.add(removeTrackButton);
+        c.gridx = 1;
+        c.gridy = 1;
+        topToolbar.add(removeTrackButton, c);
+
+        JButton longDistanceTracksButton = new JButton("Long distance tracks");
+        allComponents.add(longDistanceTracksButton);
+        longDistanceTracksButton.addActionListener((e) -> {
+            panel.setTool(GuiTool.LONG_DISTANCE_TRACKS);
+        });
+        c.gridx = 0;
+        c.gridy = 2;
+        c.gridwidth = 2;
+        topToolbar.add(longDistanceTracksButton, c);
 
         JButton stationButton = new JButton("Station");
         allComponents.add(stationButton);
         stationButton.addActionListener((e) -> {
             panel.setTool(GuiTool.STATION);
         });
-        topToolbar.add(stationButton);
+        c.gridx = 0;
+        c.gridy = 3;
+        c.gridwidth = 1;
+        topToolbar.add(stationButton, c);
 
         JButton locoButton = new JButton("Loco");
         allComponents.add(locoButton);
         locoButton.addActionListener((e) -> {
             panel.setTool(GuiTool.LOCO);
         });
-        topToolbar.add(locoButton);
+        c.gridx = 1;
+        c.gridy = 3;
+        topToolbar.add(locoButton, c);
 
         JButton wagonButton = new JButton("Wagon");
         allComponents.add(wagonButton);
         wagonButton.addActionListener((e) -> {
             panel.setTool(GuiTool.WAGON);
         });
-        topToolbar.add(wagonButton);
+        c.gridx = 0;
+        c.gridy = 4;
+        topToolbar.add(wagonButton, c);
 
         JButton removeTrainsButton = new JButton("Remove trains");
         allComponents.add(removeTrainsButton);
         removeTrainsButton.addActionListener((e) -> {
             panel.setTool(GuiTool.TRAIN_REMOVAL);
         });
-        topToolbar.add(removeTrainsButton);
+        c.gridx = 1;
+        c.gridy = 4;
+        topToolbar.add(removeTrainsButton, c);
 
         JButton zoomInButton = new JButton("Zoom in");
         allComponents.add(zoomInButton);
@@ -137,7 +168,9 @@ public class GUI extends JFrame {
             panel.zoomIn();
             panel.repaint();
         });
-        topToolbar.add(zoomInButton);
+        c.gridx = 0;
+        c.gridy = 5;
+        topToolbar.add(zoomInButton, c);
 
         JButton zoomOutButton = new JButton("Zoom out");
         allComponents.add(zoomOutButton);
@@ -145,21 +178,27 @@ public class GUI extends JFrame {
             panel.zoomOut();
             panel.repaint();
         });
-        topToolbar.add(zoomOutButton);
+        c.gridx = 1;
+        c.gridy = 5;
+        topToolbar.add(zoomOutButton, c);
 
         JButton boardButton = new JButton("Board");
         allComponents.add(boardButton);
         boardButton.addActionListener((e) -> {
             world.boardPassengers();
         });
-        topToolbar.add(boardButton);
+        c.gridx = 0;
+        c.gridy = 6;
+        topToolbar.add(boardButton, c);
 
         JButton getOffButton = new JButton("Get off");
         allComponents.add(getOffButton);
         getOffButton.addActionListener((e) -> {
             world.getPassengersOff();
         });
-        topToolbar.add(getOffButton);
+        c.gridx = 1;
+        c.gridy = 6;
+        topToolbar.add(getOffButton, c);
 
         JButton generatePassengersButton = new JButton("Generate Passengers");
         allComponents.add(generatePassengersButton);
@@ -167,8 +206,9 @@ public class GUI extends JFrame {
             world.generatePassengers();
             panel.repaint();
         });
-        topToolbar.add(generatePassengersButton);
-        topToolbar.add(getOffButton);
+        c.gridx = 0;
+        c.gridy = 7;
+        topToolbar.add(generatePassengersButton, c);
 
         JButton removePassengersButton = new JButton("Remove Passengers");
         allComponents.add(removePassengersButton);
@@ -176,21 +216,27 @@ public class GUI extends JFrame {
             world.removePassengers();
             panel.repaint();
         });
-        topToolbar.add(removePassengersButton);
+        c.gridx = 1;
+        c.gridy = 7;
+        topToolbar.add(removePassengersButton, c);
 
         JButton saveButton = new JButton("Save");
         allComponents.add(saveButton);
         saveButton.addActionListener((e) -> {
             save();
         });
-        topToolbar.add(saveButton);
+        c.gridx = 0;
+        c.gridy = 8;
+        topToolbar.add(saveButton, c);
 
         JButton loadButton = new JButton("Load");
         allComponents.add(loadButton);
         loadButton.addActionListener((e) -> {
             load();
         });
-        topToolbar.add(loadButton);
+        c.gridx = 1;
+        c.gridy = 8;
+        topToolbar.add(loadButton, c);
 
         mainToolbar.add(topToolbar);
 
@@ -203,7 +249,6 @@ public class GUI extends JFrame {
         startLocoButton.addActionListener((e) -> {
             world.startLocos();
         });
-        GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 0;
         locoToolbar.add(startLocoButton, c);
@@ -236,6 +281,7 @@ public class GUI extends JFrame {
         allComponents.add(mapScrollPane);
 
         mapScrollPane.setPreferredSize(new Dimension(200, 250));
+        mapScrollPane.setMinimumSize(new Dimension(200, 150));
         c.gridx = 0;
         c.gridy = 2;
         c.gridwidth = 2;

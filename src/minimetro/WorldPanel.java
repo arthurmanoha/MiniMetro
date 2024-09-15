@@ -14,7 +14,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import static java.lang.Double.max;
 import static java.lang.Double.min;
-import static java.lang.Math.abs;
+import static java.lang.System.currentTimeMillis;
 import java.util.Scanner;
 import javax.swing.JPanel;
 
@@ -38,6 +38,7 @@ public class WorldPanel extends JPanel implements MouseListener,
     private double cornerMargin; // percentage of cell that is considered its corner
 
     private int graphicsCurrentHeight;
+    private int graphicsCurrentWidth;
 
     private boolean ctrlIsPressed;
     private CardinalPoint currentDirection;
@@ -48,10 +49,10 @@ public class WorldPanel extends JPanel implements MouseListener,
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = .31;
+        zoomLevel = 0.804;
         zoomLevelFactor = 1.1;
-        x0 = 42;
-        y0 = 50;
+        x0 = 101;
+        y0 = -15176;
         currentTool = GuiTool.NO_TOOL;
         prevMouseX = 0;
         prevMouseY = 0;
@@ -60,6 +61,7 @@ public class WorldPanel extends JPanel implements MouseListener,
         cornerMargin = 0.1;
 
         graphicsCurrentHeight = 0;
+        graphicsCurrentWidth = 0;
         ctrlIsPressed = false;
         currentDirection = null;
 
@@ -71,18 +73,20 @@ public class WorldPanel extends JPanel implements MouseListener,
     @Override
     public void paintComponent(Graphics g) {
 
-        int gWidth = g.getClipBounds().width;
+        graphicsCurrentWidth = g.getClipBounds().width;
         graphicsCurrentHeight = g.getClipBounds().height;
 
         // Erase the whole panel
         g.setColor(Color.gray);
-        g.fillRect(0, 0, gWidth, graphicsCurrentHeight);
+        g.fillRect(0, 0, graphicsCurrentWidth, graphicsCurrentHeight);
 
         for (Cell c : world.getAllCells()) {
             c.paint(g, x0, y0, zoomLevel);
         }
 
         paintCellBorders(g);
+
+        paintStraightTracksPossibilities(g);
 
         // Paint the train links
         paintTrainLinks(g, x0, y0, zoomLevel);
@@ -100,14 +104,68 @@ public class WorldPanel extends JPanel implements MouseListener,
                 (int) (graphicsCurrentHeight - (y0 + world.getNbRows() * appCellSize - appCellSize / 2)),
                 (int) (world.getNbCols() * Cell.cellSize * zoomLevel),
                 (int) (world.getNbRows() * Cell.cellSize * zoomLevel));
+
+    }
+
+    private void paintStraightTracksPossibilities(Graphics g) {
+        if (world.isSettingLongDistanceTracks()) {
+            int startRow = world.getLongDistanceTrackRow();
+            int startCol = world.getLongDistanceTrackCol();
+
+            int appSize = (int) (zoomLevel * Cell.cellSize);
+
+            g.setColor(Color.red);
+            // Paint the authorized row and the two authorized diagonals.
+            for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
+
+                int xApp = (int) (x0 + ((col - 0.5) * Cell.cellSize) * zoomLevel);
+
+                // Horizontal
+                int yApp = (int) (graphicsCurrentHeight - (y0 + (world.getNbRows() - startRow - 0.5) * Cell.cellSize * zoomLevel));
+                g.drawRect(xApp, yApp, appSize, appSize);
+
+                // First diagonal
+                int row = startRow - startCol + col;
+                yApp = (int) (graphicsCurrentHeight - (y0 + (world.getNbRows() - row - 0.5) * Cell.cellSize * zoomLevel));
+                g.drawRect(xApp, yApp, appSize, appSize);
+
+                // Second diagonal
+                row = startRow + startCol - col;
+                yApp = (int) (graphicsCurrentHeight - (y0 + (world.getNbRows() - row - 0.5) * Cell.cellSize * zoomLevel));
+                g.drawRect(xApp, yApp, appSize, appSize);
+            }
+            // Paint the authorized column.
+            for (int row = getMinVisibleRow(); row <= getMaxVisibleRow(); row++) {
+                int xApp = (int) (x0 + ((startCol - 0.5) * Cell.cellSize) * zoomLevel);
+                int yApp = (int) (graphicsCurrentHeight - (y0 + (world.getNbRows() - row - 0.5) * Cell.cellSize * zoomLevel));
+
+                g.drawRect(xApp, yApp, appSize, appSize);
+            }
+        }
+    }
+
+    private int getMinVisibleCol() {
+        return (int) max(0, getCol(0));
+    }
+
+    private int getMaxVisibleCol() {
+        return (int) min(world.getNbCols() - 1, getCol(graphicsCurrentWidth));
+    }
+
+    private int getMinVisibleRow() {
+        return (int) (max(0, getRow(0)));
+    }
+
+    private int getMaxVisibleRow() {
+        return (int) min(world.getNbRows() - 1, getRow(graphicsCurrentHeight));
     }
 
     protected void paintCellBorders(Graphics g) {
         int gWidth = g.getClipBounds().width;
-        int colMinVisible = (int) (max(0, getCol(0)));
-        int colMaxVisible = (int) min(world.getNbCols() - 1, getCol(gWidth));
-        int rowMinVisible = (int) (max(0, getRow(0)));
-        int rowMaxVisible = (int) min(world.getNbRows() - 1, getRow(graphicsCurrentHeight));
+        int colMinVisible = getMinVisibleCol();
+        int colMaxVisible = getMaxVisibleCol();
+        int rowMinVisible = getMinVisibleRow();
+        int rowMaxVisible = getMaxVisibleRow();
         int xApp, yApp;
 
         // The vertical and horizontal lines shall not extend beyond the borders of the world.
@@ -141,6 +199,10 @@ public class WorldPanel extends JPanel implements MouseListener,
 
     void setTool(GuiTool newTool) {
         currentTool = newTool;
+        if (currentTool != GuiTool.LONG_DISTANCE_TRACKS) {
+            world.cancelLongDistanceTracks();
+            repaint();
+        }
     }
 
     /**
@@ -165,6 +227,7 @@ public class WorldPanel extends JPanel implements MouseListener,
 
     @Override
     public void mousePressed(MouseEvent e) {
+        System.out.println("                WorldPanel: Mouse pressed.");
         int b1 = MouseEvent.BUTTON1_DOWN_MASK;
         if ((e.getModifiersEx() & b1) == b1) {
 
@@ -174,6 +237,7 @@ public class WorldPanel extends JPanel implements MouseListener,
             // Clicked first mouse button
             switch (currentTool) {
             case LOCO -> {
+                System.out.println("WorldPanel case LOCO");
                 world.addLoco(xReal, yReal);
             }
             case WAGON -> {
@@ -188,6 +252,15 @@ public class WorldPanel extends JPanel implements MouseListener,
             case TRACK -> {
                 prevCol = Integer.MAX_VALUE;
                 prevRow = Integer.MAX_VALUE;
+            }
+            case LONG_DISTANCE_TRACKS -> {
+                currentCol = getCol(e.getX());
+                currentRow = getRow(e.getY());
+                int currentColInt = (int) currentCol;
+                int currentRowInt = (int) currentRow;
+                System.out.println("WorldPanel.setLongDistanceTracks(" + currentRowInt + ", " + currentColInt);
+                world.setLongDistanceTracks(currentRowInt, currentColInt);
+                repaint();
             }
             case STATION -> {
                 world.toggleStation((int) currentRow, (int) currentCol);
@@ -311,7 +384,6 @@ public class WorldPanel extends JPanel implements MouseListener,
                 prevCol = currentColInt;
                 prevRow = currentRowInt;
             }
-
         } else if (currentTool.equals(GuiTool.TRACK_REMOVAL)) {
             int currentColInt = (int) currentCol;
             int currentRowInt = (int) currentRow;
@@ -382,7 +454,6 @@ public class WorldPanel extends JPanel implements MouseListener,
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
-        /* Récupère l'objet source */
         repaint();
     }
 
