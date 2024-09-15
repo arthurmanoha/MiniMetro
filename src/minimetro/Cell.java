@@ -18,6 +18,8 @@ import java.util.ArrayList;
  */
 public class Cell {
 
+    private static boolean DISPLAY_ACTIVE_BORDERS = false;
+
     protected static double cellSize = 100;
 
     protected Color color;
@@ -44,6 +46,8 @@ public class Cell {
     private ArrayList<TrainElement> alreadyStoppedTrains;
     private Cell previous;
 
+    private boolean isActive;
+
     public Cell() {
         color = Color.gray;
         trainElements = new ArrayList<>();
@@ -55,6 +59,7 @@ public class Cell {
         absolutePosition = new Point2D.Double();
         links = new ArrayList<>();
         speedLimit = Integer.MAX_VALUE;
+        isActive = false;
     }
 
     public Cell(Cell previousCell) {
@@ -65,6 +70,7 @@ public class Cell {
         this.nbRails = previousCell.nbRails;
         this.speedLimit = previousCell.speedLimit;
         this.stopTimerDuration = previousCell.stopTimerDuration;
+        this.isActive = previousCell.isActive;
     }
 
     public Cell(Point2D.Double newAbsPos) {
@@ -96,9 +102,25 @@ public class Cell {
         final double yApp = g.getClipBounds().height - (absolutePosition.y * zoom + y0);
         final double appSize = zoom * cellSize;
 
-        // Draw background
-        g.setColor(this.color);
-        g.fillRect((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) (appSize), (int) (appSize));
+        final double activeBorderSize = 0.05;
+        if (DISPLAY_ACTIVE_BORDERS) {
+            // Draw background
+            if (isActive) {
+                g.setColor(Color.cyan);
+            } else {
+                g.setColor(this.color);
+            }
+            // Border
+            g.fillRect((int) (xApp - appSize * 0.5), (int) (yApp - appSize * 0.5), (int) (appSize), (int) (appSize));
+            // Center
+            g.setColor(this.color);
+            g.fillRect((int) (xApp - appSize * (0.5 - activeBorderSize)), (int) (yApp - appSize * (0.5 - activeBorderSize)),
+                    (int) (appSize * (1 - 2 * activeBorderSize)), (int) (appSize * (1 - 2 * activeBorderSize)));
+        } else {
+            g.setColor(this.color);
+            g.fillRect((int) (xApp - appSize * 0.5), (int) (yApp - appSize * 0.5),
+                    (int) appSize, (int) appSize);
+        }
 
         if (rails != null && !rails.isEmpty()) {
             for (RailSegment railSegment : rails) {
@@ -1014,5 +1036,13 @@ public class Cell {
 
     protected int getNbPassengers() {
         return 0;
+    }
+
+    protected void setActive(boolean b) {
+        isActive = b;
+    }
+
+    protected boolean hasPassengers() {
+        return false;
     }
 }

@@ -74,7 +74,6 @@ public class StationCell extends Cell {
             colorList.add(Color.green.darker().darker());
             colorList.add(Color.blue.darker().darker());
             colorList.add(Color.blue);
-            colorList.add(Color.CYAN);
             colorList.add(Color.yellow);
             colorList.add(Color.orange);
             colorList.add(Color.MAGENTA);
@@ -122,7 +121,8 @@ public class StationCell extends Cell {
         this.passengerList.add(passenger);
     }
 
-    private boolean hasPassengers() {
+    @Override
+    protected boolean hasPassengers() {
         return passengerList != null && !passengerList.isEmpty();
     }
 
