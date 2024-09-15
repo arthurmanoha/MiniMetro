@@ -227,7 +227,6 @@ public class WorldPanel extends JPanel implements MouseListener,
 
     @Override
     public void mousePressed(MouseEvent e) {
-        System.out.println("                WorldPanel: Mouse pressed.");
         int b1 = MouseEvent.BUTTON1_DOWN_MASK;
         if ((e.getModifiersEx() & b1) == b1) {
 
@@ -237,7 +236,6 @@ public class WorldPanel extends JPanel implements MouseListener,
             // Clicked first mouse button
             switch (currentTool) {
             case LOCO -> {
-                System.out.println("WorldPanel case LOCO");
                 world.addLoco(xReal, yReal);
             }
             case WAGON -> {
@@ -258,7 +256,6 @@ public class WorldPanel extends JPanel implements MouseListener,
                 currentRow = getRow(e.getY());
                 int currentColInt = (int) currentCol;
                 int currentRowInt = (int) currentRow;
-                System.out.println("WorldPanel.setLongDistanceTracks(" + currentRowInt + ", " + currentColInt);
                 world.setLongDistanceTracks(currentRowInt, currentColInt);
                 repaint();
             }

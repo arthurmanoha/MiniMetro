@@ -99,7 +99,6 @@ public class GUI extends JFrame {
         JButton trackButton = new JButton("Track");
         allComponents.add(trackButton);
         trackButton.addActionListener((e) -> {
-            System.out.println("Pressed track button");
             panel.setTool(GuiTool.TRACK);
         });
         c.gridx = 0;

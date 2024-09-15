@@ -40,6 +40,8 @@ public class World {
 
     private int nbRows, nbCols;
     protected SparseMatrix<Cell> cells;
+    protected ArrayList<Cell> activeCells;
+    private ArrayList<Cell> newlyActiveCells;
     private double simulationDt; // Time elapsed in world during one simulation step.
 
     // Links between TrainElements;
@@ -90,6 +92,8 @@ public class World {
     private void initializeGrid() {
         System.out.println("World.initializeGrid()");
         cells = new SparseMatrix<>();
+        activeCells = new ArrayList<>();
+        newlyActiveCells = new ArrayList<>();
         links = new ArrayList<>();
         step = 0;
         isRunning = false;
@@ -165,29 +169,29 @@ public class World {
 
     public void step() {
 
-        for (Cell c : getAllCells()) {
+        for (Cell c : activeCells) {
             c.resetForces();
         }
 
-        for (Cell c : getAllCells()) {
+        for (Cell c : activeCells) {
             c.computeMotorForces(simulationDt); // Set the force applied on each loco
         }
 
-        for (Cell c : getAllCells()) {
+        for (Cell c : activeCells) {
             c.snapToRail();
         }
 
         applyLinkForces();
 
-        for (Cell c : getAllCells()) {
+        for (Cell c : activeCells) {
             c.computeNewSpeeds(simulationDt);
         }
 
-        for (Cell c : getAllCells()) {
+        for (Cell c : activeCells) {
             c.moveTrains(simulationDt);
         }
 
-        for (Cell c : getAllCells()) {
+        for (Cell c : activeCells) {
             c.movePassengers(simulationDt);
         }
 
@@ -197,8 +201,23 @@ public class World {
         transferTrainsBetweenCells();
 
         // Flush transfer lists
-        for (Cell c : getAllCells()) {
+        for (Cell c : activeCells) {
             c.flushMovingTrains();
+        }
+
+        for (Cell c : newlyActiveCells) {
+            if (!activeCells.contains(c)) {
+                activeCells.add(c);
+            }
+        }
+
+        Iterator iter = activeCells.iterator();
+        while (iter.hasNext()) {
+            Cell c = (Cell) iter.next();
+            if (!c.hasTrain() && !c.hasPassengers()) {
+                iter.remove();
+                c.setActive(false);
+            }
         }
 
         step++;
@@ -208,51 +227,57 @@ public class World {
 
     private void reinsertMovingPassengers() {
         // Reinsert moving passengers
-        for (int row = 0; row < nbRows; row++) {
-            for (int col = 0; col < nbCols; col++) {
-                Cell c = getCell(row, col);
-                if (c instanceof StationCell) {
-                    StationCell station = (StationCell) c;
-                    for (Passenger p : station.passengersLeavingCell) {
-                        int newRow = row;
-                        int newCol = col;
+        for (Cell c : activeCells) {
+            int row = cells.getRow(c);
+            int col = cells.getCol(c);
 
-                        double xLocal = p.getX() - ((StationCell) c).absolutePosition.x;
-                        double yLocal = p.getY() - ((StationCell) c).absolutePosition.y;
-                        // Which neighbor the passenger is walking to depends on which quadrant he is.
-                        if (xLocal > yLocal) {
-                            // South or East
-                            if (xLocal > -yLocal) {
-                                // Reinsert East
-                                newCol = col + 1;
-                            } else {
-                                // Reinsert South
-                                newRow = row + 1;
-                            }
+            if (c instanceof StationCell) {
+                StationCell station = (StationCell) c;
+                for (Passenger p : station.passengersLeavingCell) {
+                    int newRow = row;
+                    int newCol = col;
+
+                    double xLocal = p.getX() - ((StationCell) c).absolutePosition.x;
+                    double yLocal = p.getY() - ((StationCell) c).absolutePosition.y;
+                    // Which neighbor the passenger is walking to depends on which quadrant he is.
+                    if (xLocal > yLocal) {
+                        // South or East
+                        if (xLocal > -yLocal) {
+                            // Reinsert East
+                            newCol = col + 1;
                         } else {
-                            // West or North
-                            if (xLocal > -yLocal) {
-                                // Reinsert North
-                                newRow = row - 1;
-                            } else {
-                                // Reinsert West
-                                newCol = col - 1;
-                            }
+                            // Reinsert South
+                            newRow = row + 1;
                         }
-                        Cell newCell = getCell(newRow, newCol);
-                        if (newCell instanceof StationCell) {
-                            ((StationCell) newCell).addPassenger(p);
+                    } else {
+                        // West or North
+                        if (xLocal > -yLocal) {
+                            // Reinsert North
+                            newRow = row - 1;
+                        } else {
+                            // Reinsert West
+                            newCol = col - 1;
                         }
                     }
-                    station.flushMovingPassengers();
+                    Cell newCell = getCell(newRow, newCol);
+                    if (newCell instanceof StationCell) {
+                        ((StationCell) newCell).addPassenger(p);
+                        if (!activeCells.contains(newCell)) {
+                            activeCells.add(newCell);
+                            newCell.setActive(true);
+                        }
+                    }
                 }
+                station.flushMovingPassengers();
             }
         }
     }
 
     private void transferTrainsBetweenCells() {
         // Transfert trains between cells when necessary
-        for (Cell c : getAllCells()) {
+        Iterator iter = activeCells.iterator();
+        while (iter.hasNext()) {
+            Cell c = (Cell) iter.next();
             int rowIndex = cells.getRow(c);
             int colIndex = cells.getCol(c);
             for (TransferringTrain transferringTrain : c.trainsLeavingCell) {
@@ -328,7 +353,6 @@ public class World {
 
             ArrayList<TrainElement> oldTrains = oldCell.getAllElements();
 
-            Point2D.Double pos = oldCell.getAbsolutePosition();
             if (oldCell instanceof StationCell) {
                 newCell = new Cell(oldCell);
                 stationList.remove((StationCell) oldCell);
@@ -342,6 +366,10 @@ public class World {
                 for (TrainElement oldTrain : oldTrains) {
                     newCell.addTrainElement(oldTrain);
                 }
+            }
+            activeCells.remove(oldCell);
+            if (newCell.hasTrain() || newCell.hasPassengers()) {
+                activeCells.add(newCell);
             }
         }
     }
@@ -432,6 +460,10 @@ public class World {
         Cell cell = getCell(row, col);
         if (cell != null && cell.hasRails()) {
             cell.addTrainElement(newElement);
+            if (!activeCells.contains(cell)) {
+                activeCells.add(cell);
+                cell.setActive(true);
+            }
             updateTrainLinks(newElement, row, col);
         }
         return newElement;
@@ -548,11 +580,13 @@ public class World {
     private void reinsertTrain(TrainElement movingTrain, int rowIndex, int colIndex) {
 
         // Add the train to the new cell.
-        Cell newCell = this.getCell(rowIndex, colIndex);
+        Cell newCell = this.getCellOrCreateIfNull(rowIndex, colIndex);
         if (newCell == null) {
             System.out.println("World: error, next cell is null");
         } else {
             TrainElement insertionCheck = newCell.addTrainElement(movingTrain);
+            newCell.setActive(true);
+            newlyActiveCells.add(newCell);
             if (insertionCheck != null) {
                 // Error in train reinsertion.
                 System.out.println("World: error in train reinsertion.");
@@ -723,6 +757,9 @@ public class World {
                 }
             }
             c.removeTrains();
+            if (!c.hasTrain()) {
+                activeCells.remove(c);
+            }
         }
     }
 
@@ -757,15 +794,12 @@ public class World {
     }
 
     protected void startLocos() {
-        System.out.println("World start locos");
-
         for (Cell c : getAllCells()) {
             c.startLocos();
         }
     }
 
     protected void stopLocos() {
-        System.out.println("World stop locos");
         for (Cell c : getAllCells()) {
             c.stopLocos();
         }
@@ -773,7 +807,6 @@ public class World {
 
     protected void setSpeedLimitValue(double newSpeedLimit) {
         speedIndicatorValue = newSpeedLimit;
-        System.out.println("World received speed limit " + speedIndicatorValue);
     }
 
     protected void setSpeedIndicator(int row, int col) {
@@ -828,6 +861,10 @@ public class World {
             newPassenger.setTargetStationId(targetStationNumber);
             // Add the passenger to the station
             startingStation.addPassenger(newPassenger);
+            if (!activeCells.contains(startingStation)) {
+                activeCells.add(startingStation);
+                startingStation.setActive(true);
+            }
             nbPassengersGenerated++;
         }
 
@@ -846,19 +883,25 @@ public class World {
      * Remove all passengers from all stations and all trains.
      */
     protected void removePassengers() {
-        for (Cell c : getAllCells()) {
+        Iterator iter = activeCells.iterator();
+        while (iter.hasNext()) {
+            Cell c = (Cell) iter.next();
             c.removePassengers();
+            if (!c.hasTrain()) {
+                iter.remove();
+                c.setActive(false);
+            }
         }
     }
 
     protected void boardPassengers() {
-        for (Cell c : getAllCells()) {
+        for (Cell c : activeCells) {
             c.boardPassengers();
         }
     }
 
     protected void getPassengersOff() {
-        for (Cell c : getAllCells()) {
+        for (Cell c : activeCells) {
             c.getPassengersOff();
         }
     }
@@ -1031,9 +1074,13 @@ public class World {
                 }
                 col = getCol(x);
                 row = getRow(y);
-                Cell receivingCell = getCell(row, col);
+                Cell receivingCell = getCellOrCreateIfNull(row, col);
                 if (receivingCell != null && receivingCell instanceof StationCell) {
                     ((StationCell) receivingCell).addPassenger(newPassenger);
+                    if (!activeCells.contains(receivingCell)) {
+                        activeCells.add(receivingCell);
+                        receivingCell.setActive(true);
+                    }
                 }
                 break;
             default:
@@ -1081,6 +1128,9 @@ public class World {
             for (int rank = 0; rank < nbPassengers; rank++) {
                 Passenger newPassenger = new Passenger(endStationId);
                 s.addPassenger(newPassenger);
+            }
+            if (!activeCells.contains(s)) {
+                activeCells.add(s);
             }
         }
     }
