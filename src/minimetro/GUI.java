@@ -94,6 +94,7 @@ public class GUI extends JFrame {
             repaint();
         });
         c.gridx = 1;
+        c.gridy = 0;
         topToolbar.add(stepButton, c);
 
         JButton trackButton = new JButton("Track");
@@ -105,24 +106,32 @@ public class GUI extends JFrame {
         c.gridy = 1;
         topToolbar.add(trackButton, c);
 
+        JButton longDistanceTracksButton = new JButton("Long distance tracks");
+        allComponents.add(longDistanceTracksButton);
+        longDistanceTracksButton.addActionListener((e) -> {
+            panel.setTool(GuiTool.LONG_DISTANCE_TRACKS);
+        });
+        c.gridx = 1;
+        c.gridy = 1;
+        topToolbar.add(longDistanceTracksButton, c);
+
+        JButton switchButton = new JButton("Switch");
+        allComponents.add(switchButton);
+        switchButton.addActionListener((e) -> {
+            panel.setTool(GuiTool.SWITCH);
+        });
+        c.gridx = 0;
+        c.gridy = 2;
+        topToolbar.add(switchButton, c);
+
         JButton removeTrackButton = new JButton("Remove Track");
         allComponents.add(removeTrackButton);
         removeTrackButton.addActionListener((e) -> {
             panel.setTool(GuiTool.TRACK_REMOVAL);
         });
         c.gridx = 1;
-        c.gridy = 1;
-        topToolbar.add(removeTrackButton, c);
-
-        JButton longDistanceTracksButton = new JButton("Long distance tracks");
-        allComponents.add(longDistanceTracksButton);
-        longDistanceTracksButton.addActionListener((e) -> {
-            panel.setTool(GuiTool.LONG_DISTANCE_TRACKS);
-        });
-        c.gridx = 0;
         c.gridy = 2;
-        c.gridwidth = 2;
-        topToolbar.add(longDistanceTracksButton, c);
+        topToolbar.add(removeTrackButton, c);
 
         JButton stationButton = new JButton("Station");
         allComponents.add(stationButton);

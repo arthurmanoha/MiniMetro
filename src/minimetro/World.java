@@ -5,6 +5,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.FileWriter;
 import java.io.IOException;
+import static java.lang.Math.floor;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
@@ -81,12 +82,34 @@ public class World {
         isSettingLongDistanceTracks = false;
     }
 
+    /**
+     * Create a new cell at the selected row and col.
+     *
+     * @param row
+     * @param col
+     */
     private void addNewCell(int row, int col) {
+        addNewCell(null, row, col);
+    }
 
+    /**
+     * Add the specified new cell at the specified position, or create a new
+     * cell there.
+     *
+     * @param newCell
+     * @param row
+     * @param col
+     */
+    protected void addNewCell(Cell newCell, int row, int col) {
         double xCell = col * Cell.cellSize;
         double yCell = (nbRows - row - 1) * Cell.cellSize;
         Point2D.Double newAbsPos = new Point2D.Double(xCell, yCell);
-        cells.set(new Cell(newAbsPos), row, col);
+        if (newCell == null) {
+            newCell = new Cell(newAbsPos);
+        } else {
+            newCell.absolutePosition = newAbsPos;
+        }
+        cells.set(newCell, row, col);
     }
 
     private void initializeGrid() {
@@ -263,7 +286,7 @@ public class World {
                     if (newCell instanceof StationCell) {
                         ((StationCell) newCell).addPassenger(p);
                         if (!activeCells.contains(newCell)) {
-                            activeCells.add(newCell);
+                            newlyActiveCells.add(newCell);
                             newCell.setActive(true);
                         }
                     }
@@ -542,6 +565,11 @@ public class World {
     protected void setNewTrack(int row, int col, int rowNeighbor, int colNeighbor) {
 
         Cell newTrackCell = getCellOrCreateIfNull(rowNeighbor, colNeighbor);
+        if (newTrackCell instanceof SwitchCell) {
+            // Replace the switch with a classical Cell
+            newTrackCell = new Cell(newTrackCell);
+            cells.set(newTrackCell, rowNeighbor, colNeighbor);
+        }
         CardinalPoint newLinkDirection;
 
         if (newTrackCell != null) {
@@ -735,7 +763,7 @@ public class World {
     protected void removeTrack(int row, int col) {
         Cell c = getCell(row, col);
         if (c != null) {
-            c.removeTracks();
+            c.removeTracksAndLinks();
             if (c.isEmpty()) {
                 cells.remove(c);
             }
@@ -925,10 +953,15 @@ public class World {
                 int col = cells.getCol(c);
 
                 // Save rails
-                String cellLinks = c.getLinks();
-                if (!cellLinks.isEmpty()) {
-                    for (String singleLink : cellLinks.split(" ")) {
-                        writer.write(RAIL_LINK + " " + row + " " + col + " " + singleLink + "\n");
+                if (c instanceof SwitchCell) {
+                    // Save a switch cell
+                    writer.write("SWITCH " + row + " " + col + "\n");
+                } else {
+                    String cellLinks = c.getLinks();
+                    if (!cellLinks.isEmpty()) {
+                        for (String singleLink : cellLinks.split(" ")) {
+                            writer.write(RAIL_LINK + " " + row + " " + col + " " + singleLink + "\n");
+                        }
                     }
                 }
 
@@ -1208,5 +1241,28 @@ public class World {
      */
     private int getSign(int val) {
         return val > 0 ? 1 : (val < 0 ? -1 : 0);
+    }
+
+    protected void setSwitchPoint(double currentRow, double currentCol) {
+        Cell c = getCellOrCreateIfNull((int) currentRow, (int) currentCol);
+
+        // Click coordinates in the cell's reference
+        double localX = currentCol - floor(currentCol);
+        double localY = currentRow - floor(currentRow);
+
+        SwitchCell s;
+
+        if (c instanceof SwitchCell) {
+            // Add or replace a connecting CardinalPoint to the SwitchCell.
+            s = (SwitchCell) c;
+        } else {
+            // Replace the Cell with a new SwitchCell and add the first CardinalPoint.
+            s = new SwitchCell(c);
+            cells.remove(c);
+            activeCells.remove(c);
+            s.resetConnections();
+            addNewCell(s, (int) currentRow, (int) currentCol);
+        }
+        s.setSwitchPoint(localX, localY);
     }
 }

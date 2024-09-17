@@ -67,6 +67,10 @@ public class RailSegment {
 
     }
 
+    public RailSegment(RailSegment copied) {
+        this(copied.xStart, copied.yStart, copied.xEnd, copied.yEnd);
+    }
+
     void paint(Graphics g, double x0, double y0, double zoom) {
 
         int panelHeight = g.getClipBounds().height;

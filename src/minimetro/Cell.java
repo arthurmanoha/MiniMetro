@@ -19,6 +19,7 @@ import java.util.ArrayList;
 public class Cell {
 
     private static boolean DISPLAY_ACTIVE_BORDERS = false;
+    private static int DEFAULT_NB_RAILS = 10;
 
     protected static double cellSize = 100;
 
@@ -28,14 +29,11 @@ public class Cell {
     public ArrayList<TransferringTrain> trainsLeavingCell;
     double maxHeadingDiff = 10;
 
+    private ArrayList<CardinalPoint> links;
     private ArrayList<RailSegment> rails;
     private int nbRails;
-    private double totalRailLength;
 
     protected Point2D.Double absolutePosition; // This point is the center of the cell.
-
-    // Directions with which this cell shares a railroad.
-    private ArrayList<CardinalPoint> links;
 
     protected double speedLimit; // Integer.MAX_VALUE if not set, -1 for end of limit, >0 for actual limit.
     // StopTimer: -1: no stopping required; >0: brake and stop for that many seconds.
@@ -54,8 +52,7 @@ public class Cell {
         trainsLeavingCell = new ArrayList<>();
         alreadyStoppedTrains = new ArrayList<>();
         rails = new ArrayList<>();
-        totalRailLength = cellSize;
-        nbRails = 20;
+        nbRails = DEFAULT_NB_RAILS;
         absolutePosition = new Point2D.Double();
         links = new ArrayList<>();
         speedLimit = Integer.MAX_VALUE;
@@ -64,13 +61,21 @@ public class Cell {
 
     public Cell(Cell previousCell) {
         this();
-        this.absolutePosition = previousCell.absolutePosition;
-        this.links = previousCell.links;
-        this.rails = previousCell.rails;
-        this.nbRails = previousCell.nbRails;
-        this.speedLimit = previousCell.speedLimit;
-        this.stopTimerDuration = previousCell.stopTimerDuration;
-        this.isActive = previousCell.isActive;
+        if (previousCell != null) {
+            this.absolutePosition = previousCell.absolutePosition;
+            this.links = new ArrayList<>();
+            for (CardinalPoint cp : previousCell.links) {
+                this.links.add(cp);
+            }
+            this.rails = new ArrayList<>();
+            for (RailSegment rail : previousCell.rails) {
+                this.rails.add(new RailSegment(rail));
+            }
+            this.nbRails = previousCell.nbRails;
+            this.speedLimit = previousCell.speedLimit;
+            this.stopTimerDuration = previousCell.stopTimerDuration;
+            this.isActive = previousCell.isActive;
+        }
     }
 
     public Cell(Point2D.Double newAbsPos) {
@@ -78,24 +83,10 @@ public class Cell {
         this.absolutePosition = newAbsPos;
     }
 
-    public Cell(ArrayList<RailSegment> oldRails) {
-
-        this();
-
-        if (oldRails == null) {
-            rails = new ArrayList<>();
-            nbRails = 10;
-        } else {
-            rails = oldRails;
-            nbRails = rails.size();
-        }
-
-    }
-
     /**
      * Paint the cell with its background and foreground.
      */
-    protected void paint(Graphics g, double x0, double y0, double zoom) {
+    protected void paintBackground(Graphics g, double x0, double y0, double zoom) {
 
         // On-screen coordinates of the center of the cell:
         final double xApp = absolutePosition.x * zoom + x0;
@@ -121,6 +112,13 @@ public class Cell {
             g.fillRect((int) (xApp - appSize * 0.5), (int) (yApp - appSize * 0.5),
                     (int) appSize, (int) appSize);
         }
+    }
+
+    protected void paintForeground(Graphics g, double x0, double y0, double zoom) {
+        // On-screen coordinates of the center of the cell:
+        final double xApp = absolutePosition.x * zoom + x0;
+        final double yApp = g.getClipBounds().height - (absolutePosition.y * zoom + y0);
+        final double appSize = zoom * cellSize;
 
         if (rails != null && !rails.isEmpty()) {
             for (RailSegment railSegment : rails) {
@@ -131,10 +129,11 @@ public class Cell {
         }
         paintSpeedLimitSign(g, xApp, yApp, appSize);
 
+        g.setColor(Color.black);
+        Font font = new Font("helvetica", Font.PLAIN, 10);
+        g.setFont(font);
+
         if (stopTimerDuration > 0) {
-            g.setColor(Color.black);
-            Font font = new Font("helvetica", Font.PLAIN, 10);
-            g.setFont(font);
             String text = "Stop for " + stopTimerDuration + " seconds";
             g.drawString(text, (int) (xApp - appSize / 2 + 5), (int) (yApp - appSize / 2 + 15));
         }
@@ -307,57 +306,12 @@ public class Cell {
     }
 
     /**
-     * Get the heading of the first end of the track, from the outside to the
-     * inside of the cell.
-     *
-     * @return the first track heading
-     */
-    private double getFirstRailHeading() {
-        return rails.get(0).getHeadingInDegrees();
-    }
-
-    /**
      * Get the heading of the center of the track.
      *
      * @return the heading of the center of the track
      */
     protected double getCenterHeading() {
         return rails.get(nbRails / 2).getHeadingInDegrees();
-    }
-
-    /**
-     * Get the heading of the last end of the track, from the outside to the
-     * inside of the cell.
-     *
-     * @return the last track heading
-     */
-    private double getLastRailHeading() {
-        return (rails.get(nbRails - 1).getHeadingInDegrees() + 180) % 360;
-    }
-
-    /**
-     * Compare two directions and see if they are closer than a margin.
-     */
-    private boolean compareHeadings(double h0, double h1) {
-        double headingDifference = h0 - h1;
-
-        // Need to be close to 0 (or 360) degrees difference.
-        boolean result = Math.abs(headingDifference) <= 0 + maxHeadingDiff || Math.abs(headingDifference) >= 360 - maxHeadingDiff;
-        return result;
-    }
-
-    protected boolean hasLinkTowardNeighbor(double headingTowardNeighbor) {
-        if (hasRails()) {
-            // Heading of a train leaving this cell via the first end of the tracks.
-            double exitFirstHeading = (getFirstRailHeading() + 180) % 360;
-            // Heading of a train leaving this cell via the last end of the tracks.
-            double exitLastHeading = (getLastRailHeading() + 180) % 360;
-
-            // This cell is headed towards given heading if one of its track ends follows that direction.
-            return compareHeadings(exitFirstHeading, headingTowardNeighbor) || compareHeadings(exitLastHeading, headingTowardNeighbor);
-        } else {
-            return false;
-        }
     }
 
     protected TrainElement getTrainElement() {
@@ -375,27 +329,6 @@ public class Cell {
             copyList.add(te);
         }
         return copyList;
-    }
-
-    /**
-     * If the trainElement has the given trainNumber, that number must be
-     * replaced.
-     *
-     * @param toBeReplaced the old train number; we only renumber trains, not
-     * un-linked elements, so we ignore -1
-     * @param newTrainNumber
-     */
-    protected void renumberTrainElement(int toBeReplaced, int newTrainNumber) {
-        if (toBeReplaced != -1) {
-            for (TrainElement te : trainElements) {
-                if (hasTrain() && te.trainNumber == toBeReplaced) {
-                    System.out.println("renumbering train element: from " + toBeReplaced + " to " + newTrainNumber);
-                    System.out.println("Renamed element " + te.id + " from train " + te.trainNumber
-                            + " into " + newTrainNumber);
-                    te.trainNumber = newTrainNumber;
-                }
-            }
-        }
     }
 
     void flushMovingTrains() {
@@ -497,16 +430,16 @@ public class Cell {
      * @param newLinkDirection
      */
     void addLink(CardinalPoint newLinkDirection) {
-
-        // The new direction must be placed in first position in the list (as the most recent one).
-        if (links.contains(newLinkDirection)) {
-            links.remove(newLinkDirection);
+        if (newLinkDirection != null) {
+            // The new direction must be placed in first position in the list (as the most recent one).
+            if (links.contains(newLinkDirection)) {
+                links.remove(newLinkDirection);
+            }
+            links.add(0, newLinkDirection);
         }
-        links.add(newLinkDirection);
-
         // If the cell is already linked to two other cells, remove the oldest connection.
         if (links.size() > 2) {
-            links.remove(0);
+            links.remove(2);
         }
 
         updateTracks();
@@ -515,14 +448,21 @@ public class Cell {
     /**
      * Test for 90° turns between horizontal and vertical.
      *
-     * @return
+     * @return true when the selected exit is connected in an axis-aligned 90°
+     * turn with the entrance.
      */
     private boolean isTrackTurningAxisAligned() {
+        return this.isTrackTurningAxisAligned(0, 1);
+    }
 
-        return (isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.EAST)
-                || isLinked(CardinalPoint.EAST) && isLinked(CardinalPoint.SOUTH)
-                || isLinked(CardinalPoint.SOUTH) && isLinked(CardinalPoint.WEST)
-                || isLinked(CardinalPoint.WEST) && isLinked(CardinalPoint.NORTH));
+    private boolean isTrackTurningAxisAligned(int index0, int index1) {
+        try {
+            int difference = links.get(index0).difference(links.get(index1));
+            boolean result = difference == 2 || difference == 6;
+            return result;
+        } catch (NullPointerException | IndexOutOfBoundsException e) {
+            return false;
+        }
     }
 
     /**
@@ -531,15 +471,17 @@ public class Cell {
      * @return
      */
     private boolean isTrackTurning45() {
+        return this.isTrackTurning45(0, 1);
+    }
 
-        return (isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.SOUTHEAST)
-                || isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.SOUTHWEST)
-                || isLinked(CardinalPoint.EAST) && isLinked(CardinalPoint.NORTHWEST)
-                || isLinked(CardinalPoint.EAST) && isLinked(CardinalPoint.SOUTHWEST)
-                || isLinked(CardinalPoint.SOUTH) && isLinked(CardinalPoint.NORTHEAST)
-                || isLinked(CardinalPoint.SOUTH) && isLinked(CardinalPoint.NORTHWEST)
-                || isLinked(CardinalPoint.WEST) && isLinked(CardinalPoint.NORTHEAST)
-                || isLinked(CardinalPoint.WEST) && isLinked(CardinalPoint.SOUTHEAST));
+    private boolean isTrackTurning45(int index0, int index1) {
+        try {
+            int difference = links.get(index0).difference(links.get(index1));
+            boolean result = difference == 3 || difference == 5;
+            return result;
+        } catch (IndexOutOfBoundsException e) {
+            return false;
+        }
     }
 
     /**
@@ -548,10 +490,18 @@ public class Cell {
      * @return
      */
     private boolean isTrackStraight() {
-        return isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.SOUTH)
-                || isLinked(CardinalPoint.NORTHEAST) && isLinked(CardinalPoint.SOUTHWEST)
-                || isLinked(CardinalPoint.EAST) && isLinked(CardinalPoint.WEST)
-                || isLinked(CardinalPoint.SOUTHEAST) && isLinked(CardinalPoint.NORTHWEST);
+        return this.isTrackStraight(0, 1);
+    }
+
+    private boolean isTrackStraight(int index0, int index1) {
+        try {
+            int difference = links.get(index0).difference(links.get(index1));
+            boolean result = difference == 4;
+            return result;
+
+        } catch (IndexOutOfBoundsException e) {
+            return false;
+        }
     }
 
     /**
@@ -559,9 +509,13 @@ public class Cell {
      *
      * @return
      */
-    private boolean isTrackDiagonal() {
-        return isLinked(CardinalPoint.NORTHEAST) && isLinked(CardinalPoint.SOUTHWEST)
-                || isLinked(CardinalPoint.NORTHWEST) && isLinked(CardinalPoint.SOUTHEAST);
+    private boolean isTrackDiagonal(int index0, int index1) {
+
+        // Each link must be NE, SE, SW or NW.
+        boolean result = (links.get(index0)).getIntValue() % 2 == 1
+                && (links.get(index1)).getIntValue() % 2 == 1;
+
+        return result;
     }
 
     /**
@@ -585,11 +539,15 @@ public class Cell {
      * turns.
      */
     private void updateStraightTracks() {
+        updateStraightTracks(0, 1, rails);
+    }
+
+    private void updateStraightTracks(int firstIndex, int secondIndex, ArrayList<RailSegment> railsParam) {
         double xCell = absolutePosition.x, yCell = absolutePosition.y;
         double xStart = xCell, xEnd = xCell, yStart = yCell, yEnd = yCell;
 
-        if (links.size() >= 1) {
-            CardinalPoint firstLink = links.get(0);
+        if (links.size() >= firstIndex) {
+            CardinalPoint firstLink = links.get(firstIndex);
             switch (firstLink) {
             case WEST:
                 xStart = xCell - cellSize / 2;
@@ -628,8 +586,8 @@ public class Cell {
                 yStart = yCell;
             }
         }
-        if (links.size() >= 2) {
-            CardinalPoint secondLink = links.get(1);
+        if (links.size() >= secondIndex) {
+            CardinalPoint secondLink = links.get(secondIndex);
             switch (secondLink) {
             case WEST:
                 xEnd = xCell - cellSize / 2;
@@ -670,7 +628,7 @@ public class Cell {
         }
 
         int actualNbRails = nbRails;
-        if (isTrackDiagonal()) {
+        if (isTrackDiagonal(firstIndex, secondIndex)) {
             actualNbRails = (int) (nbRails * 1.41);
         }
         for (int i = 0; i < actualNbRails; i++) {
@@ -678,7 +636,7 @@ public class Cell {
             double y0 = yStart + i * (yEnd - yStart) / actualNbRails;
             double x1 = xStart + (i + 1) * (xEnd - xStart) / actualNbRails;
             double y1 = yStart + (i + 1) * (yEnd - yStart) / actualNbRails;
-            rails.add(new RailSegment(x0, y0, x1, y1));
+            railsParam.add(new RailSegment(x0, y0, x1, y1));
         }
     }
 
@@ -687,55 +645,59 @@ public class Cell {
      * or when they go from axis-aligned to diagonal.
      */
     private void updateTurningTracks() {
+        this.updateTurningTracks(0, 1, this.rails);
+    }
+
+    private void updateTurningTracks(int index0, int index1, ArrayList<RailSegment> railsParam) {
 
         double xCenter = 0, yCenter = 0;
         double radius;
         double angleStart = 0, angleEnd = 0;
 
         // Add the curved part for both 45 and 90 degrees turns.
-        if (isTrackTurning45()) {
+        if (isTrackTurning45(index0, index1)) {
             radius = cellSize * (1 + 1.414) / 2;
 
             // Horizontal EAST
-            if (isLinked(CardinalPoint.NORTHWEST) && isLinked(CardinalPoint.EAST)) {
+            if (isLinked(CardinalPoint.NORTHWEST, index0, index1) && isLinked(CardinalPoint.EAST, index0, index1)) {
                 xCenter = absolutePosition.x + cellSize / 2;
                 yCenter = absolutePosition.y + cellSize * (2.414 / 2);
                 angleStart = 5 * PI / 4;
                 angleEnd = 3 * PI / 2;
-            } else if (isLinked(CardinalPoint.SOUTHWEST) && isLinked(CardinalPoint.EAST)) {
+            } else if (isLinked(CardinalPoint.SOUTHWEST, index0, index1) && isLinked(CardinalPoint.EAST, index0, index1)) {
                 xCenter = absolutePosition.x + cellSize / 2;
                 yCenter = absolutePosition.y - cellSize * (2.414 / 2);
                 angleStart = 3 * PI / 4;
                 angleEnd = PI / 2;
             } // Horizontal WEST
-            else if (isLinked(CardinalPoint.NORTHEAST) && isLinked(CardinalPoint.WEST)) {
+            else if (isLinked(CardinalPoint.NORTHEAST, index0, index1) && isLinked(CardinalPoint.WEST, index0, index1)) {
                 xCenter = absolutePosition.x - cellSize / 2;
                 yCenter = absolutePosition.y + cellSize * (2.414 / 2);
                 angleStart = 3 * PI / 2;
                 angleEnd = 7 * PI / 4;
-            } else if (isLinked(CardinalPoint.SOUTHEAST) && isLinked(CardinalPoint.WEST)) {
+            } else if (isLinked(CardinalPoint.SOUTHEAST, index0, index1) && isLinked(CardinalPoint.WEST, index0, index1)) {
                 xCenter = absolutePosition.x - cellSize / 2;
                 yCenter = absolutePosition.y - cellSize * (2.414 / 2);
                 angleStart = PI / 2;
                 angleEnd = PI / 4;
             } // Vertical NORTH
-            else if (isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.SOUTHWEST)) {
+            else if (isLinked(CardinalPoint.NORTH, index0, index1) && isLinked(CardinalPoint.SOUTHWEST, index0, index1)) {
                 xCenter = absolutePosition.x - cellSize * (2.414 / 2);
                 yCenter = absolutePosition.y + cellSize / 2;
                 angleStart = 0;
                 angleEnd = -PI / 4;
-            } else if (isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.SOUTHEAST)) {
+            } else if (isLinked(CardinalPoint.NORTH, index0, index1) && isLinked(CardinalPoint.SOUTHEAST, index0, index1)) {
                 xCenter = absolutePosition.x + cellSize * (2.414 / 2);
                 yCenter = absolutePosition.y + cellSize / 2;
                 angleStart = PI;
                 angleEnd = 5 * PI / 4;
             } // Vertical SOUTH
-            else if (isLinked(CardinalPoint.SOUTH) && isLinked(CardinalPoint.NORTHWEST)) {
+            else if (isLinked(CardinalPoint.SOUTH, index0, index1) && isLinked(CardinalPoint.NORTHWEST, index0, index1)) {
                 xCenter = absolutePosition.x - cellSize * (2.414 / 2);
                 yCenter = absolutePosition.y - cellSize / 2;
                 angleStart = 0;
                 angleEnd = PI / 4;
-            } else if (isLinked(CardinalPoint.SOUTH) && isLinked(CardinalPoint.NORTHEAST)) {
+            } else if (isLinked(CardinalPoint.SOUTH, index0, index1) && isLinked(CardinalPoint.NORTHEAST, index0, index1)) {
                 xCenter = absolutePosition.x + cellSize * (2.414 / 2);
                 yCenter = absolutePosition.y - cellSize / 2;
                 angleStart = PI;
@@ -745,25 +707,25 @@ public class Cell {
         } else {
             // Axis-aligned right-angled turns
             radius = cellSize / 2;
-            if (isLinked(CardinalPoint.SOUTH) && isLinked(CardinalPoint.EAST)) {
+            if (isLinked(CardinalPoint.SOUTH, index0, index1) && isLinked(CardinalPoint.EAST, index0, index1)) {
                 xCenter = absolutePosition.x + cellSize / 2;
                 yCenter = absolutePosition.y - cellSize / 2;
                 angleStart = PI;
                 angleEnd = PI / 2;
                 radius = cellSize / 2;
-            } else if (isLinked(CardinalPoint.EAST) && isLinked(CardinalPoint.NORTH)) {
+            } else if (isLinked(CardinalPoint.EAST, index0, index1) && isLinked(CardinalPoint.NORTH, index0, index1)) {
                 xCenter = absolutePosition.x + cellSize / 2;
                 yCenter = absolutePosition.y + cellSize / 2;
                 angleStart = 3 * PI / 2;
                 angleEnd = PI;
                 radius = cellSize / 2;
-            } else if (isLinked(CardinalPoint.NORTH) && isLinked(CardinalPoint.WEST)) {
+            } else if (isLinked(CardinalPoint.NORTH, index0, index1) && isLinked(CardinalPoint.WEST, index0, index1)) {
                 xCenter = absolutePosition.x - cellSize / 2;
                 yCenter = absolutePosition.y + cellSize / 2;
                 angleStart = 4 * PI / 2;
                 angleEnd = 3 * PI / 2;
                 radius = cellSize / 2;
-            } else if (isLinked(CardinalPoint.WEST) && isLinked(CardinalPoint.SOUTH)) {
+            } else if (isLinked(CardinalPoint.WEST, index0, index1) && isLinked(CardinalPoint.SOUTH, index0, index1)) {
                 xCenter = absolutePosition.x - cellSize / 2;
                 yCenter = absolutePosition.y - cellSize / 2;
                 angleStart = PI / 2;
@@ -777,27 +739,27 @@ public class Cell {
             double y0 = yCenter + radius * sin(angleStart + i * (angleEnd - angleStart) / nbRails);
             double x1 = xCenter + radius * cos(angleStart + (i + 1) * (angleEnd - angleStart) / nbRails);
             double y1 = yCenter + radius * sin(angleStart + (i + 1) * (angleEnd - angleStart) / nbRails);
-            rails.add(new RailSegment(x0, y0, x1, y1));
+            railsParam.add(new RailSegment(x0, y0, x1, y1));
         }
 
         // 45 degrees turns require an additional straight part
-        if (isTrackTurning45()) {
+        if (isTrackTurning45(index0, index1)) {
             double unitLength = (2 - 1.414) / 4; // The length of the straight part
             int nbAdditionalSegments = 4;
             double dx = unitLength / nbAdditionalSegments;
 
             for (int i = 0; i < nbAdditionalSegments; i++) {
-                if (isLinked(CardinalPoint.NORTHEAST)) {
-                    rails.add(new RailSegment(absolutePosition.x + cellSize * (0.5 - i * dx), absolutePosition.y + cellSize * (0.5 - i * dx),
+                if (isLinked(CardinalPoint.NORTHEAST, index0, index1)) {
+                    railsParam.add(new RailSegment(absolutePosition.x + cellSize * (0.5 - i * dx), absolutePosition.y + cellSize * (0.5 - i * dx),
                             absolutePosition.x + cellSize * (0.5 - (i + 1) * dx), absolutePosition.y + cellSize * (0.5 - (i + 1) * dx)));
-                } else if (isLinked(CardinalPoint.SOUTHEAST)) {
-                    rails.add(new RailSegment(absolutePosition.x + cellSize * (0.5 - i * dx), absolutePosition.y - cellSize * (0.5 - i * dx),
+                } else if (isLinked(CardinalPoint.SOUTHEAST, index0, index1)) {
+                    railsParam.add(new RailSegment(absolutePosition.x + cellSize * (0.5 - i * dx), absolutePosition.y - cellSize * (0.5 - i * dx),
                             absolutePosition.x + cellSize * (0.5 - (i + 1) * dx), absolutePosition.y - cellSize * (0.5 - (i + 1) * dx)));
-                } else if (isLinked(CardinalPoint.SOUTHWEST)) {
-                    rails.add(new RailSegment(absolutePosition.x - cellSize * (0.5 - i * dx), absolutePosition.y - cellSize * (0.5 - i * dx),
+                } else if (isLinked(CardinalPoint.SOUTHWEST, index0, index1)) {
+                    railsParam.add(new RailSegment(absolutePosition.x - cellSize * (0.5 - i * dx), absolutePosition.y - cellSize * (0.5 - i * dx),
                             absolutePosition.x - cellSize * (0.5 - (i + 1) * dx), absolutePosition.y - cellSize * (0.5 - (i + 1) * dx)));
-                } else if (isLinked(CardinalPoint.NORTHWEST)) {
-                    rails.add(new RailSegment(absolutePosition.x - cellSize * (0.5 - i * dx), absolutePosition.y + cellSize * (0.5 - i * dx),
+                } else if (isLinked(CardinalPoint.NORTHWEST, index0, index1)) {
+                    railsParam.add(new RailSegment(absolutePosition.x - cellSize * (0.5 - i * dx), absolutePosition.y + cellSize * (0.5 - i * dx),
                             absolutePosition.x - cellSize * (0.5 - (i + 1) * dx), absolutePosition.y + cellSize * (0.5 - (i + 1) * dx)));
                 }
             }
@@ -818,21 +780,29 @@ public class Cell {
      * Return true when the cell has a link in the specified direction.
      *
      * @param cardinalPoint
+     * @param index0 the first exit we're testing (can be 0 to 1 for regular
+     * tracks, or 0 to 3 for switches)
+     * @param index1 the second exit we're testing (can be 0 to 1 for regular
+     * tracks, or 0 to 3 for switches)
      * @return
      */
-    protected boolean isLinked(CardinalPoint cardinalPoint) {
+    protected boolean isLinked(CardinalPoint cardinalPoint, int index0, int index1) {
         try {
             if (links.isEmpty()) {
                 return false;
             }
-            return (links.size() >= 1 && links.get(0) == cardinalPoint
-                    || links.size() >= 2 && links.get(1) == cardinalPoint);
+            return links.size() > index0 && links.get(index0) == cardinalPoint
+                    || links.size() > index1 && links.get(index1) == cardinalPoint;
         } catch (ArrayIndexOutOfBoundsException e) {
             return false;
         }
     }
 
-    protected void removeTracks() {
+    protected boolean isLinked(CardinalPoint cardinalPoint) {
+        return isLinked(cardinalPoint, 0, 1);
+    }
+
+    protected void removeTracksAndLinks() {
         if (!hasTrain()) {
             rails.clear();
             links.clear();
@@ -919,9 +889,9 @@ public class Cell {
             double xSign = xApp;
             double ySign = yApp;
 
-            if (isLinked(CardinalPoint.NORTH)) {
+            if (isLinked(CardinalPoint.NORTH, 0, 1) || isLinked(CardinalPoint.NORTH, 2, 3)) {
                 // Second spot, halfway to the South border
-                if (isLinked(CardinalPoint.SOUTH)) {
+                if (isLinked(CardinalPoint.SOUTH, 0, 1) || isLinked(CardinalPoint.SOUTH, 2, 3)) {
                     // Cell is linked North and South, the sign shall be placed in the East.
                     xSign += appSize / 4;
                 } else {

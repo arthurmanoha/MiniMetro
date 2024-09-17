@@ -14,9 +14,11 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+TrainElements shall follow the tracks defined by switches.
+The two tracks of a switch shall be visually different.
 Pressing Control increases the zoom factor.
 Add a tool to automatically remove every non-connected piece of tracks.
-Add switches.
+The mouse indicator shall change with the GUI tool currently active.
 Splitscreen shall allow the player to view different parts of the world in sub-panels.
 When tracks are being laid, a fast movement of the mouse shall still create a continuous set of tracks.
 Locomotives shall be displayed in a panel with their speed and direction, and the list of their next stations.
@@ -86,6 +88,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Added switches - in progress
 Fixed: A large amount of tracks, even without a train, will slow the game down. Fixed by simulating only active cells.
 Straight tracks: a GUI button allows to select one cell and choose another in the two axis or two diagonals, then link them.
 Straight tracks: in World.setLongDistanceTracks, check that the values correspond to a correct axis or diagonal.Pressing Control allows tracks to be laid diagonally in a straight line.
