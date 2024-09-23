@@ -151,7 +151,8 @@ public class SwitchCell extends Cell {
         addConnection(connection2);
     }
 
-    void resetConnections() {
+    @Override
+    protected void removeTracksAndLinks() {
         cellA.removeTracksAndLinks();
         cellB.removeTracksAndLinks();
     }

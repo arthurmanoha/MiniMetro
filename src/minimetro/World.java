@@ -1279,7 +1279,7 @@ public class World {
             cells.remove(c);
             activeCells.remove(c);
             s = new SwitchCell(c);
-            s.resetConnections();
+            s.removeTracksAndLinks();
             addNewCell(s, (int) currentRow, (int) currentCol);
         }
         s.setSwitchPoint(localX, localY);
