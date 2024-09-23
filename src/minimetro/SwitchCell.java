@@ -3,6 +3,7 @@ package minimetro;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.io.FileWriter;
 import java.util.ArrayList;
 
 /**
@@ -299,6 +300,11 @@ public class SwitchCell extends Cell {
     }
 
     @Override
+    protected boolean hasRails() {
+        return cellA.hasRails() || cellB.hasRails();
+    }
+
+    @Override
     protected boolean hasPassengers() {
         return cellA.hasPassengers() || cellB.hasPassengers();
     }
@@ -340,5 +346,35 @@ public class SwitchCell extends Cell {
         super.setActive(b);
         cellA.setActive(false);
         cellB.setActive(false);
+    }
+
+    @Override
+    protected void startLocos() {
+        cellA.startLocos();
+        cellB.startLocos();
+    }
+
+    @Override
+    protected void removeTrains() {
+        cellA.removeTrains();
+        cellB.removeTrains();
+    }
+
+    @Override
+    protected void saveTrains(FileWriter writer) {
+        cellA.saveTrains(writer);
+        cellB.saveTrains(writer);
+    }
+
+    @Override
+    protected void setSpeedIndicator(double speedIndicatorValue) {
+        cellA.setSpeedIndicator(speedIndicatorValue);
+        cellB.setSpeedIndicator(speedIndicatorValue);
+    }
+
+    @Override
+    protected void setStopTimer(double newStopTimerDuration) {
+        cellA.setStopTimer(newStopTimerDuration);
+        cellB.setStopTimer(newStopTimerDuration);
     }
 }
