@@ -26,7 +26,7 @@ public class Cell {
     protected Color color;
 
     protected ArrayList<TrainElement> trainElements;
-    public ArrayList<TransferringTrain> trainsLeavingCell;
+    protected ArrayList<TransferringTrain> trainsLeavingCell;
     double maxHeadingDiff = 10;
 
     private ArrayList<CardinalPoint> links;
@@ -46,6 +46,9 @@ public class Cell {
 
     private boolean isActive;
 
+    private static int NB_CELLS_CREATED = 0;
+    protected int id;
+
     public Cell() {
         color = Color.gray;
         trainElements = new ArrayList<>();
@@ -57,6 +60,8 @@ public class Cell {
         links = new ArrayList<>();
         speedLimit = Integer.MAX_VALUE;
         isActive = false;
+        id = NB_CELLS_CREATED;
+        NB_CELLS_CREATED++;
     }
 
     public Cell(Cell previousCell) {
@@ -130,7 +135,7 @@ public class Cell {
         paintSpeedLimitSign(g, xApp, yApp, appSize);
 
         g.setColor(Color.black);
-        Font font = new Font("helvetica", Font.PLAIN, 10);
+        Font font = new Font("helvetica", Font.PLAIN, 20);
         g.setFont(font);
 
         if (stopTimerDuration > 0) {
@@ -181,14 +186,10 @@ public class Cell {
      * heading.
      *
      * @param newTrain
-     * @return null if everything went OK, or the train if it could not be
-     * reinserted.
      */
-    protected TrainElement addTrainElement(TrainElement newTrain) {
+    protected void addTrainElement(TrainElement newTrain) {
         this.trainElements.add(newTrain);
         snapToRail();
-//        newTrain.setCurrentStationNumber(-1);
-        return null;
     }
 
     protected boolean hasLoco() {
@@ -334,7 +335,9 @@ public class Cell {
     void flushMovingTrains() {
         for (TransferringTrain te : trainsLeavingCell) {
             int index = trainElements.lastIndexOf(te.getTrainElement());
-            trainElements.remove(index);
+            if (index >= 0) {
+                trainElements.remove(index);
+            }
         }
         trainsLeavingCell.clear();
     }
@@ -398,21 +401,28 @@ public class Cell {
      */
     void snapToRail() {
         for (TrainElement te : trainElements) {
-            // Find the rail that is closest to the TrainElement
-            double minDistance = Double.MAX_VALUE;
-            RailSegment closestSegment = null;
-            for (RailSegment r : rails) {
-                double distance = r.getDistance(te);
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestSegment = r;
-                }
-            }
-            if (closestSegment != null) {
+            RailSegment closestRail = findClosestRailSegment(te);
+            if (closestRail != null) {
                 // snap the TrainElement to the rail
-                closestSegment.snapTrain(te);
+                closestRail.snapTrain(te);
             }
         }
+    }
+
+    /**
+     * Find the rail that is closest to the TrainElement
+     */
+    protected RailSegment findClosestRailSegment(TrainElement te) {
+        double minDistance = Double.MAX_VALUE;
+        RailSegment closestSegment = null;
+        for (RailSegment r : rails) {
+            double distance = r.getDistance(te);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestSegment = r;
+            }
+        }
+        return closestSegment;
     }
 
     protected String getLinks() {
@@ -1014,5 +1024,9 @@ public class Cell {
 
     protected boolean hasPassengers() {
         return false;
+    }
+
+    protected ArrayList<TransferringTrain> getTrainsLeavingCell() {
+        return this.trainsLeavingCell;
     }
 }

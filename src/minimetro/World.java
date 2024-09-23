@@ -233,6 +233,7 @@ public class World {
                 activeCells.add(c);
             }
         }
+        newlyActiveCells.clear();
 
         Iterator iter = activeCells.iterator();
         while (iter.hasNext()) {
@@ -303,41 +304,43 @@ public class World {
             Cell c = (Cell) iter.next();
             int rowIndex = cells.getRow(c);
             int colIndex = cells.getCol(c);
-            for (TransferringTrain transferringTrain : c.trainsLeavingCell) {
-                TrainElement movingTrain = transferringTrain.getTrainElement();
-                CardinalPoint direction = transferringTrain.getDirection();
-                int newRow = rowIndex, newCol = colIndex;
-                switch (direction) {
-                case NORTH:
-                    newRow = rowIndex - 1;
-                    break;
-                case NORTHEAST:
-                    newRow = rowIndex - 1;
-                    newCol = colIndex + 1;
-                    break;
-                case EAST:
-                    newCol = colIndex + 1;
-                    break;
-                case SOUTHEAST:
-                    newRow = rowIndex + 1;
-                    newCol = colIndex + 1;
-                    break;
-                case SOUTH:
-                    newRow = rowIndex + 1;
-                    break;
-                case SOUTHWEST:
-                    newRow = rowIndex + 1;
-                    newCol = colIndex - 1;
-                    break;
-                case WEST:
-                    newCol = colIndex - 1;
-                    break;
-                case NORTHWEST:
-                    newRow = rowIndex - 1;
-                    newCol = colIndex - 1;
-                    break;
+            if (rowIndex != Integer.MIN_VALUE) {
+                for (TransferringTrain transferringTrain : c.getTrainsLeavingCell()) {
+                    TrainElement movingTrain = transferringTrain.getTrainElement();
+                    CardinalPoint direction = transferringTrain.getDirection();
+                    int newRow = rowIndex, newCol = colIndex;
+                    switch (direction) {
+                    case NORTH:
+                        newRow = rowIndex - 1;
+                        break;
+                    case NORTHEAST:
+                        newRow = rowIndex - 1;
+                        newCol = colIndex + 1;
+                        break;
+                    case EAST:
+                        newCol = colIndex + 1;
+                        break;
+                    case SOUTHEAST:
+                        newRow = rowIndex + 1;
+                        newCol = colIndex + 1;
+                        break;
+                    case SOUTH:
+                        newRow = rowIndex + 1;
+                        break;
+                    case SOUTHWEST:
+                        newRow = rowIndex + 1;
+                        newCol = colIndex - 1;
+                        break;
+                    case WEST:
+                        newCol = colIndex - 1;
+                        break;
+                    case NORTHWEST:
+                        newRow = rowIndex - 1;
+                        newCol = colIndex - 1;
+                        break;
+                    }
+                    reinsertTrain(movingTrain, newRow, newCol);
                 }
-                reinsertTrain(movingTrain, newRow, newCol);
             }
         }
     }
@@ -607,17 +610,16 @@ public class World {
      */
     private void reinsertTrain(TrainElement movingTrain, int rowIndex, int colIndex) {
 
-        // Add the train to the new cell.
-        Cell newCell = this.getCellOrCreateIfNull(rowIndex, colIndex);
-        if (newCell == null) {
-            System.out.println("World: error, next cell is null");
-        } else {
-            TrainElement insertionCheck = newCell.addTrainElement(movingTrain);
-            newCell.setActive(true);
-            newlyActiveCells.add(newCell);
-            if (insertionCheck != null) {
-                // Error in train reinsertion.
-                System.out.println("World: error in train reinsertion.");
+        if (rowIndex != Integer.MAX_VALUE) {
+
+            // Add the train to the new cell.
+            Cell newCell = this.getCellOrCreateIfNull(rowIndex, colIndex);
+            if (newCell == null) {
+                System.out.println("World: error, next cell is null");
+            } else {
+                newCell.addTrainElement(movingTrain);
+                newCell.setActive(true);
+                newlyActiveCells.add(newCell);
             }
         }
     }
@@ -1254,12 +1256,13 @@ public class World {
 
         if (c instanceof SwitchCell) {
             // Add or replace a connecting CardinalPoint to the SwitchCell.
+            activeCells.remove(c);
             s = (SwitchCell) c;
         } else {
             // Replace the Cell with a new SwitchCell and add the first CardinalPoint.
-            s = new SwitchCell(c);
             cells.remove(c);
             activeCells.remove(c);
+            s = new SwitchCell(c);
             s.resetConnections();
             addNewCell(s, (int) currentRow, (int) currentCol);
         }

@@ -172,14 +172,13 @@ public class StationCell extends Cell {
      * @return
      */
     @Override
-    protected TrainElement addTrainElement(TrainElement newTrain) {
+    protected void addTrainElement(TrainElement newTrain) {
         super.addTrainElement(newTrain);
         if (newTrain instanceof Locomotive) {
 
             Locomotive newLoco = (Locomotive) newTrain;
             newLoco.addStationToLine(this);
         }
-        return null;
     }
 
     /**
