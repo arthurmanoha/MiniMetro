@@ -7,6 +7,7 @@ import java.awt.geom.Point2D;
 import java.io.FileWriter;
 import static java.lang.Math.PI;
 import static java.lang.Math.cos;
+import static java.lang.Math.max;
 import static java.lang.Math.sin;
 import java.util.ArrayList;
 
@@ -135,8 +136,7 @@ public class Cell {
         paintSpeedLimitSign(g, xApp, yApp, appSize);
 
         g.setColor(Color.black);
-        Font font = new Font("helvetica", Font.PLAIN, 20);
-        g.setFont(font);
+        g.setFont(new Font("helvetica", Font.PLAIN, (int) (max(10, appSize / 15))));
 
         if (stopTimerDuration > 0) {
             String text = "Stop for " + stopTimerDuration + " seconds";

@@ -4,6 +4,7 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
+Switch Cells don not save their TrainElements.
 World map is not properly updated on station removal.
 A train that crosses itself in an intersection is not loaded properly.
 Wagons are not perfectly centered, especially when comparing 90 and 270 degrees heading.
@@ -14,8 +15,9 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
-Switches shall be saved to and loaded from file.
 A switch that does not have its 3 connections yet shall display part of each existing connection.
+The Track tool shall not remove any switches.
+Locos must observe the stopping time upon leaving any station.
 The Remove Tracks tool shall allow to remove switches.
 The two tracks of a switch shall be visually different.
 Pressing Control increases the zoom factor.
@@ -93,6 +95,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Switches are saved to and loaded from file.
 TrainElements shall follow the tracks defined by switches.
 Added switches - in progress
 Fixed: A large amount of tracks, even without a train, will slow the game down. Fixed by simulating only active cells.

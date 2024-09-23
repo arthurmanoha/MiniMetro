@@ -24,6 +24,7 @@ import static minimetro.CardinalPoint.*;
 public class World {
 
     private static final String RAIL_LINK = "rail_link";
+    private static final String SWITCH = "switch";
     private static final String STATION = "station";
     private static final String SPEED_LIMIT = "speed_limit";
     private static final String STOP_TIMER = "stop_timer";
@@ -957,7 +958,8 @@ public class World {
                 // Save rails
                 if (c instanceof SwitchCell) {
                     // Save a switch cell
-                    writer.write("SWITCH " + row + " " + col + "\n");
+                    String switchText = SWITCH + " " + row + " " + col + " " + ((SwitchCell) c).getLinks() + "\n";
+                    writer.write(switchText);
                 } else {
                     String cellLinks = c.getLinks();
                     if (!cellLinks.isEmpty()) {
@@ -1033,6 +1035,7 @@ public class World {
             boolean isEngineActive, isBraking;
             int rank, targetStationId;
             Passenger newPassenger;
+            CardinalPoint direction;
 
             switch (split[0]) {
             case STATION:
@@ -1045,8 +1048,21 @@ public class World {
                 row = Integer.valueOf(split[1]);
                 col = Integer.valueOf(split[2]);
                 c = getCellOrCreateIfNull(row, col);
-                CardinalPoint direction = CardinalPoint.valueOf(split[3]);
+                direction = CardinalPoint.valueOf(split[3]);
                 c.addLink(direction);
+                break;
+            case SWITCH:
+                row = Integer.valueOf(split[1]);
+                col = Integer.valueOf(split[2]);
+                // SWITCH 1 1 NORTH EAST WEST EAST
+                c = getCellOrCreateIfNull(row, col);
+                SwitchCell sc = new SwitchCell(c);
+                setCell(row, col, sc);
+                sc.addConnections(
+                        CardinalPoint.valueOf(split[3]),
+                        CardinalPoint.valueOf(split[4]),
+                        CardinalPoint.valueOf(split[5]));
+
                 break;
             case SPEED_LIMIT:
                 row = Integer.valueOf(split[1]);

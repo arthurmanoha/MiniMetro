@@ -37,7 +37,11 @@ public class SwitchCell extends Cell {
 
     public SwitchCell(Cell c) {
         super(c);
-        cellA = c;
+        if (c == null) {
+            cellA = new Cell();
+        } else {
+            cellA = c;
+        }
         cellA.setActive(false);
         cellB = new Cell(cellA);
         cellB.setActive(false);
@@ -67,18 +71,37 @@ public class SwitchCell extends Cell {
         final double xApp = absolutePosition.x * zoom + x0;
         final double yApp = g.getClipBounds().height - (absolutePosition.y * zoom + y0);
         final double appSize = zoom * cellSize;
-        String text = "S ";
+
+        // Display the direction as text only if at least one is undefined.
+        if (isSwitchIncomplete()) {
+            String text = "";
+            for (CardinalPoint cp : connections) {
+                if (cp == null) {
+                    text += "-";
+                } else {
+                    text += (cp + "").substring(0, 1) + "";
+                }
+            }
+            g.setColor(Color.black);
+            Font font = new Font("helvetica", Font.PLAIN, 20);
+            g.setFont(font);
+            g.drawString(text, (int) (xApp - appSize / 2 + 5), (int) (yApp - appSize / 2 + 20));
+        }
+    }
+
+    /**
+     * Test if the switch is complete.
+     *
+     * @return true when the switch is incomplete, i.e. not all its connections
+     * are specified.
+     */
+    private boolean isSwitchIncomplete() {
         for (CardinalPoint cp : connections) {
             if (cp == null) {
-                text += "-";
-            } else {
-                text += (cp + "").substring(0, 1) + "";
+                return true;
             }
         }
-        g.setColor(Color.black);
-        Font font = new Font("helvetica", Font.PLAIN, 20);
-        g.setFont(font);
-        g.drawString(text, (int) (xApp - appSize / 2 + 5), (int) (yApp - appSize / 2 + 20));
+        return false;
     }
 
     /**
@@ -98,8 +121,12 @@ public class SwitchCell extends Cell {
      * @param x
      * @param y
      */
-    void setSwitchPoint(double x, double y) {
+    protected void setSwitchPoint(double x, double y) {
         CardinalPoint cp = computeDirection(x, y);
+        addConnection(cp);
+    }
+
+    private void addConnection(CardinalPoint cp) {
 
         connections[0] = connections[1];
         connections[1] = connections[2];
@@ -115,6 +142,12 @@ public class SwitchCell extends Cell {
             cellB.addLink(connections[0]);
             cellB.addLink(connections[2]);
         }
+    }
+
+    protected void addConnections(CardinalPoint connection0, CardinalPoint connection1, CardinalPoint connection2) {
+        addConnection(connection0);
+        addConnection(connection1);
+        addConnection(connection2);
     }
 
     void resetConnections() {
@@ -163,7 +196,7 @@ public class SwitchCell extends Cell {
 
     @Override
     protected String getLinks() {
-        return "S " + cellA.getLinks() + " / " + cellB.getLinks();
+        return connections[0] + " " + connections[1] + " " + connections[2];
     }
 
     /**
