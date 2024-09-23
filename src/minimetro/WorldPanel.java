@@ -14,7 +14,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import static java.lang.Double.max;
 import static java.lang.Double.min;
-import static java.lang.System.currentTimeMillis;
 import java.util.Scanner;
 import javax.swing.JPanel;
 
@@ -58,7 +57,7 @@ public class WorldPanel extends JPanel implements MouseListener,
         prevMouseY = 0;
         prevRow = Integer.MAX_VALUE;
         prevCol = Integer.MAX_VALUE;
-        cornerMargin = 0.1;
+        cornerMargin = 0.25;
 
         graphicsCurrentHeight = 0;
         graphicsCurrentWidth = 0;
@@ -81,7 +80,10 @@ public class WorldPanel extends JPanel implements MouseListener,
         g.fillRect(0, 0, graphicsCurrentWidth, graphicsCurrentHeight);
 
         for (Cell c : world.getAllCells()) {
-            c.paint(g, x0, y0, zoomLevel);
+            c.paintBackground(g, x0, y0, zoomLevel);
+        }
+        for (Cell c : world.getAllCells()) {
+            c.paintForeground(g, x0, y0, zoomLevel);
         }
 
         paintCellBorders(g);
@@ -254,9 +256,13 @@ public class WorldPanel extends JPanel implements MouseListener,
             case LONG_DISTANCE_TRACKS -> {
                 currentCol = getCol(e.getX());
                 currentRow = getRow(e.getY());
-                int currentColInt = (int) currentCol;
-                int currentRowInt = (int) currentRow;
-                world.setLongDistanceTracks(currentRowInt, currentColInt);
+                world.setLongDistanceTracks((int) currentRow, (int) currentCol);
+                repaint();
+            }
+            case SWITCH -> {
+                currentCol = getCol(e.getX());
+                currentRow = getRow(e.getY());
+                world.setSwitchPoint(currentRow, currentCol);
                 repaint();
             }
             case STATION -> {

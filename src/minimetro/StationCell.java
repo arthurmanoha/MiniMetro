@@ -83,8 +83,8 @@ public class StationCell extends Cell {
     }
 
     @Override
-    protected void paint(Graphics g, double x0, double y0, double zoom) {
-        super.paint(g, x0, y0, zoom);
+    protected void paintForeground(Graphics g, double x0, double y0, double zoom) {
+        super.paintForeground(g, x0, y0, zoom);
 
         // On-screen coordinates of the center of the cell:
         final double xApp = absolutePosition.x * zoom + x0;
@@ -172,14 +172,13 @@ public class StationCell extends Cell {
      * @return
      */
     @Override
-    protected TrainElement addTrainElement(TrainElement newTrain) {
+    protected void addTrainElement(TrainElement newTrain) {
         super.addTrainElement(newTrain);
         if (newTrain instanceof Locomotive) {
 
             Locomotive newLoco = (Locomotive) newTrain;
             newLoco.addStationToLine(this);
         }
-        return null;
     }
 
     /**
