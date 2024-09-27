@@ -4,6 +4,7 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
+Placing a track removes a switch event if a train is already there.
 World map is not properly updated on station removal.
 A train that crosses itself in an intersection is not loaded properly.
 Wagons are not perfectly centered, especially when comparing 90 and 270 degrees heading.
@@ -17,7 +18,6 @@ TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 A right click on a SwitchCell shall toggle the switch.
 A switch that does not have its 3 connections yet shall display part of each existing connection.
 The Track tool shall not remove any switches.
-Locos must observe the stopping time upon leaving any station.
 The two tracks of a switch shall be visually different.
 Pressing Control increases the zoom factor.
 Add a tool to automatically remove every non-connected piece of tracks.
@@ -94,6 +94,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Locos must observe the stopping time upon leaving the cell that specifies a stop.
 The Remove Tracks tool shall allow to remove switches.
 Fixed: Switch Cells now save their TrainElements.
 Switches are saved to and loaded from file.

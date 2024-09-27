@@ -40,11 +40,6 @@ public class Cell {
     // StopTimer: -1: no stopping required; >0: brake and stop for that many seconds.
     protected double stopTimerDuration;
 
-    // The TrainElements that are currently stopped or have already stopped in
-    // this cell and started moving again, and still are in this cell.
-    private ArrayList<TrainElement> alreadyStoppedTrains;
-    private Cell previous;
-
     private boolean isActive;
 
     private static int NB_CELLS_CREATED = 0;
@@ -54,7 +49,6 @@ public class Cell {
         color = Color.gray;
         trainElements = new ArrayList<>();
         trainsLeavingCell = new ArrayList<>();
-        alreadyStoppedTrains = new ArrayList<>();
         rails = new ArrayList<>();
         nbRails = DEFAULT_NB_RAILS;
         absolutePosition = new Point2D.Double();
@@ -284,13 +278,11 @@ public class Cell {
 
             trainElement.observeCurrentSpeedLimit();
 
-            observeStop(trainElement);
-
             CardinalPoint leavingDirection = isTrainElementLeaving(trainElement);
             if (leavingDirection != CardinalPoint.CENTER) {
                 // The element has travelled to the next cell.
                 trainsLeavingCell.add(new TransferringTrain(trainElement, leavingDirection));
-                alreadyStoppedTrains.remove(trainElement);
+                trainElement.stopTimerDuration = this.stopTimerDuration;
             }
         }
 
@@ -925,19 +917,6 @@ public class Cell {
             int textHeight = g.getFontMetrics().getHeight();
             g.drawString(text, (int) xSign - textWidth / 2, (int) ySign + textHeight / 2);
         }
-    }
-
-    private void observeStop(TrainElement trainElement) {
-
-        if (stopTimerDuration > 0) {
-
-            if (!alreadyStoppedTrains.contains(trainElement)) {
-                // Set the train to stop for the requested duration.
-                alreadyStoppedTrains.add(trainElement);
-                trainElement.setTimedStop(this.stopTimerDuration);
-            }
-        }
-        // otherwise this cell does not stop trains.
     }
 
     protected Point2D.Double getAbsolutePosition() {
