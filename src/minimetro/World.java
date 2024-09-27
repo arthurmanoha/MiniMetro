@@ -569,14 +569,9 @@ public class World {
     protected void setNewTrack(int row, int col, int rowNeighbor, int colNeighbor) {
 
         Cell newTrackCell = getCellOrCreateIfNull(rowNeighbor, colNeighbor);
-        if (newTrackCell instanceof SwitchCell) {
-            // Replace the switch with a classical Cell
-            newTrackCell = new Cell(newTrackCell);
-            cells.set(newTrackCell, rowNeighbor, colNeighbor);
-        }
         CardinalPoint newLinkDirection;
 
-        if (newTrackCell != null) {
+        if (newTrackCell != null && !newTrackCell.hasTrain()) {
             if (col < colNeighbor) {
                 if (row < rowNeighbor) {
                     newLinkDirection = CardinalPoint.NORTHWEST;
