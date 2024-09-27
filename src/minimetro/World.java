@@ -707,37 +707,43 @@ public class World {
      * @param link
      */
     private void applyLinkForce(TrainLink link) {
-        TrainElement e0 = link.getElement(0);
-        TrainElement e1 = link.getElement(1);
+        TrainElement e0 = null, e1 = null;
+        try {
+            e0 = link.getElement(0);
+            e1 = link.getElement(1);
 
-        if (e0 != null && e1 != null) {
+            if (e0 != null && e1 != null) {
 
-            Cell c0 = getCell(e0);
-            Cell c1 = getCell(e1);
+                Cell c0 = getCell(e0);
+                Cell c1 = getCell(e1);
 
-            Point2D.Double posC0 = getCellPosition(c0);
-            if (posC0 == null) {
-                System.out.println("pos c0 is null");
+                Point2D.Double posC0 = getCellPosition(c0);
+                if (posC0 == null) {
+                    System.out.println("pos c0 is null");
+                }
+                Point2D.Double posC1 = getCellPosition(c1);
+                if (posC1 == null) {
+                    System.out.println("pos c1 is null");
+                }
+
+                Point2D.Double posElem0 = c0.getTrainPosition(e0);
+                if (posElem0 == null) {
+                    System.out.println("pos elem0 is null");
+                }
+                Point2D.Double posElem1 = c1.getTrainPosition(e1);
+                if (posElem1 == null) {
+                    System.out.println("pos elem1 is null");
+                }
+
+                Point2D.Double force = link.computeForce(posElem0, posElem1);
+                Point2D.Double forceOpposite = new Point2D.Double(-force.x, -force.y);
+
+                e0.increaseEfficientForce(force);
+                e1.increaseEfficientForce(forceOpposite);
             }
-            Point2D.Double posC1 = getCellPosition(c1);
-            if (posC1 == null) {
-                System.out.println("pos c1 is null");
-            }
-
-            Point2D.Double posElem0 = c0.getTrainPosition(e0);
-            if (posElem0 == null) {
-                System.out.println("pos elem0 is null");
-            }
-            Point2D.Double posElem1 = c1.getTrainPosition(e1);
-            if (posElem1 == null) {
-                System.out.println("pos elem1 is null");
-            }
-
-            Point2D.Double force = link.computeForce(posElem0, posElem1);
-            Point2D.Double forceOpposite = new Point2D.Double(-force.x, -force.y);
-
-            e0.increaseEfficientForce(force);
-            e1.increaseEfficientForce(forceOpposite);
+        } catch (NullPointerException e) {
+            System.out.println("NPE in World.applyLinkForce "
+                    + ", e0: " + e0 + ", e1: " + e1);
         }
     }
 
