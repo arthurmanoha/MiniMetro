@@ -1059,10 +1059,14 @@ public class World {
                 c = getCellOrCreateIfNull(row, col);
                 SwitchCell sc = new SwitchCell(c);
                 setCell(row, col, sc);
-                sc.addConnections(
-                        CardinalPoint.valueOf(split[3]),
-                        CardinalPoint.valueOf(split[4]),
-                        CardinalPoint.valueOf(split[5]));
+                try {
+                    sc.addConnections(
+                            CardinalPoint.valueOf(split[3]),
+                            CardinalPoint.valueOf(split[4]),
+                            CardinalPoint.valueOf(split[5]));
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Cannot load incomplete switch (row " + row + ", col " + col + ");");
+                }
 
                 break;
             case SPEED_LIMIT:
@@ -1284,5 +1288,12 @@ public class World {
             addNewCell(s, (int) currentRow, (int) currentCol);
         }
         s.setSwitchPoint(localX, localY);
+    }
+
+    protected void toggleSwitch(int row, int col) {
+        Cell c = getCell(row, col);
+        if (c instanceof SwitchCell) {
+            ((SwitchCell) c).toggle();
+        }
     }
 }
