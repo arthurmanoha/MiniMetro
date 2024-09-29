@@ -73,6 +73,8 @@ public class SwitchCell extends Cell {
         final double yApp = g.getClipBounds().height - (absolutePosition.y * zoom + y0);
         final double appSize = zoom * cellSize;
 
+        paintActiveCellIndicator(g, xApp, yApp, appSize);
+
         // Display the direction as text only if at least one is undefined.
         if (isSwitchIncomplete()) {
             String text = "";
@@ -377,5 +379,104 @@ public class SwitchCell extends Cell {
     protected void setStopTimer(double newStopTimerDuration) {
         cellA.setStopTimer(newStopTimerDuration);
         cellB.setStopTimer(newStopTimerDuration);
+    }
+
+    private void paintActiveCellIndicator(Graphics g, double xApp, double yApp, double appSize) {
+        double xStart, yStart, xEnd, yEnd;
+        try {
+            switch (connections[0]) {
+            case WEST:
+                xStart = xApp - appSize / 2;
+                yStart = yApp;
+                break;
+            case NORTHWEST:
+                xStart = xApp - appSize / 2;
+                yStart = yApp - appSize / 2;
+                break;
+            case NORTH:
+                xStart = xApp;
+                yStart = yApp - appSize / 2;
+                break;
+            case NORTHEAST:
+                xStart = xApp + appSize / 2;
+                yStart = yApp - appSize / 2;
+                break;
+            case EAST:
+                xStart = xApp + appSize / 2;
+                yStart = yApp;
+                break;
+            case SOUTHEAST:
+                xStart = xApp + appSize / 2;
+                yStart = yApp + appSize / 2;
+                break;
+            case SOUTH:
+                xStart = xApp;
+                yStart = yApp + appSize / 2;
+                break;
+            case SOUTHWEST:
+                xStart = xApp - appSize / 2;
+                yStart = yApp + appSize / 2;
+                break;
+            default:
+                xStart = 0;
+                yStart = 0;
+            }
+
+            CardinalPoint activeExit;
+            if (isToggled) {
+                activeExit = connections[2];
+            } else {
+                activeExit = connections[1];
+            }
+
+            switch (activeExit) {
+            case WEST:
+                xEnd = xApp - appSize / 2;
+                yEnd = yApp;
+                break;
+            case NORTHWEST:
+                xEnd = xApp - appSize / 2;
+                yEnd = yApp - appSize / 2;
+                break;
+            case NORTH:
+                xEnd = xApp;
+                yEnd = yApp - appSize / 2;
+                break;
+            case NORTHEAST:
+                xEnd = xApp + appSize / 2;
+                yEnd = yApp - appSize / 2;
+                break;
+            case EAST:
+                xEnd = xApp + appSize / 2;
+                yEnd = yApp;
+                break;
+            case SOUTHEAST:
+                xEnd = xApp + appSize / 2;
+                yEnd = yApp + appSize / 2;
+                break;
+            case SOUTH:
+                xEnd = xApp;
+                yEnd = yApp + appSize / 2;
+                break;
+            case SOUTHWEST:
+                xEnd = xApp - appSize / 2;
+                yEnd = yApp + appSize / 2;
+                break;
+            default:
+                xEnd = 0;
+                yEnd = 0;
+            }
+            g.setColor(Color.red);
+            g.drawLine((int) xStart, (int) yStart, (int) xEnd, (int) yEnd);
+        } catch (NullPointerException e) {
+
+        }
+    }
+
+    /**
+     * Change which sub-cell is active.
+     */
+    protected void toggle() {
+        isToggled = !isToggled;
     }
 }

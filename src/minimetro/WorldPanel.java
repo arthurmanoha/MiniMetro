@@ -230,10 +230,14 @@ public class WorldPanel extends JPanel implements MouseListener,
     @Override
     public void mousePressed(MouseEvent e) {
         int b1 = MouseEvent.BUTTON1_DOWN_MASK;
-        if ((e.getModifiersEx() & b1) == b1) {
 
-            double xReal = (e.getX() - x0) / zoomLevel;
-            double yReal = (graphicsCurrentHeight - e.getY() - y0) / zoomLevel;
+        double xReal = (e.getX() - x0) / zoomLevel;
+        double yReal = (graphicsCurrentHeight - e.getY() - y0) / zoomLevel;
+
+        currentRow = getRow(e.getY());
+        currentCol = getCol(e.getX());
+
+        if ((e.getModifiersEx() & b1) == b1) {
 
             // Clicked first mouse button
             switch (currentTool) {
@@ -244,8 +248,6 @@ public class WorldPanel extends JPanel implements MouseListener,
                 world.addWagon(xReal, yReal);
             }
             case TRAIN_REMOVAL -> {
-                currentCol = getCol(e.getX());
-                currentRow = getRow(e.getY());
                 world.removeTrains((int) currentRow, (int) currentCol);
                 repaint();
             }
@@ -254,14 +256,10 @@ public class WorldPanel extends JPanel implements MouseListener,
                 prevRow = Integer.MAX_VALUE;
             }
             case LONG_DISTANCE_TRACKS -> {
-                currentCol = getCol(e.getX());
-                currentRow = getRow(e.getY());
                 world.setLongDistanceTracks((int) currentRow, (int) currentCol);
                 repaint();
             }
             case SWITCH -> {
-                currentCol = getCol(e.getX());
-                currentRow = getRow(e.getY());
                 world.setSwitchPoint(currentRow, currentCol);
                 repaint();
             }
@@ -277,6 +275,11 @@ public class WorldPanel extends JPanel implements MouseListener,
             }
             }
         }
+        int b2 = MouseEvent.BUTTON3_DOWN_MASK;
+        if ((e.getModifiersEx() & b2) == b2) {
+            world.toggleSwitch((int) currentRow, (int) currentCol);
+        }
+
         repaint();
     }
 

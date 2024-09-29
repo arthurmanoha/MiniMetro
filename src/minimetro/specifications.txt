@@ -14,15 +14,13 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
-A right click on a SwitchCell shall toggle the switch.
+Splitscreen shall allow the player to view different parts of the world in sub-panels.
+Smooth out cars movement in curves.
 A switch that does not have its 3 connections yet shall display part of each existing connection.
-The Track tool shall not remove any switches.
-The two tracks of a switch shall be visually different.
 Pressing Control increases the zoom factor.
 Add a tool to automatically remove every non-connected piece of tracks.
 The mouse indicator shall change with the GUI tool currently active.
 Add cells with two parallel sections of track, with 1-to-2 parallel switches, and train collisions.
-Splitscreen shall allow the player to view different parts of the world in sub-panels.
 When tracks are being laid, a fast movement of the mouse shall still create a continuous set of tracks.
 A special type of locomotive shall lay new tracks over empty terrain.
 Stations with buildings shall provide resources: coal, diesel, material to build new tracks.
@@ -93,6 +91,8 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+A right click on a SwitchCell shall toggle the switch.
+A switch indicator shows what part of a switch is active.
 Placing a track no longer removes a switch.
 Fixed: a track with a train may not be removed or replaced.
 Locos must observe the stopping time upon leaving the cell that specifies a stop.
