@@ -4,11 +4,12 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -28,12 +29,14 @@ import javax.swing.JTextField;
  *
  * @author arthu
  */
-public class GUI extends JFrame {
+public class GUI extends JFrame implements PropertyChangeListener {
 
     WorldPanel panel;
     JPanel topToolbar;
     JPanel locoToolbar;
     JPanel speedToolbar;
+    JPanel viewsPanel;
+    JPanel subVPPanel;
     JPanel mainToolbar;
     JScrollPane mainToolbarScrollpane;
     JLabel worldMapLabel;
@@ -49,8 +52,6 @@ public class GUI extends JFrame {
     private CustomKeyListener keyListener;
     private ArrayList<Component> allComponents;
 
-    private ArrayList<ViewPoint> viewpointList;
-
     public GUI(World newWorld) {
         super();
 
@@ -64,8 +65,6 @@ public class GUI extends JFrame {
         allComponents.add(topToolbar);
         allComponents.add(locoToolbar);
         allComponents.add(speedToolbar);
-
-        this.viewpointList = new ArrayList<>();
     }
 
     private void setLayoutAndButtons() {
@@ -463,19 +462,24 @@ public class GUI extends JFrame {
 
         mainToolbar.add(speedToolbar);
 
-        JPanel viewsPanel = new JPanel();
+        viewsPanel = new JPanel();
         viewsPanel.setLayout(new BoxLayout(viewsPanel, BoxLayout.Y_AXIS));
         viewsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         viewsPanel.add(new JLabel("Viewpoints"));
+        subVPPanel = new JPanel();
+        subVPPanel.setLayout(new BoxLayout(subVPPanel, BoxLayout.Y_AXIS));
+        subVPPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         JButton newViewPointButton = new JButton("Add viewpoint");
         newViewPointButton.addActionListener((e) -> {
             ViewpointPanel newViewPanel = new ViewpointPanel("Go to Location", panel);
-            viewsPanel.add(newViewPanel);
+            newViewPanel.addPropertyChangeListener("deleteViewpointPanel", this);
+            subVPPanel.add(newViewPanel);
 
             mainToolbar.revalidate();
             Rectangle bounds = viewsPanel.getBounds();
             viewsPanel.scrollRectToVisible(bounds);
         });
+        viewsPanel.add(subVPPanel);
         viewsPanel.add(newViewPointButton);
 
         mainToolbar.add(viewsPanel);
@@ -579,5 +583,25 @@ public class GUI extends JFrame {
 
     protected void setControlState(boolean b) {
         panel.setControlState(b);
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent e) {
+        int viewpointPanelId = (int) e.getNewValue();
+        deleteViewpoint(viewpointPanelId);
+    }
+
+    private void deleteViewpoint(int idToDelete) {
+        Component[] allViewpoints = subVPPanel.getComponents();
+        for (int rank = 0; rank < allViewpoints.length; rank++) {
+            Component yolo = allViewpoints[rank];
+            if (yolo instanceof ViewpointPanel) {
+                ViewpointPanel viewpointPanel = (ViewpointPanel) yolo;
+                if (viewpointPanel.getId() == idToDelete) {
+                    subVPPanel.remove(yolo);
+                }
+            }
+        }
+        revalidate();
     }
 }

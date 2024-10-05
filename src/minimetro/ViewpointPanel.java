@@ -1,6 +1,7 @@
 package minimetro;
 
-import java.awt.event.ActionListener;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import javax.swing.InputVerifier;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -18,7 +19,10 @@ public class ViewpointPanel extends JPanel {
     protected JTextField t;
     protected ViewPoint viewPoint;
     protected JButton overwriteButton;
+    protected JButton deleteButton;
     protected WorldPanel worldPanel;
+
+    private PropertyChangeSupport support;
 
     private int id;
     private static int NB_TEXT_BUTTONS_CREATED = 0;
@@ -45,6 +49,19 @@ public class ViewpointPanel extends JPanel {
         this.add(overwriteButton);
         worldPanel = newWorldPanel;
         viewPoint = new ViewPoint(worldPanel.getView());
+
+        support = new PropertyChangeSupport(this);
+
+        deleteButton = new JButton("x");
+        deleteButton.addActionListener((e) -> {
+            support.firePropertyChange("deleteViewpointPanel", -1, id);
+        });
+        this.add(deleteButton);
+    }
+
+    @Override
+    public void addPropertyChangeListener(String propertyName, PropertyChangeListener listener) {
+        support.addPropertyChangeListener(propertyName, listener);
     }
 
     public String getText() {
@@ -60,5 +77,9 @@ public class ViewpointPanel extends JPanel {
         public boolean verify(JComponent input) {
             return true;
         }
+    }
+
+    public int getId() {
+        return id;
     }
 }

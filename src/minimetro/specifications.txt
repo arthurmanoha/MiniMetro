@@ -16,7 +16,10 @@ TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 
 Viewpoints shall be saved to file.
 Viewpoints shall be loaded from file.
+Links between cars shall be saved from file.
+Links between cars shall be loaded from file.
 The menu sidebar shall be scrolled with a mousewheel click and a mouse movement.
+The windows shall display statistics about the tracks and trains.
 Splitscreen shall allow the player to view different parts of the world in sub-panels.
 Smooth out cars movement in curves.
 A switch that does not have its 3 connections yet shall display part of each existing connection.
@@ -95,6 +98,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Viewpoints can be deleted.
 The user shall be able to record and name the current viewpoint which shall be displayed in a list.
 A right click on a SwitchCell shall toggle the switch.
 A switch indicator shows what part of a switch is active.
