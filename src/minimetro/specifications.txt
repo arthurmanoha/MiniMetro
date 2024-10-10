@@ -14,6 +14,10 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Links between cars shall be saved from file.
+Links between cars shall be loaded from file.
+The menu sidebar shall be scrolled with a mousewheel click and a mouse movement.
+The windows shall display statistics about the tracks and trains.
 Splitscreen shall allow the player to view different parts of the world in sub-panels.
 Smooth out cars movement in curves.
 A switch that does not have its 3 connections yet shall display part of each existing connection.
@@ -29,7 +33,6 @@ When a new loco gets into a station, it shall register all the stations register
 Text on the "save file" popup should be adapted.
 Allow tracks to join two non-opposite corners of a cell, i.e. NE to SE.
 Allow a single cell to contain two sets of non-crossing tracks, i.e. N-SE and S-NW.
-Simulate only cells that have trains or passengers.
 Display info about locos in small stickers next to them.
 Locomotives shall be numbered independantly from the wagons.
 Long-range 45° or 90° turns, that link two distant squares with a track independant from the other squares it crosses.
@@ -37,7 +40,6 @@ Wagons shall be created and linked together by click and drag over a track.
 Stations names shall be selected from a list made of real-life subway stations of cities.
 Passengers on the platform shall be positioned away from the tracks.
 Rain makes braking distances longer.
-The world shall be stored as a sparse matrix but still painted the same way.
 The grid shall show one in ten lines at large enough scales.
 The world shall contain water areas.
 Water areas can be crossed by bridges.
@@ -65,6 +67,9 @@ An IntersectionCell is a special cell, where one track splits into several track
 A passenger shall find a path from its current position to its target: which line to use, which station to walk to.
 A passenger may walk from one station to another if the stations have one side in common.
 Add portal cells.
+Sound design: trains make noise, passengers talk.
+Train sound is only heard at a convenient zoom level.
+Passenger dialogue is only heard at close zoom level.
 
 Tools:
 
@@ -91,6 +96,10 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Viewpoints are saved to file.
+Viewpoints are loaded from file.
+Viewpoints can be deleted.
+The user shall be able to record and name the current viewpoint which shall be displayed in a list.
 A right click on a SwitchCell shall toggle the switch.
 A switch indicator shows what part of a switch is active.
 Placing a track no longer removes a switch.
@@ -101,6 +110,7 @@ Fixed: Switch Cells now save their TrainElements.
 Switches are saved to and loaded from file.
 TrainElements shall follow the tracks defined by switches.
 Added switches - in progress
+Simulate only cells that have trains or passengers.
 Fixed: A large amount of tracks, even without a train, will slow the game down. Fixed by simulating only active cells.
 Straight tracks: a GUI button allows to select one cell and choose another in the two axis or two diagonals, then link them.
 Straight tracks: in World.setLongDistanceTracks, check that the values correspond to a correct axis or diagonal.Pressing Control allows tracks to be laid diagonally in a straight line.

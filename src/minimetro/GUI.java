@@ -1,17 +1,22 @@
 package minimetro;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Rectangle;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -24,13 +29,16 @@ import javax.swing.JTextField;
  *
  * @author arthu
  */
-public class GUI extends JFrame {
+public class GUI extends JFrame implements PropertyChangeListener {
 
     WorldPanel panel;
     JPanel topToolbar;
     JPanel locoToolbar;
     JPanel speedToolbar;
+    JPanel viewsPanel;
+    JPanel subVPPanel;
     JPanel mainToolbar;
+    JScrollPane mainToolbarScrollpane;
     JLabel worldMapLabel;
 
     int windowWidth = 1100;
@@ -67,7 +75,12 @@ public class GUI extends JFrame {
 
         mainToolbar = new JPanel();
         allComponents.add(mainToolbar);
-        mainToolbar.setLayout(new GridLayout(3, 1));
+
+        mainToolbarScrollpane = new JScrollPane(mainToolbar,
+                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        allComponents.add(mainToolbarScrollpane);
+        mainToolbar.setLayout(new BoxLayout(mainToolbar, BoxLayout.Y_AXIS));
 
         topToolbar = new JPanel();
         allComponents.add(topToolbar);
@@ -252,29 +265,37 @@ public class GUI extends JFrame {
         allComponents.add(locoToolbar);
         locoToolbar.setLayout(new GridBagLayout());
 
+        JPanel locoSubMenu = new JPanel();
+        locoSubMenu.setLayout(new GridLayout(2, 2));
         JButton startLocoButton = new JButton("Start Locos");
         allComponents.add(startLocoButton);
         startLocoButton.addActionListener((e) -> {
             world.startLocos();
         });
-        c.gridx = 0;
-        c.gridy = 0;
-        locoToolbar.add(startLocoButton, c);
+        locoSubMenu.add(startLocoButton, c);
 
         JButton stopLocoButton = new JButton("Stop Locos");
         allComponents.add(stopLocoButton);
         stopLocoButton.addActionListener((e) -> {
             world.stopLocos();
         });
-        c.gridx = 1;
-        c.gridy = 0;
-        locoToolbar.add(stopLocoButton, c);
+        locoSubMenu.add(stopLocoButton, c);
 
         JButton worldMapButton = new JButton("Display World Map");
         allComponents.add(worldMapButton);
+        locoSubMenu.add(worldMapButton, c);
+
+        JButton clearMapButton = new JButton("Clear Map");
+        allComponents.add(clearMapButton);
+        clearMapButton.addActionListener((e) -> {
+            world.clearMap();
+            worldMapLabel.setText(World.map.toFormattedString());
+        });
+        locoSubMenu.add(clearMapButton, c);
         c.gridx = 0;
         c.gridy = 1;
-        locoToolbar.add(worldMapButton, c);
+        c.gridwidth = 3;
+        locoToolbar.add(locoSubMenu, c);
 
         worldMapLabel = new JLabel();
         allComponents.add(worldMapLabel);
@@ -292,59 +313,43 @@ public class GUI extends JFrame {
         mapScrollPane.setMinimumSize(new Dimension(200, 150));
         c.gridx = 0;
         c.gridy = 2;
-        c.gridwidth = 2;
+        c.gridwidth = 3;
         locoToolbar.add(mapScrollPane, c);
-
-        JButton clearMapButton = new JButton("Clear Map");
-        allComponents.add(clearMapButton);
-        clearMapButton.addActionListener((e) -> {
-            world.clearMap();
-            worldMapLabel.setText(World.map.toFormattedString());
-        });
-        c.gridwidth = 1;
-        c.gridx = 1;
-        c.gridy = 1;
-        locoToolbar.add(clearMapButton, c);
 
         JLabel startStationIdLabel = new JLabel("Start station");
         allComponents.add(startStationIdLabel);
         c.gridx = 0;
         c.gridy = 3;
-        startStationIdLabel.setMinimumSize(new Dimension(100, 20));
+        c.gridwidth = 1;
         locoToolbar.add(startStationIdLabel, c);
 
         JTextField startStationIdTextField = new JTextField("0");
         allComponents.add(startStationIdTextField);
         c.gridx = 0;
         c.gridy = 4;
-        startStationIdTextField.setMinimumSize(new Dimension(100, 20));
         locoToolbar.add(startStationIdTextField, c);
 
         JLabel endStationIdLabel = new JLabel("End station");
         allComponents.add(endStationIdLabel);
         c.gridx = 1;
         c.gridy = 3;
-        endStationIdLabel.setMinimumSize(new Dimension(100, 20));
         locoToolbar.add(endStationIdLabel, c);
 
         JTextField endStationIdTextField = new JTextField("0");
         allComponents.add(endStationIdTextField);
         c.gridx = 1;
         c.gridy = 4;
-        endStationIdTextField.setMinimumSize(new Dimension(100, 20));
         locoToolbar.add(endStationIdTextField, c);
 
         JLabel nbPassengersLabel = new JLabel("Nb passengers");
         allComponents.add(nbPassengersLabel);
         c.gridx = 2;
         c.gridy = 3;
-        nbPassengersLabel.setMinimumSize(new Dimension(100, 20));
         locoToolbar.add(nbPassengersLabel, c);
 
         JTextField nbPassengersTextField = new JTextField("1");
         allComponents.add(nbPassengersTextField);
         c.gridy = 4;
-        nbPassengersTextField.setMinimumSize(new Dimension(100, 20));
         locoToolbar.add(nbPassengersTextField, c);
 
         JButton createPassengersButton = new JButton("Go");
@@ -363,8 +368,6 @@ public class GUI extends JFrame {
         locoToolbar.add(createPassengersButton, c);
 
         mainToolbar.add(locoToolbar);
-
-        this.add(mainToolbar, BorderLayout.WEST);
 
         panel = new WorldPanel(world);
 
@@ -459,6 +462,27 @@ public class GUI extends JFrame {
 
         mainToolbar.add(speedToolbar);
 
+        viewsPanel = new JPanel();
+        viewsPanel.setLayout(new BoxLayout(viewsPanel, BoxLayout.Y_AXIS));
+        viewsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        viewsPanel.add(new JLabel("Viewpoints"));
+        subVPPanel = new JPanel();
+        subVPPanel.setLayout(new BoxLayout(subVPPanel, BoxLayout.Y_AXIS));
+        subVPPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JButton newViewPointButton = new JButton("Add viewpoint");
+        newViewPointButton.addActionListener((e) -> {
+            createViewPoint();
+        });
+        viewsPanel.add(subVPPanel);
+        viewsPanel.add(newViewPointButton);
+
+        mainToolbar.add(viewsPanel);
+
+        mainToolbarScrollpane.setForeground(Color.red);
+        mainToolbarScrollpane.setFocusable(true);
+
+        this.add(mainToolbarScrollpane, BorderLayout.WEST);
+
         for (Component comp : allComponents) {
             comp.setFocusable(true);
             comp.addKeyListener(keyListener);
@@ -469,6 +493,20 @@ public class GUI extends JFrame {
         this.setSize(new Dimension(windowWidth, windowHeight));
         this.setVisible(true);
 
+    }
+
+    private void createViewPoint() {
+        createViewPoint("");
+    }
+
+    private void createViewPoint(String specifiedView) {
+        ViewpointPanel newViewPanel = new ViewpointPanel("Go", panel, specifiedView);
+        newViewPanel.addPropertyChangeListener("deleteViewpointPanel", this);
+        subVPPanel.add(newViewPanel);
+
+        mainToolbar.revalidate();
+        Rectangle bounds = viewsPanel.getBounds();
+        viewsPanel.scrollRectToVisible(bounds);
     }
 
     private void readSpeedLimit() {
@@ -511,6 +549,7 @@ public class GUI extends JFrame {
                     FileWriter writer = new FileWriter(file);
                     panel.save(writer);
                     world.save(writer);
+                    saveViewpoints(writer);
                     writer.close();
                 } catch (IOException e) {
                     System.out.println("Error writing to file.");
@@ -536,12 +575,14 @@ public class GUI extends JFrame {
             int returnVal = fileChooser.showOpenDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
-                System.out.println("GUI Loading from file " + file.getAbsolutePath());
+
+                subVPPanel.removeAll();
 
                 scanner = new Scanner(file);
                 panel.load(scanner);
                 world.load(scanner);
-                repaint();
+                loadViewpoints(scanner);
+                revalidate();
             }
         } catch (FileNotFoundException ex) {
             // No config file, maybe create it here.
@@ -553,5 +594,54 @@ public class GUI extends JFrame {
 
     protected void setControlState(boolean b) {
         panel.setControlState(b);
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent e) {
+        int viewpointPanelId = (int) e.getNewValue();
+        deleteViewpoint(viewpointPanelId);
+    }
+
+    private void deleteViewpoint(int idToDelete) {
+        Component[] allViewpoints = subVPPanel.getComponents();
+        for (int rank = 0; rank < allViewpoints.length; rank++) {
+            Component yolo = allViewpoints[rank];
+            ViewpointPanel viewpointPanel = (ViewpointPanel) yolo;
+            if (viewpointPanel.getId() == idToDelete) {
+                subVPPanel.remove(yolo);
+            }
+        }
+        revalidate();
+    }
+
+    private void saveViewpoints(FileWriter writer) {
+
+        try {
+            writer.write("viewpoints\n");
+
+            Component[] allViewpoints = subVPPanel.getComponents();
+            for (int rank = 0; rank < allViewpoints.length; rank++) {
+                Component yolo = allViewpoints[rank];
+                ViewpointPanel viewpointPanel = (ViewpointPanel) yolo;
+                viewpointPanel.save(writer);
+            }
+            writer.write("endviewpoints\n");
+        } catch (IOException ex) {
+            System.out.println("GUI error while writing viewpoints");
+        }
+    }
+
+    private void loadViewpoints(Scanner scanner) {
+        String text = "";
+        boolean loop = true;
+        while (scanner.hasNextLine() && loop) {
+            text = scanner.nextLine();
+            if (text.equals("endviewpoints")) {
+                loop = false;
+            } else if (!text.equals("viewpoints")) {
+                String[] split = text.split(" ");
+                createViewPoint(text);
+            }
+        }
     }
 }

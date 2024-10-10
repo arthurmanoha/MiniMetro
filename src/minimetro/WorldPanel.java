@@ -556,4 +556,25 @@ public class WorldPanel extends JPanel implements MouseListener,
             }
         }
     }
+
+    protected String getView() {
+        return trimIfLongerThan(x0) + " "
+                + trimIfLongerThan(y0) + " "
+                + trimIfLongerThan(Math.max(zoomLevel, 0.001));
+    }
+
+    protected void setView(ViewPoint v) {
+        this.x0 = v.getX();
+        this.y0 = v.getY();
+        this.zoomLevel = v.getZoom();
+    }
+
+    private String trimIfLongerThan(double val) {
+        double valAbs = Math.abs(val);
+        if (valAbs > 1000) {
+            return Math.floor(val) + "";
+        } else {
+            return (Math.floor(val * 1000)) / 1000 + "";
+        }
+    }
 }
