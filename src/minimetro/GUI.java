@@ -471,13 +471,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
         subVPPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         JButton newViewPointButton = new JButton("Add viewpoint");
         newViewPointButton.addActionListener((e) -> {
-            ViewpointPanel newViewPanel = new ViewpointPanel("Go to Location", panel);
-            newViewPanel.addPropertyChangeListener("deleteViewpointPanel", this);
-            subVPPanel.add(newViewPanel);
-
-            mainToolbar.revalidate();
-            Rectangle bounds = viewsPanel.getBounds();
-            viewsPanel.scrollRectToVisible(bounds);
+            createViewPoint();
         });
         viewsPanel.add(subVPPanel);
         viewsPanel.add(newViewPointButton);
@@ -499,6 +493,20 @@ public class GUI extends JFrame implements PropertyChangeListener {
         this.setSize(new Dimension(windowWidth, windowHeight));
         this.setVisible(true);
 
+    }
+
+    private void createViewPoint() {
+        createViewPoint("");
+    }
+
+    private void createViewPoint(String specifiedView) {
+        ViewpointPanel newViewPanel = new ViewpointPanel("Go", panel, specifiedView);
+        newViewPanel.addPropertyChangeListener("deleteViewpointPanel", this);
+        subVPPanel.add(newViewPanel);
+
+        mainToolbar.revalidate();
+        Rectangle bounds = viewsPanel.getBounds();
+        viewsPanel.scrollRectToVisible(bounds);
     }
 
     private void readSpeedLimit() {
@@ -541,6 +549,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
                     FileWriter writer = new FileWriter(file);
                     panel.save(writer);
                     world.save(writer);
+                    saveViewpoints(writer);
                     writer.close();
                 } catch (IOException e) {
                     System.out.println("Error writing to file.");
@@ -566,12 +575,14 @@ public class GUI extends JFrame implements PropertyChangeListener {
             int returnVal = fileChooser.showOpenDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
-                System.out.println("GUI Loading from file " + file.getAbsolutePath());
+
+                subVPPanel.removeAll();
 
                 scanner = new Scanner(file);
                 panel.load(scanner);
                 world.load(scanner);
-                repaint();
+                loadViewpoints(scanner);
+                revalidate();
             }
         } catch (FileNotFoundException ex) {
             // No config file, maybe create it here.
@@ -595,13 +606,42 @@ public class GUI extends JFrame implements PropertyChangeListener {
         Component[] allViewpoints = subVPPanel.getComponents();
         for (int rank = 0; rank < allViewpoints.length; rank++) {
             Component yolo = allViewpoints[rank];
-            if (yolo instanceof ViewpointPanel) {
-                ViewpointPanel viewpointPanel = (ViewpointPanel) yolo;
-                if (viewpointPanel.getId() == idToDelete) {
-                    subVPPanel.remove(yolo);
-                }
+            ViewpointPanel viewpointPanel = (ViewpointPanel) yolo;
+            if (viewpointPanel.getId() == idToDelete) {
+                subVPPanel.remove(yolo);
             }
         }
         revalidate();
+    }
+
+    private void saveViewpoints(FileWriter writer) {
+
+        try {
+            writer.write("viewpoints\n");
+
+            Component[] allViewpoints = subVPPanel.getComponents();
+            for (int rank = 0; rank < allViewpoints.length; rank++) {
+                Component yolo = allViewpoints[rank];
+                ViewpointPanel viewpointPanel = (ViewpointPanel) yolo;
+                viewpointPanel.save(writer);
+            }
+            writer.write("endviewpoints\n");
+        } catch (IOException ex) {
+            System.out.println("GUI error while writing viewpoints");
+        }
+    }
+
+    private void loadViewpoints(Scanner scanner) {
+        String text = "";
+        boolean loop = true;
+        while (scanner.hasNextLine() && loop) {
+            text = scanner.nextLine();
+            if (text.equals("endviewpoints")) {
+                loop = false;
+            } else if (!text.equals("viewpoints")) {
+                String[] split = text.split(" ");
+                createViewPoint(text);
+            }
+        }
     }
 }

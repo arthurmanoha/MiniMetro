@@ -190,15 +190,16 @@ public class WorldMap {
                 writer.write(linesList.get(key).toString() + "\n");
             }
 
+            writer.write("endmap\n");
+
         } catch (IOException e) {
             System.out.println("Error in saving worldmap.");
         }
     }
 
     protected void load(Scanner scanner) {
-        String text = "";
-        while (scanner.hasNextLine()) {
-            text = scanner.nextLine();
+        String text = scanner.nextLine();
+        while (scanner.hasNextLine() && !text.equals("endmap")) {
             String split[] = text.split(" |_");
             int locoId = Integer.valueOf(split[1]);
             TrainLine newLine = new TrainLine(locoId);
@@ -208,6 +209,7 @@ public class WorldMap {
                 newLine.addCell(station);
             }
             linesList.put(locoId, newLine);
+            text = scanner.nextLine();
         }
     }
 

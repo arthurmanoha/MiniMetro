@@ -2,6 +2,8 @@ package minimetro;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.FileWriter;
+import java.io.IOException;
 import javax.swing.InputVerifier;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -27,7 +29,7 @@ public class ViewpointPanel extends JPanel {
     private int id;
     private static int NB_TEXT_BUTTONS_CREATED = 0;
 
-    public ViewpointPanel(String text1, WorldPanel newWorldPanel) {
+    public ViewpointPanel(String text1, WorldPanel newWorldPanel, String newView) {
         super();
         id = NB_TEXT_BUTTONS_CREATED;
         NB_TEXT_BUTTONS_CREATED++;
@@ -48,7 +50,11 @@ public class ViewpointPanel extends JPanel {
         });
         this.add(overwriteButton);
         worldPanel = newWorldPanel;
-        viewPoint = new ViewPoint(worldPanel.getView());
+        if (newView.equals("")) {
+            viewPoint = new ViewPoint(worldPanel.getView());
+        } else {
+            viewPoint = new ViewPoint(newView);
+        }
 
         support = new PropertyChangeSupport(this);
 
@@ -66,6 +72,18 @@ public class ViewpointPanel extends JPanel {
 
     public String getText() {
         return b.getText();
+    }
+
+    public void save(FileWriter writer) {
+
+        String text = "";
+        try {
+            text += viewPoint.getX() + " " + viewPoint.getY() + " " + viewPoint.getZoom();
+            text += "\n";
+            writer.write(text);
+        } catch (IOException ex) {
+            System.out.println("Error in saving viewpointPanel");
+        }
     }
 
     private static class CustomInputVerifier extends InputVerifier {

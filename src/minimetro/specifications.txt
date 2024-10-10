@@ -14,8 +14,6 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
-Viewpoints shall be saved to file.
-Viewpoints shall be loaded from file.
 Links between cars shall be saved from file.
 Links between cars shall be loaded from file.
 The menu sidebar shall be scrolled with a mousewheel click and a mouse movement.
@@ -98,6 +96,8 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Viewpoints are saved to file.
+Viewpoints are loaded from file.
 Viewpoints can be deleted.
 The user shall be able to record and name the current viewpoint which shall be displayed in a list.
 A right click on a SwitchCell shall toggle the switch.
