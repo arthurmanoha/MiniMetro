@@ -14,6 +14,7 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+End of limit sign on the WorldPanel shall be drawn using the black and white sign.
 Links between cars shall be saved from file.
 Links between cars shall be loaded from file.
 The menu sidebar shall be scrolled with a mousewheel click and a mouse movement.
@@ -22,6 +23,8 @@ Splitscreen shall allow the player to view different parts of the world in sub-p
 Smooth out cars movement in curves.
 A switch that does not have its 3 connections yet shall display part of each existing connection.
 Pressing Control increases the zoom factor.
+Toroidal map - pacman-style with day/night cycle.
+Spherical map with hexagonal tiles.
 Add a tool to automatically remove every non-connected piece of tracks.
 The mouse indicator shall change with the GUI tool currently active.
 Add cells with two parallel sections of track, with 1-to-2 parallel switches, and train collisions.
@@ -96,6 +99,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Menu revamp: small buttons with icons are displayed on the WorldPanel, former toolbar is removed.
 Viewpoints are saved to file.
 Viewpoints are loaded from file.
 Viewpoints can be deleted.

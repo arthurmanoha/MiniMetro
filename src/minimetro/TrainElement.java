@@ -78,7 +78,7 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         linearSpeed = 0;
         size = 0.03;
         mass = 1;
-        isEngineActive = false;
+        isEngineActive = true;
         isBraking = false;
         currentSpeedLimit = -1;
         stopTimerDuration = -1;
