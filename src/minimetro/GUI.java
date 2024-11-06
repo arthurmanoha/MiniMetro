@@ -6,7 +6,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -19,7 +18,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Scanner;
-import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -112,7 +110,6 @@ public class GUI extends JFrame implements PropertyChangeListener {
                     FileWriter writer = new FileWriter(file);
                     panel.save(writer);
                     world.save(writer);
-                    saveViewpoints(writer);
                     writer.close();
                 } catch (IOException e) {
                     System.out.println("Error writing to file.");
@@ -232,6 +229,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
         createButton("menu_load.png", "load", 9, 1);
         createButton("stop_10.png", GuiTool.STOP_TIMER.toString(), 10, 0, 1, "10");
         createButton("stop_30.png", GuiTool.STOP_TIMER.toString(), 10, 1, 1, "30");
+        createButton("generate_terrain.png", "generateTerrain", 11, 0);
 
         panel.setLayout(new BorderLayout());
         panel.add(buttonPanel, BorderLayout.SOUTH);
@@ -340,4 +338,9 @@ public class GUI extends JFrame implements PropertyChangeListener {
     public void removePassengers() {
         world.removePassengers();
     }
+
+    public void generateTerrain() {
+        world.generateTerrain();
+    }
+
 }

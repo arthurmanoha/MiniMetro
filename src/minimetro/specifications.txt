@@ -14,6 +14,9 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Add scales and amplitudes for Perlin noise.
+Add a smoother interpolation for Perlin noise.
+Adapt the viewpoints to the new menu.
 End of limit sign on the WorldPanel shall be drawn using the black and white sign.
 Links between cars shall be saved from file.
 Links between cars shall be loaded from file.
@@ -99,6 +102,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Implemented Perlin noise - single scale.
 Menu revamp: small buttons with icons are displayed on the WorldPanel, former toolbar is removed.
 Viewpoints are saved to file.
 Viewpoints are loaded from file.

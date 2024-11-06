@@ -1008,4 +1008,8 @@ public class Cell {
     protected ArrayList<TransferringTrain> getTrainsLeavingCell() {
         return this.trainsLeavingCell;
     }
+
+    public void setBackground(Color newColor) {
+        this.color = newColor;
+    }
 }

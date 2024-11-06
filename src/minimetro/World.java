@@ -1296,4 +1296,8 @@ public class World {
             ((SwitchCell) c).toggle();
         }
     }
+
+    public void generateTerrain() {
+        System.out.println("World.generateTerrain");
+    }
 }
