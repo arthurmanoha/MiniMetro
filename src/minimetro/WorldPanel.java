@@ -1,5 +1,6 @@
 package minimetro;
 
+import colorramp.ColorRamp;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -16,6 +17,7 @@ import static java.lang.Double.max;
 import static java.lang.Double.min;
 import java.util.Scanner;
 import javax.swing.JPanel;
+import static minimetro.Cell.cellSize;
 
 /**
  *
@@ -44,14 +46,19 @@ public class WorldPanel extends JPanel implements MouseListener,
     private int straightOriginRow;
     private int straightOriginCol;
 
+    private ColorRamp colorRamp;
+    private boolean mustDisplayTerrain;
+
+    private Color defaultBackgroundColor;
+
     public WorldPanel(World w) {
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = 0.804;
+        zoomLevel = 1.0;
         zoomLevelFactor = 1.1;
-        x0 = 101;
-        y0 = -15176;
+        x0 = 78;
+        y0 = 29;
         currentTool = GuiTool.NO_TOOL;
         prevMouseX = 0;
         prevMouseY = 0;
@@ -67,6 +74,16 @@ public class WorldPanel extends JPanel implements MouseListener,
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
         this.addMouseWheelListener(this);
+
+        colorRamp = new ColorRamp();
+        colorRamp.addValue(-0.2, Color.magenta);
+        colorRamp.addValue(-0.1, Color.yellow);
+        colorRamp.addValue(0, Color.blue);
+        colorRamp.addValue(0.1, Color.green);
+        colorRamp.addValue(0.2, Color.red);
+        defaultBackgroundColor = Color.gray;
+
+        mustDisplayTerrain = false;
     }
 
     @Override
@@ -76,18 +93,44 @@ public class WorldPanel extends JPanel implements MouseListener,
         graphicsCurrentHeight = g.getClipBounds().height;
 
         // Erase the whole panel
-        g.setColor(Color.gray);
+        g.setColor(defaultBackgroundColor);
         g.fillRect(0, 0, graphicsCurrentWidth, graphicsCurrentHeight);
 
-        for (Cell c : world.getAllCells()) {
-            c.paintBackground(g, x0, y0, zoomLevel);
+        // Paint cell background
+        for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
+            for (int row = getMinVisibleRow(); row <= getMaxVisibleRow(); row++) {
+
+                double xCell = col * Cell.cellSize;
+                double yCell = (world.getNbRows() - row - 1) * Cell.cellSize;
+                if (mustDisplayTerrain) {
+
+                    double altitude = world.getAltitude(col, row);
+                    g.setColor(colorRamp.getValue(altitude));
+                } else {
+                    Cell c = world.getCell(row, col);
+                    if (c != null) {
+                        c.paintBackground(g, x0, y0, zoomLevel);
+                    }
+                }
+                final double xApp = xCell * zoomLevel + x0;
+                final double yApp = g.getClipBounds().height - (yCell * zoomLevel + y0);
+                final double appSize = zoomLevel * cellSize;
+
+                g.fillRect((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) appSize + 1, (int) appSize + 1);
+                if (!mustDisplayTerrain) {
+                    g.setColor(defaultBackgroundColor);
+                    g.drawLine((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) (xApp + appSize / 2), (int) (yApp - appSize / 2));
+                }
+            }
         }
+
         for (Cell c : world.getAllCells()) {
             c.paintForeground(g, x0, y0, zoomLevel);
         }
 
-        paintCellBorders(g);
-
+        if (!mustDisplayTerrain) {
+            paintCellBorders(g);
+        }
         paintStraightTracksPossibilities(g);
 
         // Paint the train links
@@ -576,5 +619,10 @@ public class WorldPanel extends JPanel implements MouseListener,
         } else {
             return (Math.floor(val * 1000)) / 1000 + "";
         }
+    }
+
+    protected void toggleDisplayTerrain() {
+        mustDisplayTerrain = !mustDisplayTerrain;
+        repaint();
     }
 }

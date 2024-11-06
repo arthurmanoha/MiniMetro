@@ -1,0 +1,101 @@
+package minimetro;
+
+import java.util.Random;
+
+/**
+ *
+ * @author arthu
+ */
+public class PerlinNoise {
+
+    private static final long SEED = 264305296l;
+    private static Random r = new Random(SEED);
+
+    // The largest spatial period of the noise, i.e. the smallest frequency
+    private double largestSpatialPeriod;
+
+    public PerlinNoise(double initLargestSpatialPeriod) {
+        largestSpatialPeriod = initLargestSpatialPeriod;
+    }
+
+    public double getNoise(double x, double y) {
+        double result = 0;
+        double spatialPeriod = largestSpatialPeriod;
+        double divisor = 1;
+        for (int level = 0; level < 6; level++) {
+            result += getNoise(x, y, spatialPeriod) / divisor;
+            spatialPeriod = spatialPeriod / 2;
+            divisor = divisor * 2;
+        }
+        return result;
+    }
+
+    public double getNoise(double x, double y, double currentScale) {
+
+        // Position of the cell in the noise grid
+        int perlinCol = (int) (x / currentScale);
+        int perlinRow = (int) (y / currentScale);
+
+        double dotSW = dotprod(perlinRow, perlinCol, x, y, currentScale);
+        double dotSE = dotprod(perlinRow, perlinCol + 1, x, y, currentScale);
+        double dotNW = dotprod(perlinRow + 1, perlinCol, x, y, currentScale);
+        double dotNE = dotprod(perlinRow + 1, perlinCol + 1, x, y, currentScale);
+
+        // Coordinates of the point within the Perlin cell, remapped from 0 to 1.
+        double xP = x / currentScale - perlinCol;
+        double yP = y / currentScale - perlinRow;
+
+        // Interpolate between the 4 dot products
+        // The square ABCD represents the points NW, NE, SE, SW
+        // Interpolation is done on segments [AB] (north segment) and [DC] (south segment)
+        // South:
+        double f_xp_0 = interpolate(xP, dotSW, dotSE);
+        // North:
+        double f_xp_1 = interpolate(xP, dotNW, dotNE);
+
+        // Last step of the interpolation is done between (xP, 0) and (xP, 1)
+        double result = interpolate(yP, f_xp_0, f_xp_1);
+        return result;
+    }
+
+    /**
+     * Compute the dot product between the gradient on the Perlin grid at (row,
+     * col) and the offset vector to the (x, y) point.
+     */
+    public double dotprod(int row, int col, double x, double y, double scale) {
+        // Offset is in [-1,0]
+        double offsetX = ((col) * scale - x) / scale;
+        double offsetY = ((row) * scale - y) / scale;
+
+        double gradX = getGradX(row, col);
+        double gradY = getGradY(row, col);
+
+        // dotProd in in [-1, 1]
+        double dotProd = offsetX * gradX + offsetY * gradY;
+        return dotProd;
+    }
+
+    public double getGradX(int row, int col) {
+        r.setSeed(SEED * 73 * (row + 23) * (col + 37));
+        return r.nextDouble() - 0.5;
+    }
+
+    public double getGradY(int row, int col) {
+        r.setSeed(SEED * 19 * (row + 13) * (col + 19));
+        return r.nextDouble() - 0.5;
+    }
+
+    /**
+     * Perform an interpolation.
+     *
+     * @param x the argument, between 0 and 1
+     * @param val0 the value of the function when interpolated at zero
+     * @param val1 the value of the function when interpolated at one
+     * @return the value of the function when interpolated at @param x
+     */
+    public double interpolate(double x, double val0, double val1) {
+
+        // Linear interpolation
+        return x * val1 + (1 - x) * val0;
+    }
+}
