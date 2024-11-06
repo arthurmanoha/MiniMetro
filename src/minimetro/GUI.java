@@ -229,7 +229,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
         createButton("menu_load.png", "load", 9, 1);
         createButton("stop_10.png", GuiTool.STOP_TIMER.toString(), 10, 0, 1, "10");
         createButton("stop_30.png", GuiTool.STOP_TIMER.toString(), 10, 1, 1, "30");
-        createButton("generate_terrain.png", "generateTerrain", 11, 0);
+        createButton("generate_terrain.png", "displayTerrain", 11, 0);
 
         panel.setLayout(new BorderLayout());
         panel.add(buttonPanel, BorderLayout.SOUTH);
@@ -339,8 +339,8 @@ public class GUI extends JFrame implements PropertyChangeListener {
         world.removePassengers();
     }
 
-    public void generateTerrain() {
-        world.generateTerrain();
+    public void displayTerrain() {
+        panel.toggleDisplayTerrain();
     }
 
 }

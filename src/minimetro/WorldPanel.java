@@ -1,5 +1,6 @@
 package minimetro;
 
+import colorramp.ColorRamp;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -14,7 +15,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import static java.lang.Double.max;
 import static java.lang.Double.min;
-import java.util.Random;
 import java.util.Scanner;
 import javax.swing.JPanel;
 import static minimetro.Cell.cellSize;
@@ -46,24 +46,19 @@ public class WorldPanel extends JPanel implements MouseListener,
     private int straightOriginRow;
     private int straightOriginCol;
 
-    long seed = 264305296l;
-    int perlinCellSize = 7;
-    double scale = perlinCellSize * Cell.cellSize;
-    private Random r = new Random(seed);
+    private ColorRamp colorRamp;
+    private boolean mustDisplayTerrain;
 
-    private double maxDotProd = Double.MIN_VALUE;
-    private double minDotProd = Double.MAX_VALUE;
-    private double maxNoise = Double.MIN_VALUE;
-    private double minNoise = Double.MAX_VALUE;
+    private Color defaultBackgroundColor;
 
     public WorldPanel(World w) {
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = 0.1195;//0.04607607685413911;
+        zoomLevel = 1.0;
         zoomLevelFactor = 1.1;
-        x0 = 169;//97;
-        y0 = 71;//18;
+        x0 = 78;
+        y0 = 29;
         currentTool = GuiTool.NO_TOOL;
         prevMouseX = 0;
         prevMouseY = 0;
@@ -79,6 +74,16 @@ public class WorldPanel extends JPanel implements MouseListener,
         this.addMouseListener(this);
         this.addMouseMotionListener(this);
         this.addMouseWheelListener(this);
+
+        colorRamp = new ColorRamp();
+        colorRamp.addValue(-0.2, Color.magenta);
+        colorRamp.addValue(-0.1, Color.yellow);
+        colorRamp.addValue(0, Color.blue);
+        colorRamp.addValue(0.1, Color.green);
+        colorRamp.addValue(0.2, Color.red);
+        defaultBackgroundColor = Color.gray;
+
+        mustDisplayTerrain = false;
     }
 
     @Override
@@ -88,7 +93,7 @@ public class WorldPanel extends JPanel implements MouseListener,
         graphicsCurrentHeight = g.getClipBounds().height;
 
         // Erase the whole panel
-        g.setColor(Color.gray.darker().darker());
+        g.setColor(defaultBackgroundColor);
         g.fillRect(0, 0, graphicsCurrentWidth, graphicsCurrentHeight);
 
         // Paint cell background
@@ -97,28 +102,35 @@ public class WorldPanel extends JPanel implements MouseListener,
 
                 double xCell = col * Cell.cellSize;
                 double yCell = (world.getNbRows() - row - 1) * Cell.cellSize;
+                if (mustDisplayTerrain) {
 
-                double noise = getNoise(col, row);
-                int color = (int) ((noise + 0.5) * 255);
-                if (color > 255 || color < 0) {
-                    color = 128;
+                    double altitude = world.getAltitude(col, row);
+                    g.setColor(colorRamp.getValue(altitude));
+                } else {
+                    Cell c = world.getCell(row, col);
+                    if (c != null) {
+                        c.paintBackground(g, x0, y0, zoomLevel);
+                    }
                 }
-                g.setColor(new Color(color, 0, 255 - color));
-
                 final double xApp = xCell * zoomLevel + x0;
                 final double yApp = g.getClipBounds().height - (yCell * zoomLevel + y0);
                 final double appSize = zoomLevel * cellSize;
 
                 g.fillRect((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) appSize + 1, (int) appSize + 1);
+                if (!mustDisplayTerrain) {
+                    g.setColor(defaultBackgroundColor);
+                    g.drawLine((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) (xApp + appSize / 2), (int) (yApp - appSize / 2));
+                }
             }
         }
 
-//        paintLocalGradients(g);
         for (Cell c : world.getAllCells()) {
             c.paintForeground(g, x0, y0, zoomLevel);
         }
 
-        paintCellBorders(g);
+        if (!mustDisplayTerrain) {
+            paintCellBorders(g);
+        }
         paintStraightTracksPossibilities(g);
 
         // Paint the train links
@@ -138,39 +150,6 @@ public class WorldPanel extends JPanel implements MouseListener,
                 (int) (world.getNbCols() * Cell.cellSize * zoomLevel),
                 (int) (world.getNbRows() * Cell.cellSize * zoomLevel));
 
-    }
-
-    /**
-     * Paint local gradients on perlin nodes (the corners of one in every n
-     * cells)
-     *
-     * @param g
-     */
-    public void paintLocalGradients(Graphics g) {
-        g.setColor(Color.gray);
-        for (int col = getMinVisibleCol(); col <= getMaxVisibleCol() + 1; col++) {
-            if ((col / perlinCellSize) * perlinCellSize == col) {
-                for (int row = getMinVisibleRow(); row <= getMaxVisibleRow() + 1; row++) {
-                    if ((row / perlinCellSize) * perlinCellSize == row) {
-
-                        double xCell = (col - 0.5) * Cell.cellSize;
-                        double yCell = (world.getNbRows() - (row + 0.5) - 1) * Cell.cellSize;
-                        int perlinRow = row / perlinCellSize;
-                        int perlinCol = col / perlinCellSize;
-                        double gradX = getGradX(perlinRow, perlinCol);
-                        double gradY = getGradY(perlinRow, perlinCol);
-
-                        final double xApp = xCell * zoomLevel + x0;
-                        final double yApp = g.getClipBounds().height - (yCell * zoomLevel + y0);
-
-                        double apparentGradScale = 50;
-                        g.drawLine((int) (xApp), (int) (yApp),
-                                (int) (xApp + gradX * apparentGradScale),
-                                (int) (yApp - gradY * apparentGradScale));
-                    }
-                }
-            }
-        }
     }
 
     private void paintStraightTracksPossibilities(Graphics g) {
@@ -244,20 +223,16 @@ public class WorldPanel extends JPanel implements MouseListener,
 
         // Vertical lines
         for (int col = colMinVisible; col <= colMaxVisible; col++) {
-            if ((col / perlinCellSize) * perlinCellSize == col) {
-                double xCol = (col - 0.5) * Cell.cellSize;
-                xApp = (int) (x0 + xCol * zoomLevel);
-                g.drawLine(xApp, (int) max(0, yMin), xApp, (int) max(0, yMax));
-            }
+            double xCol = (col - 0.5) * Cell.cellSize;
+            xApp = (int) (x0 + xCol * zoomLevel);
+            g.drawLine(xApp, (int) max(0, yMin), xApp, (int) max(0, yMax));
         }
 
         // Horizontal lines
         for (int row = rowMinVisible; row <= rowMaxVisible; row++) {
-            if (((row - 1) / perlinCellSize) * perlinCellSize == (row - 1)) {
-                double yRow = (world.getNbRows() - row - 0.5) * Cell.cellSize;
-                yApp = (int) (graphicsCurrentHeight - (y0 + yRow * zoomLevel));
-                g.drawLine((int) max(0, xMin), yApp, (int) min(xMax, gWidth), yApp);
-            }
+            double yRow = (world.getNbRows() - row - 0.5) * Cell.cellSize;
+            yApp = (int) (graphicsCurrentHeight - (y0 + yRow * zoomLevel));
+            g.drawLine((int) max(0, xMin), yApp, (int) min(xMax, gWidth), yApp);
         }
     }
 
@@ -646,75 +621,8 @@ public class WorldPanel extends JPanel implements MouseListener,
         }
     }
 
-    private double getGradX(int row, int col) {
-        r.setSeed(seed * 73 * (row + 23) * (col + 37));
-        return r.nextDouble() - 0.5;
-    }
-
-    private double getGradY(int row, int col) {
-        r.setSeed(seed * 19 * (row + 13) * (col + 19));
-        return r.nextDouble() - 0.5;
-    }
-
-    private double getNoise(int col, int row) {
-
-        double x = col * Cell.cellSize;
-        double y = (world.getNbRows() - row - 1) * Cell.cellSize;
-
-        // Position of the cell in the noise grid
-        int perlinCol = (int) (x / scale);
-        int perlinRow = (int) (y / scale);
-
-        double dotSW = dotprod(perlinRow, perlinCol, x, y);
-        double dotSE = dotprod(perlinRow, perlinCol + 1, x, y);
-        double dotNW = dotprod(perlinRow + 1, perlinCol, x, y);
-        double dotNE = dotprod(perlinRow + 1, perlinCol + 1, x, y);
-
-        // Coordinates of the point within the Perlin cell, remapped from 0 to 1.
-        double xP = x / scale - perlinCol;
-        double yP = y / scale - perlinRow;
-
-        // Interpolate between the 4 dot products
-        // The square ABCD represents the points NW, NE, SE, SW
-        // Interpolation is done on segments [AB] (north segment) and [DC] (south segment)
-        // South:
-        double f_xp_0 = interpolate(xP, dotSW, dotSE);
-        // North:
-        double f_xp_1 = interpolate(xP, dotNW, dotNE);
-
-        // Last step of the interpolation is done between (xP, 0) and (xP, 1)
-        double result = interpolate(yP, f_xp_0, f_xp_1);
-        return result;
-    }
-
-    /**
-     * Perform an interpolation.
-     *
-     * @param x the argument, between 0 and 1
-     * @param val0 the value of the function when interpolated at zero
-     * @param val1 the value of the function when interpolated at one
-     * @return the value of the function when interpolated at @param x
-     */
-    private double interpolate(double x, double val0, double val1) {
-
-        // Linear interpolation
-        return x * val1 + (1 - x) * val0;
-    }
-
-    /**
-     * Compute the dot product between the gradient on the Perlin grid at (row,
-     * col) and the offset vector to the (x, y) point.
-     */
-    private double dotprod(int row, int col, double x, double y) {
-        // Offset is in [-1,0]
-        double offsetX = ((col) * scale - x) / scale;
-        double offsetY = ((row) * scale - y) / scale;
-
-        double gradX = getGradX(row, col);
-        double gradY = getGradY(row, col);
-
-        // dotProd in in [-1, 1]
-        double dotProd = offsetX * gradX + offsetY * gradY;
-        return dotProd;
+    protected void toggleDisplayTerrain() {
+        mustDisplayTerrain = !mustDisplayTerrain;
+        repaint();
     }
 }

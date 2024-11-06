@@ -46,6 +46,10 @@ public class World {
     private ArrayList<Cell> newlyActiveCells;
     private double simulationDt; // Time elapsed in world during one simulation step.
 
+    private PerlinNoise noiseGenerator;
+    int perlinCellSize;
+    double perlinScale;
+
     // Links between TrainElements;
     protected ArrayList<TrainLink> links;
 
@@ -81,6 +85,10 @@ public class World {
         nbCols = newNbCols;
         initializeGrid();
         isSettingLongDistanceTracks = false;
+
+        perlinCellSize = 16;
+        perlinScale = perlinCellSize * Cell.cellSize;
+        noiseGenerator = new PerlinNoise(perlinScale);
     }
 
     /**
@@ -1299,5 +1307,20 @@ public class World {
 
     public void generateTerrain() {
         System.out.println("World.generateTerrain");
+    }
+
+    /**
+     * Get the altitude at a specific location.
+     *
+     * @param col
+     * @param row
+     * @return the altitude at that location
+     */
+    protected double getAltitude(int col, int row) {
+
+        double xCell = col * Cell.cellSize;
+        double yCell = (getNbRows() - row - 1) * Cell.cellSize;
+
+        return noiseGenerator.getNoise(xCell, yCell);
     }
 }
