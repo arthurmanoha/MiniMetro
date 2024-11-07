@@ -28,14 +28,18 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.SwingUtilities;
 
 /**
  *
  * @author arthu
  */
 public class GUI extends JFrame implements PropertyChangeListener {
+
+    private static String configFile = "config.txt";
 
     WorldPanel panel;
     JPanel buttonPanel;
@@ -73,6 +77,43 @@ public class GUI extends JFrame implements PropertyChangeListener {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(new Dimension(windowWidth, windowHeight));
         this.setVisible(true);
+        autoLoad();
+    }
+
+    /**
+     * Automatically load a saved file if the configuration file exists and
+     * specifies it.
+     *
+     */
+    private void autoLoad() {
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                // Step one: read the config file.
+                File f = new File(configFile);
+                try {
+                    Scanner scanner = new Scanner(f);
+
+                    String savedFilesFolder = scanner.nextLine();
+                    System.out.println("GUI autoload: saved files at " + savedFilesFolder);
+                    String autoLoadedFile = scanner.nextLine();
+                    System.out.println("GUI autoload: autoloading " + autoLoadedFile);
+
+                    File savedWorld = new File(savedFilesFolder + autoLoadedFile);
+                    // Step two: read the world file.
+                    scanner = new Scanner(savedWorld);
+
+                    panel.load(scanner);
+                    world.load(scanner);
+                    revalidate();
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(World.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (NoSuchElementException ex) {
+                    System.out.println("No correct autofile was specified.");
+                }
+            }
+        });
     }
 
     private void createViewPoint() {
@@ -128,7 +169,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
         try {
             Scanner scanner = new Scanner(configFile);
             String text = "";
-            while (scanner.hasNextLine()) {
+            if (scanner.hasNextLine()) {
                 text = scanner.nextLine();
             }
             JFileChooser fileChooser = new JFileChooser(text);

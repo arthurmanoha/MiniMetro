@@ -3,6 +3,8 @@ package minimetro;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import static java.lang.Math.floor;
@@ -12,6 +14,8 @@ import java.util.Random;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
 import static minimetro.CardinalPoint.*;
 
@@ -1323,4 +1327,28 @@ public class World {
 
         return noiseGenerator.getNoise(xCell, yCell);
     }
+//
+//    /**
+//     * Automatically load a saved file if the configuration file exists and
+//     * specifies it.
+//     *
+//     */
+//    private void autoLoad() {
+//
+//        // Step one: read the config file.
+//        File f = new File("config.txt");
+//        Scanner scanner = new Scanner(configFile);
+//        String text = "";
+//        // Go to the second line, which specifies which file we must load.
+//        text = scanner.nextLine();
+//        text = scanner.nextLine();
+//        File savedWorld = new File(text);
+//        try {
+//            // Step two: read the world file.
+//            scanner = new Scanner(savedWorld);
+//
+//        } catch (FileNotFoundException ex) {
+//            Logger.getLogger(World.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//    }
 }
