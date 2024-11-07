@@ -86,7 +86,7 @@ public class WorldPanel extends JPanel implements MouseListener,
         colorRamp.addValue(0.3, Color.white);
         defaultBackgroundColor = Color.gray;
 
-        mustDisplayTerrain = false;
+        mustDisplayTerrain = true;
     }
 
     @Override
