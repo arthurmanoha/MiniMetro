@@ -39,7 +39,8 @@ import javax.swing.SwingUtilities;
  */
 public class GUI extends JFrame implements PropertyChangeListener {
 
-    private static String configFile = "config.txt";
+    private String configFileName = "config.txt";
+    private File configFile;
 
     WorldPanel panel;
     JPanel buttonPanel;
@@ -77,6 +78,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setSize(new Dimension(windowWidth, windowHeight));
         this.setVisible(true);
+        configFile = new File(configFileName);
         autoLoad();
     }
 
@@ -91,14 +93,11 @@ public class GUI extends JFrame implements PropertyChangeListener {
             @Override
             public void run() {
                 // Step one: read the config file.
-                File f = new File(configFile);
                 try {
-                    Scanner scanner = new Scanner(f);
+                    Scanner scanner = new Scanner(configFile);
 
                     String savedFilesFolder = scanner.nextLine();
-                    System.out.println("GUI autoload: saved files at " + savedFilesFolder);
                     String autoLoadedFile = scanner.nextLine();
-                    System.out.println("GUI autoload: autoloading " + autoLoadedFile);
 
                     File savedWorld = new File(savedFilesFolder + autoLoadedFile);
                     // Step two: read the world file.
@@ -131,17 +130,16 @@ public class GUI extends JFrame implements PropertyChangeListener {
     }
 
     public void save() {
-        System.out.println("GUI Saving to file.");
 
         // Read the config file to know where to look
-        File configFile = new File("config.txt");
         try {
             Scanner scanner = new Scanner(configFile);
             String text = "";
-            while (scanner.hasNextLine()) {
-                text = scanner.nextLine();
+            String savedFilesFolder = "";
+            if (scanner.hasNextLine()) {
+                savedFilesFolder = scanner.nextLine();
             }
-            JFileChooser fileChooser = new JFileChooser(text);
+            JFileChooser fileChooser = new JFileChooser(savedFilesFolder);
             fileChooser.setDialogTitle("Save...");
             int returnVal = fileChooser.showOpenDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -157,15 +155,13 @@ public class GUI extends JFrame implements PropertyChangeListener {
                 }
             }
         } catch (FileNotFoundException ex) {
-            // No config file, maybe create it here.
-            System.out.println("Cannot save, no config file.");
+            System.out.println("File <" + configFileName + "> not found.");
         }
     }
 
     public void load() {
         System.out.println("GUI.load()");
         // Read the config file to know where to look
-        File configFile = new File("config.txt");
         try {
             Scanner scanner = new Scanner(configFile);
             String text = "";
