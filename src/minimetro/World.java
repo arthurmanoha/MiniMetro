@@ -77,7 +77,7 @@ public class World {
     private ArrayList<StationCell> stationList;
 
     public World() {
-        this(200, 200);
+        this(1000, 1000);
     }
 
     public World(int newNbRows, int newNbCols) {
