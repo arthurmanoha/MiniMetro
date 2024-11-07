@@ -15,6 +15,12 @@ TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
 Add a smoother interpolation for Perlin noise.
+Add a configuration file that specifies the initial size of the terrain and the file to load at startup.
+Tracks shall not be laid on water.
+Tracks shall not be laid above a certain altitude.
+Brigdes can be built over water and support tracks.
+Tunnels can be dug underground and support tracks.
+Stations shall not be placed on water.
 Adapt the viewpoints to the new menu.
 End of limit sign on the WorldPanel shall be drawn using the black and white sign.
 Links between cars shall be saved from file.
@@ -101,6 +107,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Display stations over terrain.
 Extracted the Perlin noise generator to its own file
 Added scales and amplitudes for Perlin noise.
 Implemented Perlin noise - single scale.

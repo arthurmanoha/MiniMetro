@@ -84,36 +84,14 @@ public class Cell {
     }
 
     /**
-     * Paint the cell with its background and foreground.
+     * Paint the cell's background.
      */
     protected void paintBackground(Graphics g, double x0, double y0, double zoom) {
-
-        // On-screen coordinates of the center of the cell:
-        final double xApp = absolutePosition.x * zoom + x0;
-        final double yApp = g.getClipBounds().height - (absolutePosition.y * zoom + y0);
-        final double appSize = zoom * cellSize;
-
-        final double activeBorderSize = 0.05;
-        if (DISPLAY_ACTIVE_BORDERS) {
-            // Draw background
-            if (isActive) {
-                g.setColor(Color.cyan);
-            } else {
-                g.setColor(this.color);
-            }
-            // Border
-            g.fillRect((int) (xApp - appSize * 0.5), (int) (yApp - appSize * 0.5), (int) (appSize), (int) (appSize));
-            // Center
-            g.setColor(this.color);
-            g.fillRect((int) (xApp - appSize * (0.5 - activeBorderSize)), (int) (yApp - appSize * (0.5 - activeBorderSize)),
-                    (int) (appSize * (1 - 2 * activeBorderSize)), (int) (appSize * (1 - 2 * activeBorderSize)));
-        } else {
-            g.setColor(this.color);
-            g.fillRect((int) (xApp - appSize * 0.5), (int) (yApp - appSize * 0.5),
-                    (int) appSize, (int) appSize);
-        }
     }
 
+    /**
+     * Paint the cell's foreground.
+     */
     protected void paintForeground(Graphics g, double x0, double y0, double zoom) {
         // On-screen coordinates of the center of the cell:
         final double xApp = absolutePosition.x * zoom + x0;

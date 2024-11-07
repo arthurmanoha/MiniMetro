@@ -76,11 +76,14 @@ public class WorldPanel extends JPanel implements MouseListener,
         this.addMouseWheelListener(this);
 
         colorRamp = new ColorRamp();
-        colorRamp.addValue(-0.2, Color.magenta);
-        colorRamp.addValue(-0.1, Color.yellow);
-        colorRamp.addValue(0, Color.blue);
-        colorRamp.addValue(0.1, Color.green);
-        colorRamp.addValue(0.2, Color.red);
+
+        double seaLevel = -0.05;
+        double delta = 0.001;
+        colorRamp.addValue(seaLevel - delta, Color.blue);
+        colorRamp.addValue(seaLevel, Color.green);
+        colorRamp.addValue(0.18, Color.green.darker());
+        colorRamp.addValue(0.2, Color.gray);
+        colorRamp.addValue(0.3, Color.white);
         defaultBackgroundColor = Color.gray;
 
         mustDisplayTerrain = false;
@@ -102,24 +105,18 @@ public class WorldPanel extends JPanel implements MouseListener,
 
                 double xCell = col * Cell.cellSize;
                 double yCell = (world.getNbRows() - row - 1) * Cell.cellSize;
-                if (mustDisplayTerrain) {
-
-                    double altitude = world.getAltitude(col, row);
-                    g.setColor(colorRamp.getValue(altitude));
-                } else {
-                    Cell c = world.getCell(row, col);
-                    if (c != null) {
-                        c.paintBackground(g, x0, y0, zoomLevel);
-                    }
-                }
                 final double xApp = xCell * zoomLevel + x0;
                 final double yApp = g.getClipBounds().height - (yCell * zoomLevel + y0);
                 final double appSize = zoomLevel * cellSize;
 
-                g.fillRect((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) appSize + 1, (int) appSize + 1);
-                if (!mustDisplayTerrain) {
-                    g.setColor(defaultBackgroundColor);
-                    g.drawLine((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) (xApp + appSize / 2), (int) (yApp - appSize / 2));
+                if (mustDisplayTerrain) {
+
+                    double altitude = world.getAltitude(col, row);
+                    g.setColor(colorRamp.getValue(altitude));
+                    g.fillRect((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) appSize + 1, (int) appSize + 1);
+                }
+                Cell c = world.getCell(row, col);
+                if (c != null) {
                 }
             }
         }

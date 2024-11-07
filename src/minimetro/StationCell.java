@@ -84,12 +84,18 @@ public class StationCell extends Cell {
 
     @Override
     protected void paintForeground(Graphics g, double x0, double y0, double zoom) {
-        super.paintForeground(g, x0, y0, zoom);
 
         // On-screen coordinates of the center of the cell:
         final double xApp = absolutePosition.x * zoom + x0;
         final double yApp = g.getClipBounds().height - (absolutePosition.y * zoom + y0);
         final double appSize = zoom * cellSize;
+
+        g.setColor(Color.white);
+        g.fillRect((int) (xApp - appSize * 0.5), (int) (yApp - appSize * 0.5),
+                (int) appSize, (int) appSize);
+        g.setColor(this.color);
+        g.fillRect((int) (xApp - appSize * 0.5 + 3), (int) (yApp - appSize * 0.5 + 3),
+                (int) appSize - 6, (int) appSize - 6);
 
         g.setColor(Color.black);
         g.setFont(new Font("helvetica", Font.PLAIN, (int) (max(10, appSize / 15))));
@@ -100,6 +106,8 @@ public class StationCell extends Cell {
         for (Passenger p : passengerList) {
             p.paint(g, x0, y0, zoom);
         }
+
+        super.paintForeground(g, x0, y0, zoom);
     }
 
     protected void addPassenger(Passenger passenger) {
