@@ -5,7 +5,6 @@ KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNO
 ---------------------------------------------------------------------------------------------------
 
 Passenger-related NPE with the chunk structure.
-Altitude for cells with a negative row or column is incorrect.
 Speed indicators may be placed on switch cells but are not saved and loaded.
 World map is not properly updated on station removal.
 A train that crosses itself in an intersection is not loaded properly.
@@ -116,6 +115,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Altitude for cells with a negative row or column is incorrect.
 Chunks shall be loaded via a click using the "chunk" tool.
 Map is not explored at first, unexplored chunks are not visible.
 Smooth display at large scale: background rendering shall be done using chunks.
