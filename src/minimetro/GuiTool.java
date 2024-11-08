@@ -7,6 +7,7 @@ package minimetro;
  */
 enum GuiTool {
     NO_TOOL, // Default uninitialized tool
+    LOAD_CHUNK,
     TRACK,
     TRACK_REMOVAL,
     STATION,

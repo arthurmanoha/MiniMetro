@@ -3,8 +3,6 @@ package minimetro;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import static java.lang.Math.floor;
@@ -14,10 +12,9 @@ import java.util.Random;
 import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
 import static minimetro.CardinalPoint.*;
+import static minimetro.ChunkMatrix.CHUNK_SIZE;
 
 /**
  * This class represents the terrain that contains the tracks, trains,
@@ -45,7 +42,7 @@ public class World {
     private static final int TEST_NB_PASSENGERS = 1;
 
     private int nbRows, nbCols;
-    protected SparseMatrix<Cell> cells;
+    protected ChunkMatrix<Cell> cells;
     protected ArrayList<Cell> activeCells;
     private ArrayList<Cell> newlyActiveCells;
     private double simulationDt; // Time elapsed in world during one simulation step.
@@ -66,8 +63,6 @@ public class World {
     private int periodMillisec; // Time elapsed in real world between two simulation steps.
     private int step;
 
-    private int timeCheckPeriod = 20;
-
     // Maximum distance between TEs for a link to be created.
     private static double distanceMax = 26;
 
@@ -81,7 +76,7 @@ public class World {
     private ArrayList<StationCell> stationList;
 
     public World() {
-        this(1000, 1000);
+        this(50, 50);
     }
 
     public World(int newNbRows, int newNbCols) {
@@ -93,6 +88,25 @@ public class World {
         perlinCellSize = 16;
         perlinScale = perlinCellSize * Cell.cellSize;
         noiseGenerator = new PerlinNoise(perlinScale);
+    }
+
+    public void loadChunk(int rowCh, int colCh) {
+        cells.loadChunk(rowCh, colCh);
+        Chunk ch = cells.getChunk(rowCh, colCh);
+        for (int row = 0; row < CHUNK_SIZE; row++) {
+            for (int col = 0; col < CHUNK_SIZE; col++) {
+                double xCell = (colCh * CHUNK_SIZE + col) * Cell.cellSize;
+                double yCell = (-rowCh * CHUNK_SIZE + nbRows - row - 1) * Cell.cellSize;
+                Cell c = (Cell) ch.get(row, col);
+                c.absolutePosition.x = xCell;
+                c.absolutePosition.y = yCell;
+                c.altitude = computeAltitude(colCh * CHUNK_SIZE + col, rowCh * CHUNK_SIZE + row);
+            }
+        }
+    }
+
+    public ArrayList<Chunk> getChunks() {
+        return cells.getAllChunks();
     }
 
     /**
@@ -127,7 +141,7 @@ public class World {
 
     private void initializeGrid() {
         System.out.println("World.initializeGrid()");
-        cells = new SparseMatrix<>();
+        cells = new ChunkMatrix<>();
         activeCells = new ArrayList<>();
         newlyActiveCells = new ArrayList<>();
         links = new ArrayList<>();
@@ -1313,8 +1327,17 @@ public class World {
         System.out.println("World.generateTerrain");
     }
 
+    private double computeAltitude(int col, int row) {
+        double xCell = col * Cell.cellSize;
+        double yCell = (getNbRows() - row - 1) * Cell.cellSize;
+        double altitude = noiseGenerator.getNoise(xCell, yCell);
+        return altitude;
+    }
+
     /**
      * Get the altitude at a specific location.
+     * Use the cell already in cells list if it exists, otherwise compute the
+     * altitude with the noise generator.
      *
      * @param col
      * @param row

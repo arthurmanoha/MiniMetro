@@ -15,9 +15,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import static java.lang.Double.max;
 import static java.lang.Double.min;
+import static java.lang.Math.floor;
+import java.util.Collection;
 import java.util.Scanner;
 import javax.swing.JPanel;
 import static minimetro.Cell.cellSize;
+import static minimetro.ChunkMatrix.CHUNK_SIZE;
 
 /**
  *
@@ -55,10 +58,10 @@ public class WorldPanel extends JPanel implements MouseListener,
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = 1.0;
+        zoomLevel = 0.164;
         zoomLevelFactor = 1.1;
-        x0 = 78;
-        y0 = 29;
+        x0 = 118;
+        y0 = 72;
         currentTool = GuiTool.NO_TOOL;
         prevMouseX = 0;
         prevMouseY = 0;
@@ -87,10 +90,34 @@ public class WorldPanel extends JPanel implements MouseListener,
         defaultBackgroundColor = Color.gray;
 
         mustDisplayTerrain = true;
+
+    }
+
+    private void paintChunkBackground(Graphics g) {
+        // TODO: display only visible chunks.
+        for (Chunk ch : world.getChunks()) {
+            Collection allCellsOfChunk = ch.toList();
+            for (Object elem : allCellsOfChunk) {
+                Cell c = (Cell) elem;
+                double xCell = c.absolutePosition.x;
+                double yCell = c.absolutePosition.y;
+                final double xApp = xCell * zoomLevel + x0;
+                final double yApp = g.getClipBounds().height - (yCell * zoomLevel + y0);
+                final double appSize = zoomLevel * cellSize;
+
+                if (mustDisplayTerrain) {
+
+                    double altitude = c.altitude;
+                    g.setColor(colorRamp.getValue(altitude));
+                    g.fillRect((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) appSize + 1, (int) appSize + 1);
+                }
+            }
+        }
     }
 
     @Override
     public void paintComponent(Graphics g) {
+//        System.out.println("x0: " + x0 + ", y0: " + y0 + ", zoom: " + zoomLevel);
 
         graphicsCurrentWidth = g.getClipBounds().width;
         graphicsCurrentHeight = g.getClipBounds().height;
@@ -99,27 +126,7 @@ public class WorldPanel extends JPanel implements MouseListener,
         g.setColor(defaultBackgroundColor);
         g.fillRect(0, 0, graphicsCurrentWidth, graphicsCurrentHeight);
 
-        // Paint cell background
-        for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
-            for (int row = getMinVisibleRow(); row <= getMaxVisibleRow(); row++) {
-
-                double xCell = col * Cell.cellSize;
-                double yCell = (world.getNbRows() - row - 1) * Cell.cellSize;
-                final double xApp = xCell * zoomLevel + x0;
-                final double yApp = g.getClipBounds().height - (yCell * zoomLevel + y0);
-                final double appSize = zoomLevel * cellSize;
-
-                if (mustDisplayTerrain) {
-
-                    double altitude = world.getAltitude(col, row);
-                    g.setColor(colorRamp.getValue(altitude));
-                    g.fillRect((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) appSize + 1, (int) appSize + 1);
-                }
-                Cell c = world.getCell(row, col);
-                if (c != null) {
-                }
-            }
-        }
+        paintChunkBackground(g);
 
         for (Cell c : world.getAllCells()) {
             c.paintForeground(g, x0, y0, zoomLevel);
@@ -146,7 +153,6 @@ public class WorldPanel extends JPanel implements MouseListener,
                 (int) (graphicsCurrentHeight - (y0 + world.getNbRows() * appCellSize - appCellSize / 2)),
                 (int) (world.getNbCols() * Cell.cellSize * zoomLevel),
                 (int) (world.getNbRows() * Cell.cellSize * zoomLevel));
-
     }
 
     private void paintStraightTracksPossibilities(Graphics g) {
@@ -281,6 +287,9 @@ public class WorldPanel extends JPanel implements MouseListener,
 
             // Clicked first mouse button
             switch (currentTool) {
+            case LOAD_CHUNK -> {
+                world.loadChunk((int) floor(currentRow / CHUNK_SIZE), (int) floor(currentCol / CHUNK_SIZE));
+            }
             case LOCO -> {
                 world.addLoco(xReal, yReal);
             }
@@ -347,6 +356,11 @@ public class WorldPanel extends JPanel implements MouseListener,
             x0 += dx;
             y0 += dy;
 //            System.out.println(x0 + " " + y0 + " " + zoomLevel);
+            repaint();
+        } else if (currentTool.equals(GuiTool.LOAD_CHUNK)) {
+            currentCol = getCol(e.getX());
+            currentRow = getRow(e.getY());
+            world.loadChunk((int) floor(currentRow / CHUNK_SIZE), (int) floor(currentCol / CHUNK_SIZE));
             repaint();
         } else if (currentTool.equals(GuiTool.TRACK)) {
             currentCol = getCol(e.getX());

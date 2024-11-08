@@ -42,6 +42,8 @@ public class Cell {
 
     private boolean isActive;
 
+    double altitude;
+
     private static int NB_CELLS_CREATED = 0;
     protected int id;
 
@@ -57,6 +59,10 @@ public class Cell {
         isActive = false;
         id = NB_CELLS_CREATED;
         NB_CELLS_CREATED++;
+    }
+
+    public Cell(int row, int col) {
+        this();
     }
 
     public Cell(Cell previousCell) {
@@ -75,6 +81,7 @@ public class Cell {
             this.speedLimit = previousCell.speedLimit;
             this.stopTimerDuration = previousCell.stopTimerDuration;
             this.isActive = previousCell.isActive;
+            this.altitude = previousCell.altitude;
         }
     }
 
@@ -989,5 +996,13 @@ public class Cell {
 
     public void setBackground(Color newColor) {
         this.color = newColor;
+    }
+
+    protected void setAltitude(double newAltitude) {
+        this.altitude = newAltitude;
+    }
+
+    double getAltitude() {
+        return this.altitude;
     }
 }
