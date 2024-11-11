@@ -36,6 +36,14 @@ public class PerlinNoise {
         int perlinCol = (int) (x / currentScale);
         int perlinRow = (int) (y / currentScale);
 
+        // Fix the negative x or y parts of the map.
+        if (x < 0) {
+            perlinCol--;
+        }
+        if (y < 0) {
+            perlinRow--;
+        }
+
         double dotSW = dotprod(perlinRow, perlinCol, x, y, currentScale);
         double dotSE = dotprod(perlinRow, perlinCol + 1, x, y, currentScale);
         double dotNW = dotprod(perlinRow + 1, perlinCol, x, y, currentScale);

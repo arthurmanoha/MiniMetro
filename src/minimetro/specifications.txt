@@ -4,6 +4,7 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
+Simulation gets very slow when 8-10 or more links between TrainElements are used.
 Speed indicators may be placed on switch cells but are not saved and loaded.
 World map is not properly updated on station removal.
 A train that crosses itself in an intersection is not loaded properly.
@@ -15,6 +16,9 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Stations shall have a built-in stop signal.
+i18n
+Some objects have a vision range that allows to discover nearby areas.
 Add a smoother interpolation for Perlin noise.
 Add a configuration file that specifies the initial size of the terrain and the file to load at startup.
 Tracks shall not be laid on water.
@@ -108,6 +112,12 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Chunks are replaced with a fixed-size array.
+Only modified or populated cells shall be written to file.
+Altitude for cells with a negative row or column is incorrect.
+Chunks shall be loaded via a click using the "chunk" tool.
+Map is not explored at first, unexplored chunks are not visible.
+Smooth display at large scale: background rendering shall be done using chunks.
 Display stations over terrain.
 Extracted the Perlin noise generator to its own file
 Added scales and amplitudes for Perlin noise.

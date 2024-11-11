@@ -15,9 +15,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import static java.lang.Double.max;
 import static java.lang.Double.min;
+import static java.lang.Math.floor;
 import java.util.Scanner;
 import javax.swing.JPanel;
-import static minimetro.Cell.cellSize;
 
 /**
  *
@@ -26,9 +26,11 @@ import static minimetro.Cell.cellSize;
 public class WorldPanel extends JPanel implements MouseListener,
         MouseMotionListener, MouseWheelListener, PropertyChangeListener {
 
+    private static boolean DISPLAY_ACTIVE_CELLS_BORDERS = true;
+
     World world;
     private double zoomLevel;
-    private double zoomLevelFactor;
+    private final double zoomLevelFactor = 1.1;
     private double x0, y0;
     GuiTool currentTool;
     private int prevMouseX, prevMouseY;
@@ -55,10 +57,9 @@ public class WorldPanel extends JPanel implements MouseListener,
         super();
         setSize(new Dimension(800, 600));
         world = w;
-        zoomLevel = 1.0;
-        zoomLevelFactor = 1.1;
-        x0 = 78;
-        y0 = 29;
+        zoomLevel = 0.0293;
+        x0 = 83;
+        y0 = 49;
         currentTool = GuiTool.NO_TOOL;
         prevMouseX = 0;
         prevMouseY = 0;
@@ -87,10 +88,12 @@ public class WorldPanel extends JPanel implements MouseListener,
         defaultBackgroundColor = Color.gray;
 
         mustDisplayTerrain = true;
+
     }
 
     @Override
     public void paintComponent(Graphics g) {
+//        System.out.println("x0: " + x0 + ", y0: " + y0 + ", zoom: " + zoomLevel);
 
         graphicsCurrentWidth = g.getClipBounds().width;
         graphicsCurrentHeight = g.getClipBounds().height;
@@ -99,30 +102,26 @@ public class WorldPanel extends JPanel implements MouseListener,
         g.setColor(defaultBackgroundColor);
         g.fillRect(0, 0, graphicsCurrentWidth, graphicsCurrentHeight);
 
-        // Paint cell background
-        for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
-            for (int row = getMinVisibleRow(); row <= getMaxVisibleRow(); row++) {
-
-                double xCell = col * Cell.cellSize;
-                double yCell = (world.getNbRows() - row - 1) * Cell.cellSize;
-                final double xApp = xCell * zoomLevel + x0;
-                final double yApp = g.getClipBounds().height - (yCell * zoomLevel + y0);
-                final double appSize = zoomLevel * cellSize;
-
-                if (mustDisplayTerrain) {
-
-                    double altitude = world.getAltitude(col, row);
-                    g.setColor(colorRamp.getValue(altitude));
-                    g.fillRect((int) (xApp - appSize / 2), (int) (yApp - appSize / 2), (int) appSize + 1, (int) appSize + 1);
-                }
+        for (int row = getMinVisibleRow(); row <= getMaxVisibleRow(); row++) {
+            for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
                 Cell c = world.getCell(row, col);
-                if (c != null) {
+                Color color = colorRamp.getValue(c.altitude);
+                if (mustDisplayTerrain) {
+                    c.paintBackground(g, x0, y0, zoomLevel, color);
                 }
             }
         }
+        for (int row = getMinVisibleRow(); row <= getMaxVisibleRow(); row++) {
+            for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
+                Cell c = world.getCell(row, col);
+                c.paintForeground(g, x0, y0, zoomLevel);
+            }
+        }
 
-        for (Cell c : world.getAllCells()) {
-            c.paintForeground(g, x0, y0, zoomLevel);
+        if (DISPLAY_ACTIVE_CELLS_BORDERS) {
+            for (Cell c : world.activeCells) {
+                c.outlineCell(g, x0, y0, zoomLevel);
+            }
         }
 
         if (!mustDisplayTerrain) {
@@ -138,15 +137,10 @@ public class WorldPanel extends JPanel implements MouseListener,
             c.paintTrains(g, x0, y0, zoomLevel);
         }
 
-        // Draw outer border
+        // Draw origin
         g.setColor(Color.orange);
-        double appCellSize = Cell.cellSize * zoomLevel;
-        g.drawRect(
-                (int) (x0 - appCellSize / 2),
-                (int) (graphicsCurrentHeight - (y0 + world.getNbRows() * appCellSize - appCellSize / 2)),
-                (int) (world.getNbCols() * Cell.cellSize * zoomLevel),
-                (int) (world.getNbRows() * Cell.cellSize * zoomLevel));
-
+        g.drawLine((int) x0, (int) (graphicsCurrentHeight - y0), (int) (x0 + 50), (int) (graphicsCurrentHeight - y0));
+        g.drawLine((int) x0, (int) (graphicsCurrentHeight - y0), (int) x0, (int) (graphicsCurrentHeight - y0 - 50));
     }
 
     private void paintStraightTracksPossibilities(Graphics g) {
@@ -274,8 +268,10 @@ public class WorldPanel extends JPanel implements MouseListener,
         double xReal = (e.getX() - x0) / zoomLevel;
         double yReal = (graphicsCurrentHeight - e.getY() - y0) / zoomLevel;
 
-        currentRow = getRow(e.getY());
-        currentCol = getCol(e.getX());
+        currentRow = floor(getRow(e.getY()));
+        currentCol = floor(getCol(e.getX()));
+        double currentRowDouble = getRow(e.getY());
+        double currentColDouble = getCol(e.getX());
 
         if ((e.getModifiersEx() & b1) == b1) {
 
@@ -300,7 +296,7 @@ public class WorldPanel extends JPanel implements MouseListener,
                 repaint();
             }
             case SWITCH -> {
-                world.setSwitchPoint(currentRow, currentCol);
+                world.setSwitchPoint(currentRowDouble, currentColDouble);
                 repaint();
             }
             case STATION -> {

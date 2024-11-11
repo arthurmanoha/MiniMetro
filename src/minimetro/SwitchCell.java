@@ -39,7 +39,7 @@ public class SwitchCell extends Cell {
     public SwitchCell(Cell c) {
         super(c);
         if (c == null) {
-            cellA = new Cell();
+            cellA = new Cell(c);
         } else {
             cellA = c;
         }
