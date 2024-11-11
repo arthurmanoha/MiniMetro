@@ -267,7 +267,6 @@ public class GUI extends JFrame implements PropertyChangeListener {
         createButton("stop_10.png", GuiTool.STOP_TIMER.toString(), 10, 0, 1, "10");
         createButton("stop_30.png", GuiTool.STOP_TIMER.toString(), 10, 1, 1, "30");
         createButton("generate_terrain.png", "displayTerrain", 11, 0);
-        createButton("chunk", GuiTool.LOAD_CHUNK.toString(), 11, 1);
 
         panel.setLayout(new BorderLayout());
         panel.add(buttonPanel, BorderLayout.SOUTH);

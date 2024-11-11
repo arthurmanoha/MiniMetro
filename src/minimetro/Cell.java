@@ -3,6 +3,7 @@ package minimetro;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.io.FileWriter;
 import static java.lang.Math.PI;
@@ -19,7 +20,6 @@ import java.util.ArrayList;
  */
 public class Cell {
 
-    private static boolean DISPLAY_ACTIVE_BORDERS = false;
     private static int DEFAULT_NB_RAILS = 10;
 
     protected static double cellSize = 100;
@@ -42,7 +42,7 @@ public class Cell {
 
     private boolean isActive;
 
-    double altitude;
+    protected double altitude;
 
     private static int NB_CELLS_CREATED = 0;
     protected int id;
@@ -91,13 +91,34 @@ public class Cell {
     }
 
     /**
-     * Paint the cell's background.
+     * Paint the cell's background. This represents the nature of the terrain
+     * (grass, sea, ...).
      */
-    protected void paintBackground(Graphics g, double x0, double y0, double zoom) {
+    protected void paintBackground(Graphics g, double x0, double y0, double zoom, Color c) {
+        final int xApp = (int) ((absolutePosition.x - cellSize / 2) * zoom + x0);
+        final int yApp = (int) (g.getClipBounds().height - ((absolutePosition.y + cellSize / 2) * zoom + y0));
+        final int appSize = (int) (zoom * cellSize) + 1;
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setColor(c);
+        g2.fillRect(xApp, yApp, appSize, appSize);
     }
 
     /**
      * Paint the cell's foreground.
+     */
+    protected void outlineCell(Graphics g, double x0, double y0, double zoom) {
+        // On-screen coordinates of the center of the cell:
+        final int xApp = (int) (absolutePosition.x * zoom + x0);
+        final int yApp = (int) (g.getClipBounds().height - (absolutePosition.y * zoom + y0));
+        final int appSize = (int) (zoom * cellSize);
+
+        g.setColor(Color.cyan);
+        g.drawRect(xApp - appSize / 2, yApp - appSize / 2, appSize, appSize);
+    }
+
+    /**
+     * Paint the cell's foreground.
+     * Rails, speed signs. Trains are painted by the paintTrains method.
      */
     protected void paintForeground(Graphics g, double x0, double y0, double zoom) {
         // On-screen coordinates of the center of the cell:

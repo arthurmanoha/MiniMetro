@@ -14,7 +14,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.SwingUtilities;
 import static minimetro.CardinalPoint.*;
-import static minimetro.ChunkMatrix.CHUNK_SIZE;
 
 /**
  * This class represents the terrain that contains the tracks, trains,
@@ -42,7 +41,7 @@ public class World {
     private static final int TEST_NB_PASSENGERS = 1;
 
     private int nbRows, nbCols;
-    protected ChunkMatrix<Cell> cells;
+    protected Cell cells[][];
     protected ArrayList<Cell> activeCells;
     private ArrayList<Cell> newlyActiveCells;
     private double simulationDt; // Time elapsed in world during one simulation step.
@@ -76,37 +75,19 @@ public class World {
     private ArrayList<StationCell> stationList;
 
     public World() {
-        this(50, 50);
+        this(300, 300);
     }
 
     public World(int newNbRows, int newNbCols) {
         nbRows = newNbRows;
         nbCols = newNbCols;
-        initializeGrid();
-        isSettingLongDistanceTracks = false;
 
         perlinCellSize = 16;
         perlinScale = perlinCellSize * Cell.cellSize;
         noiseGenerator = new PerlinNoise(perlinScale);
-    }
 
-    public void loadChunk(int rowCh, int colCh) {
-        cells.loadChunk(rowCh, colCh);
-        Chunk ch = cells.getChunk(rowCh, colCh);
-        for (int row = 0; row < CHUNK_SIZE; row++) {
-            for (int col = 0; col < CHUNK_SIZE; col++) {
-                double xCell = (colCh * CHUNK_SIZE + col) * Cell.cellSize;
-                double yCell = (-rowCh * CHUNK_SIZE + nbRows - row - 1) * Cell.cellSize;
-                Cell c = (Cell) ch.get(row, col);
-                c.absolutePosition.x = xCell;
-                c.absolutePosition.y = yCell;
-                c.altitude = computeAltitude(colCh * CHUNK_SIZE + col, rowCh * CHUNK_SIZE + row);
-            }
-        }
-    }
-
-    public ArrayList<Chunk> getChunks() {
-        return cells.getAllChunks();
+        initializeGrid();
+        isSettingLongDistanceTracks = false;
     }
 
     /**
@@ -136,12 +117,22 @@ public class World {
         } else {
             newCell.absolutePosition = newAbsPos;
         }
-        cells.set(newCell, row, col);
+        cells[row][col] = newCell;
     }
 
     private void initializeGrid() {
         System.out.println("World.initializeGrid()");
-        cells = new ChunkMatrix<>();
+        cells = new Cell[nbRows][];
+        for (int row = 0; row < nbRows; row++) {
+            cells[row] = new Cell[nbCols];
+            for (int col = 0; col < nbCols; col++) {
+                Cell newCell = new Cell(row, col);
+                newCell.altitude = getAltitude(col, row);
+                newCell.absolutePosition = new Point2D.Double(col * Cell.cellSize, (nbRows - row - 1) * Cell.cellSize);
+                cells[row][col] = newCell;
+            }
+        }
+        System.out.println("End cells initialization");
         activeCells = new ArrayList<>();
         newlyActiveCells = new ArrayList<>();
         links = new ArrayList<>();
@@ -174,7 +165,7 @@ public class World {
      */
     public Cell getCell(int row, int col) {
         try {
-            return cells.get(row, col);
+            return cells[row][col];
         } catch (IndexOutOfBoundsException e) {
             return null;
         }
@@ -203,7 +194,11 @@ public class World {
      */
     protected ArrayList<Cell> getAllCells() {
         ArrayList<Cell> allCells = new ArrayList<>();
-        allCells.addAll(cells.toList());
+        for (int row = 0; row < nbRows; row++) {
+            for (int col = 0; col < nbCols; col++) {
+                allCells.add(cells[row][col]);
+            }
+        }
         return allCells;
     }
 
@@ -276,11 +271,34 @@ public class World {
         updateListeners();
     }
 
+    private int getRow(Cell c) {
+        return getRowOrCol(c, true);
+    }
+
+    private int getCol(Cell c) {
+        return getRowOrCol(c, false);
+    }
+
+    private int getRowOrCol(Cell c, boolean needRow) {
+        for (int row = 0; row < nbRows; row++) {
+            for (int col = 0; col < nbCols; col++) {
+                if (cells[row][col].equals(c)) {
+                    if (needRow) {
+                        return row;
+                    } else {
+                        return col;
+                    }
+                }
+            }
+        }
+        return Integer.MAX_VALUE;
+    }
+
     private void reinsertMovingPassengers() {
         // Reinsert moving passengers
         for (Cell c : activeCells) {
-            int row = cells.getRow(c);
-            int col = cells.getCol(c);
+            int row = getRow(c);
+            int col = getCol(c);
 
             if (c instanceof StationCell) {
                 StationCell station = (StationCell) c;
@@ -329,8 +347,8 @@ public class World {
         Iterator iter = activeCells.iterator();
         while (iter.hasNext()) {
             Cell c = (Cell) iter.next();
-            int rowIndex = cells.getRow(c);
-            int colIndex = cells.getCol(c);
+            int rowIndex = getRow(c);
+            int colIndex = getCol(c);
             if (rowIndex != Integer.MIN_VALUE) {
                 for (TransferringTrain transferringTrain : c.getTrainsLeavingCell()) {
                     TrainElement movingTrain = transferringTrain.getTrainElement();
@@ -385,11 +403,7 @@ public class World {
     }
 
     protected void setCell(int row, int col, Cell newCell) {
-        try {
-            cells.set(newCell, row, col);
-        } catch (IndexOutOfBoundsException e) {
-            System.out.println("World.setCell: error");
-        }
+        cells[row][col] = newCell;
     }
 
     /**
@@ -409,7 +423,7 @@ public class World {
             if (oldCell instanceof StationCell) {
                 newCell = new Cell(oldCell);
                 stationList.remove((StationCell) oldCell);
-                cells.remove(oldCell);
+                setCell(row, col, newCell);
             } else {
                 newCell = new StationCell(oldCell, id);
                 stationList.add((StationCell) newCell);
@@ -709,11 +723,11 @@ public class World {
     }
 
     private int getColumn(Cell cell0) {
-        return cells.getCol(cell0);
+        return getCol(cell0);
     }
 
     private int getLine(Cell cell0) {
-        return cells.getRow(cell0);
+        return getRow(cell0);
     }
 
     private void applyLinkForces() {
@@ -776,9 +790,11 @@ public class World {
      * @return
      */
     private Cell getCell(TrainElement e0) {
-        for (Cell c : getAllCells()) {
-            if (c.containsTrainElement(e0)) {
-                return c;
+        for (int row = 0; row < nbRows; row++) {
+            for (int col = 0; col < nbCols; col++) {
+                if (cells[row][col].containsTrainElement(e0)) {
+                    return cells[row][col];
+                }
             }
         }
         return null;
@@ -793,9 +809,13 @@ public class World {
     protected void removeTrack(int row, int col) {
         Cell c = getCell(row, col);
         if (c != null) {
-            c.removeTracksAndLinks();
-            if (c.isEmpty()) {
-                cells.remove(c);
+            if (c instanceof SwitchCell) {
+                setCell(row, col, new Cell(c));
+            } else {
+                c.removeTracksAndLinks();
+                if (c.isEmpty()) {
+                    c.removeTracksAndLinks();
+                }
             }
         }
     }
@@ -978,42 +998,46 @@ public class World {
 
             writer.write("isRunning " + (isRunning ? YES : NO) + "\n");
 
-            for (Cell c : getAllCells()) {
-                int row = cells.getRow(c);
-                int col = cells.getCol(c);
+            int rowIndex = 0;
+            for (Cell[] row : cells) {
+                int colIndex = 0;
+                for (Cell c : row) {
 
-                // Save rails
-                if (c instanceof SwitchCell) {
-                    // Save a switch cell
-                    String switchText = SWITCH + " " + row + " " + col + " " + ((SwitchCell) c).getLinks() + "\n";
-                    writer.write(switchText);
-                } else {
-                    String cellLinks = c.getLinks();
-                    if (!cellLinks.isEmpty()) {
-                        for (String singleLink : cellLinks.split(" ")) {
-                            writer.write(RAIL_LINK + " " + row + " " + col + " " + singleLink + "\n");
+                    // Save rails
+                    if (c instanceof SwitchCell) {
+                        // Save a switch cell
+                        String switchText = SWITCH + " " + rowIndex + " " + colIndex + " " + ((SwitchCell) c).getLinks() + "\n";
+                        writer.write(switchText);
+                    } else {
+                        String cellLinks = c.getLinks();
+                        if (!cellLinks.isEmpty()) {
+                            for (String singleLink : cellLinks.split(" ")) {
+                                writer.write(RAIL_LINK + " " + rowIndex + " " + colIndex + " " + singleLink + "\n");
+                            }
                         }
                     }
-                }
 
-                c.saveTrains(writer);
+                    c.saveTrains(writer);
 
-                // Save stations
-                if (c instanceof StationCell) {
-                    String text = STATION + " " + ((StationCell) c).getId() + " " + row + " " + col + "\n";
-                    writer.write(text);
-                }
-                c.savePassengers(writer);
+                    // Save stations
+                    if (c instanceof StationCell) {
+                        String text = STATION + " " + ((StationCell) c).getId() + " " + rowIndex + " " + colIndex + "\n";
+                        writer.write(text);
+                    }
+                    c.savePassengers(writer);
 
-                // Save speed limits
-                if (c.speedLimit != Integer.MAX_VALUE) {
-                    writer.write(SPEED_LIMIT + " " + row + " " + col + " " + c.speedLimit + "\n");
-                }
+                    // Save speed limits
+                    if (c.speedLimit != Integer.MAX_VALUE) {
+                        writer.write(SPEED_LIMIT + " " + rowIndex + " " + colIndex + " " + c.speedLimit + "\n");
+                    }
 
-                // Save stop timers
-                if (c.stopTimerDuration > 0) {
-                    writer.write(STOP_TIMER + " " + row + " " + col + " " + c.stopTimerDuration + "\n");
+                    // Save stop timers
+                    if (c.stopTimerDuration > 0) {
+                        writer.write(STOP_TIMER + " " + rowIndex + " " + colIndex + " " + c.stopTimerDuration + "\n");
+                    }
+                    colIndex++;
                 }
+                rowIndex++;
             }
             map.save(writer);
 
@@ -1307,7 +1331,7 @@ public class World {
             s = (SwitchCell) c;
         } else {
             // Replace the Cell with a new SwitchCell and add the first CardinalPoint.
-            cells.remove(c);
+            removeCell(c);
             activeCells.remove(c);
             s = new SwitchCell(c);
             s.removeTracksAndLinks();
@@ -1374,4 +1398,14 @@ public class World {
 //            Logger.getLogger(World.class.getName()).log(Level.SEVERE, null, ex);
 //        }
 //    }
+
+    private void removeCell(Cell oldCell) {
+        for (int row = 0; row < nbRows; row++) {
+            for (int col = 0; col < nbCols; col++) {
+                if (cells[row][col].equals(oldCell)) {
+                    cells[row][col] = null;
+                }
+            }
+        }
+    }
 }
