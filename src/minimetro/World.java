@@ -767,14 +767,14 @@ public class World {
     protected void removeTrack(int row, int col) {
         Cell c = getCell(row, col);
         if (c != null) {
-            if (c instanceof SwitchCell) {
-                Cell newCell = new Cell(c);
-                newCell.setRow(((SwitchCell) c).row);
-                newCell.setCol(((SwitchCell) c).col);
-                setCell(row, col, newCell);
-            } else {
-                c.removeTracksAndLinks();
-                if (c.isEmpty()) {
+            if (!c.hasTrain()) {
+                if (c instanceof SwitchCell) {
+                    Cell newCell = new Cell(c);
+                    newCell.setRow(((SwitchCell) c).row);
+                    newCell.setCol(((SwitchCell) c).col);
+                    setCell(row, col, newCell);
+                } else {
+                    c.removeTracksAndLinks();
                     c.removeTracksAndLinks();
                 }
             }
@@ -1251,25 +1251,27 @@ public class World {
     protected void setSwitchPoint(double currentRow, double currentCol) {
         Cell c = getCellOrCreateIfNull((int) currentRow, (int) currentCol);
 
-        // Click coordinates in the cell's reference
-        double localX = currentCol - floor(currentCol);
-        double localY = currentRow - floor(currentRow);
+        if (!c.hasTrain() && !(c instanceof StationCell)) {
+            // Click coordinates in the cell's reference
+            double localX = currentCol - floor(currentCol);
+            double localY = currentRow - floor(currentRow);
 
-        SwitchCell s;
+            SwitchCell s;
 
-        if (c instanceof SwitchCell) {
-            // Add or replace a connecting CardinalPoint to the SwitchCell.
-            activeCells.remove(c);
-            s = (SwitchCell) c;
-        } else {
-            // Replace the Cell with a new SwitchCell and add the first CardinalPoint.
-            removeCell(c);
-            activeCells.remove(c);
-            s = new SwitchCell(c);
-            s.removeTracksAndLinks();
-            addNewCell(s, (int) currentRow, (int) currentCol);
+            if (c instanceof SwitchCell) {
+                // Add or replace a connecting CardinalPoint to the SwitchCell.
+                activeCells.remove(c);
+                s = (SwitchCell) c;
+            } else {
+                // Replace the Cell with a new SwitchCell and add the first CardinalPoint.
+                removeCell(c);
+                activeCells.remove(c);
+                s = new SwitchCell(c);
+                s.removeTracksAndLinks();
+                addNewCell(s, (int) currentRow, (int) currentCol);
+            }
+            s.setSwitchPoint(localX, localY);
         }
-        s.setSwitchPoint(localX, localY);
     }
 
     protected void toggleSwitch(int row, int col) {
