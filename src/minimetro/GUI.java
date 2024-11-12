@@ -93,11 +93,14 @@ public class GUI extends JFrame implements PropertyChangeListener {
             @Override
             public void run() {
                 // Step one: read the config file.
+                String savedFilesFolder;
+                String autoLoadedFile = "";
+
                 try {
                     Scanner scanner = new Scanner(configFile);
 
-                    String savedFilesFolder = scanner.nextLine();
-                    String autoLoadedFile = scanner.nextLine();
+                    savedFilesFolder = scanner.nextLine();
+                    autoLoadedFile = scanner.nextLine();
 
                     File savedWorld = new File(savedFilesFolder + autoLoadedFile);
                     // Step two: read the world file.
@@ -107,7 +110,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
                     world.load(scanner);
                     repaint();
                 } catch (FileNotFoundException ex) {
-                    Logger.getLogger(World.class.getName()).log(Level.SEVERE, null, ex);
+                    System.out.println("No file named <" + autoLoadedFile + ">");
                 } catch (NoSuchElementException ex) {
                     System.out.println("No correct autofile was specified.");
                 }

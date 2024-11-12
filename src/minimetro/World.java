@@ -758,24 +758,6 @@ public class World {
         }
     }
 
-    /**
-     * Find and return the cell that contains the given element, or null if no
-     * cell contains it.
-     *
-     * @param e0
-     * @return
-     */
-    private Cell getCell(TrainElement e0) {
-        for (int row = 0; row < nbRows; row++) {
-            for (int col = 0; col < nbCols; col++) {
-                if (cells[row][col].containsTrainElement(e0)) {
-                    return cells[row][col];
-                }
-            }
-        }
-        return null;
-    }
-
     private Point2D.Double getCellPosition(Cell c) {
         int row = c.getRow();
         int col = c.getCol();
@@ -786,7 +768,10 @@ public class World {
         Cell c = getCell(row, col);
         if (c != null) {
             if (c instanceof SwitchCell) {
-                setCell(row, col, new Cell(c));
+                Cell newCell = new Cell(c);
+                newCell.setRow(((SwitchCell) c).row);
+                newCell.setCol(((SwitchCell) c).col);
+                setCell(row, col, newCell);
             } else {
                 c.removeTracksAndLinks();
                 if (c.isEmpty()) {
