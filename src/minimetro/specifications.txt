@@ -4,7 +4,7 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
-Exception raised when the file specified by config.txt does not exist.
+A switch can be deleted even when hosting a train.
 Wagons saved on a the inactive side of a SwitchCell are not properly loaded.
 Speed indicators may be placed on switch cells but are not saved and loaded.
 World map is not properly updated on station removal.
@@ -17,6 +17,7 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Display latitudes and longitudes on the side of the map.
 Speed limits options for the menu shall be read from the config file.
 Stop timers shall be set to 5 and 10 seconds.
 Stations shall have a built-in stop signal.
@@ -115,6 +116,10 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+A StationCell may not host a switch.
+A Switch may no longer be deleted if it hosts a train.
+Fixed: An AIOOB exception occurs when a train leaves a track cell where a switch was deleted.
+Fixed: Exception raised when the file specified by config.txt does not exist.
 Fixed using a Swing timer and cell indices: Simulation gets very slow when 8-10 or more links between TrainElements are used.
 Chunks are replaced with a fixed-size array.
 Only modified or populated cells shall be written to file.
