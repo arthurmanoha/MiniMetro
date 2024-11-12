@@ -46,6 +46,12 @@ public class SwitchCell extends Cell {
         cellA.setActive(false);
         cellB = new Cell(cellA);
         cellB.setActive(false);
+        this.row = c.row;
+        this.col = c.col;
+        cellA.row = c.row;
+        cellA.col = c.col;
+        cellB.row = c.row;
+        cellB.col = c.col;
         connections = new CardinalPoint[3];
         connections[0] = null;
         connections[1] = null;

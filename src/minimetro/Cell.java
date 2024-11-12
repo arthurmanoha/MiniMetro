@@ -35,6 +35,7 @@ public class Cell {
     private int nbRails;
 
     protected Point2D.Double absolutePosition; // This point is the center of the cell.
+    protected int row, col; // Position on the grid.
 
     protected double speedLimit; // Integer.MAX_VALUE if not set, -1 for end of limit, >0 for actual limit.
     // StopTimer: -1: no stopping required; >0: brake and stop for that many seconds.
@@ -189,6 +190,8 @@ public class Cell {
      */
     protected void addTrainElement(TrainElement newTrain) {
         this.trainElements.add(newTrain);
+        newTrain.setRow(this.row);
+        newTrain.setCol(this.col);
         snapToRail();
     }
 
@@ -1025,5 +1028,21 @@ public class Cell {
 
     double getAltitude() {
         return this.altitude;
+    }
+
+    protected void setRow(int newRow) {
+        row = newRow;
+    }
+
+    protected void setCol(int newCol) {
+        col = newCol;
+    }
+
+    protected int getRow() {
+        return this.row;
+    }
+
+    protected int getCol() {
+        return this.col;
     }
 }

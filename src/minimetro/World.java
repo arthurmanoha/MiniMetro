@@ -1,5 +1,7 @@
 package minimetro;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -10,9 +12,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.Timer;
-import java.util.TimerTask;
-import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import static minimetro.CardinalPoint.*;
 
 /**
@@ -117,6 +117,8 @@ public class World {
         } else {
             newCell.absolutePosition = newAbsPos;
         }
+        newCell.setRow(row);
+        newCell.setCol(col);
         cells[row][col] = newCell;
     }
 
@@ -130,6 +132,8 @@ public class World {
                 newCell.altitude = getAltitude(col, row);
                 newCell.absolutePosition = new Point2D.Double(col * Cell.cellSize, (nbRows - row - 1) * Cell.cellSize);
                 cells[row][col] = newCell;
+                newCell.setRow(row);
+                newCell.setCol(col);
             }
         }
         System.out.println("End cells initialization");
@@ -139,7 +143,7 @@ public class World {
         step = 0;
         isRunning = false;
         simulationDt = 0.03;
-        periodMillisec = 30;
+        periodMillisec = 20;
         startTimer();
         speedIndicatorValue = 0;
         stopTimerValue = 5;
@@ -271,34 +275,11 @@ public class World {
         updateListeners();
     }
 
-    private int getRow(Cell c) {
-        return getRowOrCol(c, true);
-    }
-
-    private int getCol(Cell c) {
-        return getRowOrCol(c, false);
-    }
-
-    private int getRowOrCol(Cell c, boolean needRow) {
-        for (int row = 0; row < nbRows; row++) {
-            for (int col = 0; col < nbCols; col++) {
-                if (cells[row][col].equals(c)) {
-                    if (needRow) {
-                        return row;
-                    } else {
-                        return col;
-                    }
-                }
-            }
-        }
-        return Integer.MAX_VALUE;
-    }
-
     private void reinsertMovingPassengers() {
         // Reinsert moving passengers
         for (Cell c : activeCells) {
-            int row = getRow(c);
-            int col = getCol(c);
+            int row = c.getRow();
+            int col = c.getCol();
 
             if (c instanceof StationCell) {
                 StationCell station = (StationCell) c;
@@ -344,11 +325,10 @@ public class World {
 
     private void transferTrainsBetweenCells() {
         // Transfert trains between cells when necessary
-        Iterator iter = activeCells.iterator();
-        while (iter.hasNext()) {
-            Cell c = (Cell) iter.next();
-            int rowIndex = getRow(c);
-            int colIndex = getCol(c);
+
+        for (Cell c : activeCells) {
+            int rowIndex = c.getRow();
+            int colIndex = c.getCol();
             if (rowIndex != Integer.MIN_VALUE) {
                 for (TransferringTrain transferringTrain : c.getTrainsLeavingCell()) {
                     TrainElement movingTrain = transferringTrain.getTrainElement();
@@ -661,20 +641,24 @@ public class World {
     }
 
     private void startTimer() {
-        timer = new Timer();
-        timer.schedule(new TimerTask() {
+
+        if (timer != null && timer.isRunning()) {
+            System.out.println("Stopping timer.");
+            timer.stop();
+        }
+
+        System.out.println("Starting timer.");
+
+        ActionListener listener = new ActionListener() {
             @Override
-            public void run() {
+            public void actionPerformed(ActionEvent e) {
                 if (isRunning) {
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            step();
-                        }
-                    });
+                    step();
                 }
             }
-        }, 0, periodMillisec);
+        };
+        timer = new Timer(periodMillisec, listener);
+        timer.start();
     }
 
     // Add a rectangular track loop.
@@ -722,14 +706,6 @@ public class World {
         return distance;
     }
 
-    private int getColumn(Cell cell0) {
-        return getCol(cell0);
-    }
-
-    private int getLine(Cell cell0) {
-        return getRow(cell0);
-    }
-
     private void applyLinkForces() {
         for (TrainLink link : links) {
             applyLinkForce(link);
@@ -749,8 +725,8 @@ public class World {
 
             if (e0 != null && e1 != null) {
 
-                Cell c0 = getCell(e0);
-                Cell c1 = getCell(e1);
+                Cell c0 = getCell(e0.row, e0.col);
+                Cell c1 = getCell(e1.row, e1.col);
 
                 Point2D.Double posC0 = getCellPosition(c0);
                 if (posC0 == null) {
@@ -801,8 +777,8 @@ public class World {
     }
 
     private Point2D.Double getCellPosition(Cell c) {
-        int row = getLine(c);
-        int col = getColumn(c);
+        int row = c.getRow();
+        int col = c.getCol();
         return new Point2D.Double(col, row);
     }
 
@@ -839,36 +815,6 @@ public class World {
                 activeCells.remove(c);
             }
         }
-    }
-
-    protected void addTestTrain(double xStart, double yStart, int nbWagons) {
-
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                addLoco(xStart, yStart);
-                int row = getRow(yStart);
-                int col = getCol(xStart);
-                Cell c = getCell(row, col);
-                TrainElement loco = c.getLoco();
-                double spacingX = 0;
-                double spacingY = 0;
-                if (loco.headingDegrees == 0) {
-                    spacingY = -distanceMax;
-                } else if (loco.headingDegrees == 90) {
-                    spacingX = -distanceMax;
-                } else if (loco.headingDegrees == 180) {
-                    spacingY = distanceMax;
-                } else if (loco.headingDegrees == 270) {
-                    spacingX = distanceMax;
-                }
-                for (int i = 1; i <= nbWagons; i++) {
-                    addWagon(xStart + spacingX * i, yStart + spacingY * i);
-                }
-
-                updateListeners();
-            }
-        });
     }
 
     protected void startLocos() {
@@ -1196,6 +1142,7 @@ public class World {
         }
 
         map.load(scanner);
+        updateListeners();
     }
 
     protected StationCell getStation(int stationId) {
@@ -1309,8 +1256,8 @@ public class World {
      * Sign of an integer.
      *
      * @param val
-     * @return +1 if the integer is greater than 0, -1 if it is less than 0, 0
-     * if it is equal to 0.
+     * @return +1 if the integer is greater than 0, -1 if it is less than 0,
+     * 0 if it is equal to 0.
      */
     private int getSign(int val) {
         return val > 0 ? 1 : (val < 0 ? -1 : 0);
@@ -1347,17 +1294,6 @@ public class World {
         }
     }
 
-    public void generateTerrain() {
-        System.out.println("World.generateTerrain");
-    }
-
-    private double computeAltitude(int col, int row) {
-        double xCell = col * Cell.cellSize;
-        double yCell = (getNbRows() - row - 1) * Cell.cellSize;
-        double altitude = noiseGenerator.getNoise(xCell, yCell);
-        return altitude;
-    }
-
     /**
      * Get the altitude at a specific location.
      * Use the cell already in cells list if it exists, otherwise compute the
@@ -1374,30 +1310,6 @@ public class World {
 
         return noiseGenerator.getNoise(xCell, yCell);
     }
-//
-//    /**
-//     * Automatically load a saved file if the configuration file exists and
-//     * specifies it.
-//     *
-//     */
-//    private void autoLoad() {
-//
-//        // Step one: read the config file.
-//        File f = new File("config.txt");
-//        Scanner scanner = new Scanner(configFile);
-//        String text = "";
-//        // Go to the second line, which specifies which file we must load.
-//        text = scanner.nextLine();
-//        text = scanner.nextLine();
-//        File savedWorld = new File(text);
-//        try {
-//            // Step two: read the world file.
-//            scanner = new Scanner(savedWorld);
-//
-//        } catch (FileNotFoundException ex) {
-//            Logger.getLogger(World.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//    }
 
     private void removeCell(Cell oldCell) {
         for (int row = 0; row < nbRows; row++) {

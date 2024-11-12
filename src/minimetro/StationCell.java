@@ -44,6 +44,8 @@ public class StationCell extends Cell {
             id = newId;
             NB_STATIONS_CREATED = max(NB_STATIONS_CREATED, newId) + 1;
         }
+        this.row = previousCell.row;
+        this.col = previousCell.col;
         passengerList = new ArrayList<>();
         passengersLeavingCell = new ArrayList<>();
         walkways = new HashMap<>();

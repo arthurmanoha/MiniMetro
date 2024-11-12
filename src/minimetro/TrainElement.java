@@ -23,6 +23,7 @@ import static java.lang.Math.sqrt;
 public abstract class TrainElement extends SpriteElement implements ImageObserver {
 
     protected Point2D.Double absolutePosition;
+    protected int row, col; // Position on the grid.
     protected double headingDegrees; // 0:N, 90:E, 180:S, 270:W, MAX_VALUE: not set yet.
     protected double linearSpeed;
 
@@ -337,4 +338,21 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
     void setLinearSpeed(double newLinearSpeed) {
         linearSpeed = newLinearSpeed;
     }
+
+    protected void setRow(int newRow) {
+        this.row = newRow;
+    }
+
+    protected void setCol(int newCol) {
+        this.col = newCol;
+    }
+
+    protected int getRow() {
+        return this.row;
+    }
+
+    protected int getCol() {
+        return this.col;
+    }
+
 }

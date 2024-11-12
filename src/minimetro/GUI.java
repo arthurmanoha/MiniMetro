@@ -54,7 +54,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
     JLabel worldMapLabel;
 
     int windowWidth = 1100;
-    int windowHeight = 1000;
+    int windowHeight = 1035;
 
     private World world;
     private JTextField speedIndicatorTextField;
@@ -105,7 +105,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
 
                     panel.load(scanner);
                     world.load(scanner);
-                    revalidate();
+                    repaint();
                 } catch (FileNotFoundException ex) {
                     Logger.getLogger(World.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (NoSuchElementException ex) {
