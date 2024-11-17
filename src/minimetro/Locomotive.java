@@ -66,7 +66,7 @@ public class Locomotive extends TrainElement {
         int yCenter = (int) (g.getClipBounds().height - (y0 + zoom * this.absolutePosition.y));
         g.setColor(Color.black);
         g.setFont(new Font("helvetica", Font.PLAIN, 15));
-        g.drawString(text, xCenter + 20 * (int) zoom, yCenter + 20 * (int) zoom);
+        g.drawString(text, xCenter + 3 * (int) zoom, yCenter + 3 * (int) zoom);
     }
 
     @Override

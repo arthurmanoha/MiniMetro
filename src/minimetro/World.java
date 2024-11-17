@@ -63,7 +63,7 @@ public class World {
     private int step;
 
     // Maximum distance between TEs for a link to be created.
-    private static double distanceMax = 26;
+    private static double distanceMax = 5;
 
     // Tell observers that our state has changed.
     private final PropertyChangeSupport support = new PropertyChangeSupport(this);
@@ -109,17 +109,20 @@ public class World {
      * @param col
      */
     protected void addNewCell(Cell newCell, int row, int col) {
-        double xCell = col * Cell.cellSize;
-        double yCell = (nbRows - row - 1) * Cell.cellSize;
-        Point2D.Double newAbsPos = new Point2D.Double(xCell, yCell);
-        if (newCell == null) {
-            newCell = new Cell(newAbsPos);
-        } else {
-            newCell.absolutePosition = newAbsPos;
+        try {
+            double xCell = col * Cell.cellSize;
+            double yCell = (nbRows - row - 1) * Cell.cellSize;
+            Point2D.Double newAbsPos = new Point2D.Double(xCell, yCell);
+            if (newCell == null) {
+                newCell = new Cell(newAbsPos);
+            } else {
+                newCell.absolutePosition = newAbsPos;
+            }
+            newCell.setRow(row);
+            newCell.setCol(col);
+            cells[row][col] = newCell;
+        } catch (ArrayIndexOutOfBoundsException e) {
         }
-        newCell.setRow(row);
-        newCell.setCol(col);
-        cells[row][col] = newCell;
     }
 
     private void initializeGrid() {

@@ -4,7 +4,6 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
-A switch can be deleted even when hosting a train.
 Wagons saved on a the inactive side of a SwitchCell are not properly loaded.
 Speed indicators may be placed on switch cells but are not saved and loaded.
 World map is not properly updated on station removal.
@@ -17,6 +16,11 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Stations shall encompass several cells, including one with rails and its neighbors without rails as a platform.
+TrainElements shall be linked together via their ends, not their centers.
+TrainElements shall have two sets of wheels that follow the tracks, not just their center.
+Passengers may board at low speed, so that longer trains may be used.
+A cleaning tool shall remove any disconnected track section.
 Display latitudes and longitudes on the side of the map.
 Speed limits options for the menu shall be read from the config file.
 Stop timers shall be set to 5 and 10 seconds.
@@ -116,6 +120,8 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Scale change: one cell is as long as a single TrainElement.
+Fixed: A switch no longer can be deleted when hosting a train.
 A StationCell may not host a switch.
 A Switch may no longer be deleted if it hosts a train.
 Fixed: An AIOOB exception occurs when a train leaves a track cell where a switch was deleted.
