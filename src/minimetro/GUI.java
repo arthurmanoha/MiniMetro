@@ -260,9 +260,9 @@ public class GUI extends JFrame implements PropertyChangeListener {
         createButton("generate_passengers.png", "generatePassengers", 6, 1);
         createButton("remove_passengers.png", "removePassengers", 7, 1);
         // Speed limits: Integer.MAX_VALUE if not set, -1 for end of limit, >0 for actual limit.
-        createButton("limit_10.png", GuiTool.SPEED_INDICATOR.toString(), 5, 0, 1, "10");
-        createButton("limit_50.png", GuiTool.SPEED_INDICATOR.toString(), 6, 0, 1, "50");
-        createButton("limit_100.png", GuiTool.SPEED_INDICATOR.toString(), 7, 0, 1, "100");
+        createButton("limit_10.png", GuiTool.SPEED_INDICATOR.toString(), 5, 0, 1, "2");
+        createButton("limit_50.png", GuiTool.SPEED_INDICATOR.toString(), 6, 0, 1, "10");
+        createButton("limit_100.png", GuiTool.SPEED_INDICATOR.toString(), 7, 0, 1, "50");
         createButton("end_of_limit.png", GuiTool.SPEED_INDICATOR.toString(), 8, 0, 1, "-1");
         createButton("no_limit.png", GuiTool.SPEED_INDICATOR.toString(), 9, 0, 1, "Integer.MAX_VALUE");
         createButton("menu_save.png", "save", 8, 1);

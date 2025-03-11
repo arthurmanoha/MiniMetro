@@ -41,15 +41,11 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
     protected Point2D.Double currentForce;
 
     protected boolean isEngineActive, isBraking;
-    protected double brakingForce = 10.0;
+    protected double brakingForce = 20.0;
 
     protected double size; // Physical size of the object
-
-    // Only the first element of a given train is responsible of speed computation;
-    protected boolean isLeading;
-
     protected Color color;
-    private double spriteZoomLevel = 0.4;
+    private double spriteZoomLevel;
     protected double spriteWidth, spriteHeight;
 
     protected int id; // Single value for each element
@@ -72,12 +68,12 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
             NB_TRAIN_ELEMENTS_CREATED = Math.max(NB_TRAIN_ELEMENTS_CREATED, newId + 1);
         }
         trainNumber = -1;
-        isLeading = false;
         currentForce = new Point2D.Double();
         absolutePosition = new Point2D.Double();
         headingDegrees = Double.MAX_VALUE;
         linearSpeed = 0;
-        size = 0.03;
+        size = 3;
+        spriteZoomLevel = 0.15;
         mass = 1;
         isEngineActive = true;
         isBraking = false;

@@ -18,7 +18,7 @@ public class Passenger {
     private double vx, vy;
     private double vMax;
     private int targetStationId;
-    private double size = 10;
+    private double size = 1;
     private Color color;
     private static int NB_PASSENGERS_CREATED = 0;
     protected int id;

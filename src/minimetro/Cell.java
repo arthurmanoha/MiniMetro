@@ -22,7 +22,7 @@ public class Cell {
 
     private static int DEFAULT_NB_RAILS = 10;
 
-    protected static double cellSize = 100;
+    protected static double cellSize = 10;
 
     protected Color color;
 

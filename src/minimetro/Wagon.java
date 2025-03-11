@@ -60,8 +60,8 @@ public class Wagon extends TrainElement {
     @Override
     protected void move(double dt) {
         super.move(dt);
-        double rowMargin = 10.5;
-        double colMargin = 8.0;
+        double rowMargin = 1.05;
+        double colMargin = 0.8;
         int nbRows = maxCapacity / nbPassengerPerRow;
         int nbCols = maxCapacity / nbRows;
         int passengerRank = 0;
