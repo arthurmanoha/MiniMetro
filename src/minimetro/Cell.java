@@ -195,6 +195,10 @@ public class Cell {
         newTrain.setRow(this.row);
         newTrain.setCol(this.col);
         snapToRail();
+        if (this.stopTimerDuration > 0) {
+            // The train shall stop when it leaves but not now as it just arrived.
+            newTrain.stopTimerDuration = -1;
+        }
     }
 
     protected boolean hasLoco() {
