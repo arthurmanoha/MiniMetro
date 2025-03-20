@@ -309,17 +309,29 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         World.map.addStation(newStation, this.id);
     }
 
+    private String keep2Decimals(String s) {
+        int rankOfDot = s.indexOf('.');
+        if (rankOfDot == -1) {
+            // No dot, return parameter unchanged
+            return s;
+        } else {
+            // Trim after 2 decimals
+            String trimmed = s.substring(0, Math.min(s.length(), rankOfDot + 3));
+            return trimmed;
+        }
+    }
+
     @Override
     public String toString() {
         String elemClass = "" + getClass();
         elemClass = elemClass.substring(elemClass.indexOf(".") + 1);
         return elemClass
                 + " " + this.id
-                + " " + this.absolutePosition.x
-                + " " + this.absolutePosition.y
-                + " " + this.headingDegrees
-                + " " + this.linearSpeed
-                + " " + this.currentSpeedLimit;
+                + keep2Decimals(" " + this.absolutePosition.x)
+                + keep2Decimals(" " + this.absolutePosition.y)
+                + keep2Decimals(" " + this.headingDegrees)
+                + keep2Decimals(" " + this.linearSpeed)
+                + keep2Decimals(" " + this.currentSpeedLimit);
     }
 
     protected void save(FileWriter writer) {

@@ -52,6 +52,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
     JPanel mainToolbar;
     JScrollPane mainToolbarScrollpane;
     JLabel worldMapLabel;
+    JTextField itineraryTextField;
 
     int windowWidth = 1100;
     int windowHeight = 1035;
@@ -267,9 +268,18 @@ public class GUI extends JFrame implements PropertyChangeListener {
         createButton("no_limit.png", GuiTool.SPEED_INDICATOR.toString(), 9, 0, 1, "Integer.MAX_VALUE");
         createButton("menu_save.png", "save", 8, 1);
         createButton("menu_load.png", "load", 9, 1);
-        createButton("stop_10.png", GuiTool.STOP_TIMER.toString(), 10, 0, 1, "10");
-        createButton("stop_30.png", GuiTool.STOP_TIMER.toString(), 10, 1, 1, "30");
+        createButton("stop_10.png", GuiTool.STOP_TIMER.toString(), 10, 0, 1, "2");
+        createButton("stop_30.png", GuiTool.STOP_TIMER.toString(), 10, 1, 1, "10");
         createButton("generate_terrain.png", "displayTerrain", 11, 0);
+
+        System.out.println("Creating itineraryTextField");
+        itineraryTextField = new JTextField("", 3);
+        itineraryTextField.setSize(10, 10);
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 11;
+        constraints.gridy = 1;
+        constraints.gridwidth = 1;
+        buttonPanel.add(itineraryTextField, constraints);
 
         panel.setLayout(new BorderLayout());
         panel.add(buttonPanel, BorderLayout.SOUTH);
@@ -334,6 +344,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
                         try {
                             method.invoke(this);
                         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+                            System.out.println("Error: method " + method.getName() + " from class " + method.getDeclaringClass());
                             Logger.getLogger(WorldPanel.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     });
@@ -371,8 +382,41 @@ public class GUI extends JFrame implements PropertyChangeListener {
     }
 
     public void generatePassengers() {
-        world.generatePassengers();
+        if (!itineraryTextField.getText().isBlank() && !itineraryTextField.getText().isEmpty()) {
+            String textTab[] = itineraryTextField.getText().split(" ");
+            System.out.println("Reading tab");
+            int startStation = -1;
+            if (textTab.length > 0) {
+                startStation = Integer.valueOf(textTab[0]);
+            }
+            System.out.println("start station: " + startStation);
+            int targetStation = -1;
+            if (textTab.length > 1) {
+                targetStation = Integer.valueOf(textTab[1]);
+            }
+            System.out.println("target station: " + targetStation);
+            int nbPassengers = -1;
+            if (textTab.length > 2) {
+                nbPassengers = Integer.valueOf(textTab[2]);
+            }
+            System.out.println("nb passengers: " + nbPassengers);
+
+            System.out.println("Creating " + nbPassengers + " passenger"
+                    //                    + (nbPassengers >= 2 ? "s" : "") // Plural please
+                    + " at " + startStation + " going to " + targetStation);
+            System.out.println("yolo");
+
+            System.out.println("calling world.generatePassengers("
+                    + startStation + ", " + targetStation + ", " + nbPassengers + ");");
+            world.generatePassengers(startStation, targetStation, nbPassengers);
+            System.out.println("end world.generatePassengers");
+
+        } else {
+            System.out.println("Generating random passengers");
+            world.generatePassengers();
+        }
         panel.repaint();
+        System.out.println("End generatePssengers");
     }
 
     public void removePassengers() {

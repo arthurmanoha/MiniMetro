@@ -4,6 +4,7 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
+Game crashes when loading onboard passengers that were saved before their wagon.
 Wagons saved on a the inactive side of a SwitchCell are not properly loaded.
 Speed indicators may be placed on switch cells but are not saved and loaded.
 World map is not properly updated on station removal.
@@ -16,15 +17,28 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+A loco shall stop after leaving a cell with a stop signal only if the next cell does not have one. That allows for multi-cell stations.
+Stations shall be drawn to be visually different from grass or water tiles.
+Stations shall have a built-in stop signal.
+Stations shall have built-in speed limits.
+A cleaning tool shall remove any disconnected track section.
+Train-specific switch: a switch shall be given a list of the locos that it will bring to one exit, the other locos will take the other exit.
+An undo tool shall be available for some actions, such as the cleaning tool.
+Individual cells of the terrain may be defined manually and stored in the save file.
+Tracks shall have a simplified drawing version for large-scale visualization.
+Trains shall have a simplified drawing version for large-scale visualization, with the name, speed and stop info only visible when zoomed in.
+Speed limits and stop signs shall spread to the whole tile at large scales.
+Biomes shall be defined via a Voronoi diagram or a method inspired from the Minecraft biome generator.
+Switches shall have an auto-toggle mode, and toggle after each train crosses.
+A pathfinder tool shall find the shortest path between two stations, with constraints on the terrain, altitude, high-speed tracks, etc.
 Stations shall encompass several cells, including one with rails and its neighbors without rails as a platform.
 TrainElements shall be linked together via their ends, not their centers.
 TrainElements shall have two sets of wheels that follow the tracks, not just their center.
 Passengers may board at low speed, so that longer trains may be used.
-A cleaning tool shall remove any disconnected track section.
+Boats.
 Display latitudes and longitudes on the side of the map.
 Speed limits options for the menu shall be read from the config file.
 Stop timers shall be set to 5 and 10 seconds.
-Stations shall have a built-in stop signal.
 i18n
 Some objects have a vision range that allows to discover nearby areas.
 Add a smoother interpolation for Perlin noise.
@@ -70,8 +84,6 @@ Water areas can be crossed by bridges.
 The world shall contain mountains of different altitudes.
 A railroad on a slope shall have an impact on the speed of any TrainElement that drives on it.
 TrainElements shall turn smoothly in curves.
-Tracks and trains shall have a simplified drawing version for large-scale visualization.
-Speed limits and stop signs shall spread to the whole tile at large scales.
 Cells shall be drawn as sprites.
 A TrainLink shall be connected to a point close to either end of the TrainElement, not to its center.
 A new TrainLink shall be created or severed between two existing TrainElements, without any TE being created or deleted.
