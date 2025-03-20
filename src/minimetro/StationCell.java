@@ -52,8 +52,7 @@ public class StationCell extends Cell {
         passengersLeavingCell = new ArrayList<>();
         walkways = new HashMap<>();
         color = getStationColor(stationId);
-//        this.speedLimit = 2.0;
-//        this.stopTimerDuration = 2.0;
+        this.stopTimerDuration = 2.0;
     }
 
     public StationCell(Cell previousCell) {
