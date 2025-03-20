@@ -153,4 +153,8 @@ public class Wagon extends TrainElement {
         }
         return text;
     }
+
+    protected ArrayList<Passenger> getPassengers() {
+        return passengersList;
+    }
 }

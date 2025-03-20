@@ -20,7 +20,7 @@ public class StationCell extends Cell {
     private double LATERAL_MARGIN_PERCENTAGE = 25;
 
     private static ArrayList<Color> colorList;
-    private int id;
+    protected int stationId;
     protected ArrayList<Passenger> passengerList;
     protected ArrayList<Passenger> passengersLeavingCell;
 
@@ -38,18 +38,22 @@ public class StationCell extends Cell {
         super(previousCell);
         this.color = Color.yellow;
         if (newId == -1) {
-            id = NB_STATIONS_CREATED;
+            stationId = NB_STATIONS_CREATED;
             NB_STATIONS_CREATED++;
+            System.out.println("Created station " + stationId + " in sequence, NB_STATIONS_CREATED = " + NB_STATIONS_CREATED);
         } else {
-            id = newId;
-            NB_STATIONS_CREATED = max(NB_STATIONS_CREATED, newId) + 1;
+            stationId = newId;
+            NB_STATIONS_CREATED = max(NB_STATIONS_CREATED, newId + 1);
+            System.out.println("Created station with specified id " + stationId + ", NB_STATIONS_CREATED = " + NB_STATIONS_CREATED);
         }
         this.row = previousCell.row;
         this.col = previousCell.col;
         passengerList = new ArrayList<>();
         passengersLeavingCell = new ArrayList<>();
         walkways = new HashMap<>();
-        color = getStationColor(id);
+        color = getStationColor(stationId);
+//        this.speedLimit = 2.0;
+//        this.stopTimerDuration = 2.0;
     }
 
     public StationCell(Cell previousCell) {
@@ -57,7 +61,7 @@ public class StationCell extends Cell {
     }
 
     public int getId() {
-        return id;
+        return stationId;
     }
 
     public static void resetNbStationsCreated() {
@@ -99,11 +103,20 @@ public class StationCell extends Cell {
         g.fillRect((int) (xApp - appSize * 0.5 + 3), (int) (yApp - appSize * 0.5 + 3),
                 (int) appSize - 6, (int) appSize - 6);
 
-        g.setColor(Color.black);
-        g.setFont(new Font("helvetica", Font.PLAIN, (int) (max(10, appSize / 15))));
+        int rr = this.color.getRed();
+        int gg = this.color.getGreen();
+        int bb = this.color.getBlue();
+        int grayLevel = (rr + gg + bb);
+        if (grayLevel > 255) {
+            g.setColor(Color.black);
+        } else {
+            g.setColor(Color.white);
+        }
+
+        g.setFont(new Font("helvetica", Font.PLAIN, (int) (max(10, appSize * 0.75))));
         int textHeight = g.getFontMetrics().getHeight();
-        g.drawString(id + "",
-                (int) (xApp - appSize / 2 + 1),
+        g.drawString(stationId + "",
+                (int) (xApp - appSize * 0.25 + 1),
                 (int) (yApp - appSize / 2 + textHeight));
         for (Passenger p : passengerList) {
             p.paint(g, x0, y0, zoom);
@@ -142,7 +155,7 @@ public class StationCell extends Cell {
         for (TrainElement te : trainElements) {
             if (te instanceof Wagon) {
                 Wagon wagon = (Wagon) te;
-                this.passengerList.addAll(wagon.dropPassengers(this.id));
+                this.passengerList.addAll(wagon.dropPassengers(this.stationId));
             }
         }
 

@@ -35,10 +35,9 @@ public class World {
     public static final String YES = "yes";
     public static final String NO = "no";
 
-    private static final boolean IS_TESTING_PASSENGERS = false;
-    private static final int TEST_STARTING_STATION = 1;
-    private static final int TEST_TARGET_STATION_NUMBER = 4;
-    private static final int TEST_NB_PASSENGERS = 1;
+    private double lowSpeedLimit = 2;
+    private double mediumSpeedLimit = 10;
+    private double highSpeedLimit = 50;
 
     private int nbRows, nbCols;
     protected Cell cells[][];
@@ -75,7 +74,7 @@ public class World {
     private ArrayList<StationCell> stationList;
 
     public World() {
-        this(300, 300);
+        this(600, 600);
     }
 
     public World(int newNbRows, int newNbCols) {
@@ -252,6 +251,24 @@ public class World {
         reinsertMovingPassengers();
         transferTrainsBetweenCells();
 
+        // Update paths for passengers in stations or stopped trains
+        for (Cell c : getAllCells()) {
+            if (c instanceof StationCell) {
+                StationCell station = (StationCell) c;
+                for (Passenger p : station.passengerList) {
+                    World.map.computePath(station.getId(), p);
+                }
+                for (TrainElement te : c.getAllElements()) {
+                    if (te instanceof Wagon && te.isStopped()) {
+                        Wagon wagon = (Wagon) te;
+                        for (Passenger p : wagon.getPassengers()) {
+                            World.map.computePath(station.getId(), p);
+                        }
+                    }
+                }
+            }
+        }
+
         // Flush transfer lists
         for (Cell c : activeCells) {
             c.flushMovingTrains();
@@ -394,9 +411,9 @@ public class World {
      *
      * @param row
      * @param col
-     * @param id
+     * @param newStationId
      */
-    protected void toggleStation(int row, int col, int id) {
+    protected void toggleStation(int row, int col, int newStationId) {
         Cell oldCell = this.getCellOrCreateIfNull(row, col);
         if (oldCell != null) {
             Cell newCell;
@@ -404,11 +421,13 @@ public class World {
             ArrayList<TrainElement> oldTrains = oldCell.getAllElements();
 
             if (oldCell instanceof StationCell) {
+                // Remove a station
                 newCell = new Cell(oldCell);
                 stationList.remove((StationCell) oldCell);
                 setCell(row, col, newCell);
             } else {
-                newCell = new StationCell(oldCell, id);
+                // Create a station
+                newCell = new StationCell(oldCell, newStationId);
                 stationList.add((StationCell) newCell);
             }
             if (!newCell.isEmpty()) {
@@ -840,37 +859,50 @@ public class World {
     }
 
     protected void generatePassengers() {
+
         int nbNewPassengers;
-        if (IS_TESTING_PASSENGERS) {
-            nbNewPassengers = TEST_NB_PASSENGERS;
-        } else {
+
+        nbNewPassengers = new Random().nextInt(30);
+        generatePassengers(-1, -1, nbNewPassengers);
+    }
+
+    protected void generatePassengers(int startStationId, int targetStationId, int nbNewPassengers) {
+
+        int nbPassengersGenerated = 0;
+
+        if (nbNewPassengers == -1) {
             nbNewPassengers = new Random().nextInt(30);
         }
-        int nbPassengersGenerated = 0;
+
         while (nbPassengersGenerated < nbNewPassengers) {
 
-            // Choose one station at random
-            int startingRank;
-            if (IS_TESTING_PASSENGERS && TEST_STARTING_STATION != -1) {
-                startingRank = TEST_STARTING_STATION;
-            } else {
+            StationCell startingStation = null;
+            if (startStationId == -1) {
+                int startingRank;
+                // Choose one station at random
                 startingRank = new Random().nextInt(stationList.size());
+                startingStation = stationList.get(startingRank);
+            } else {
+                for (StationCell c : stationList) {
+                    if (c.stationId == startStationId) {
+                        startingStation = (StationCell) c;
+                    }
+                }
+                if (startingStation == null) {
+                    System.out.println("Error World, cannot find station " + startStationId);
+                }
             }
-            StationCell startingStation = stationList.get(startingRank);
 
             // Set the target of the passenger
-            int targetStationNumber;
-            if (IS_TESTING_PASSENGERS) {
-                targetStationNumber = TEST_TARGET_STATION_NUMBER;
-            } else {
+            int currentTarget;
+            if (targetStationId == -1) {
                 int targetRank = new Random().nextInt(stationList.size());
-                if (targetRank == startingRank) { // Target station must be different from start station.
-                    targetRank = (targetRank + 1) % (stationList.size());
-                }
-                targetStationNumber = stationList.get(targetRank).getId();
+                currentTarget = stationList.get(targetRank).getId();
+            } else {
+                currentTarget = targetStationId;
             }
-            Passenger newPassenger = new Passenger(targetStationNumber);
-            newPassenger.setTargetStationId(targetStationNumber);
+
+            Passenger newPassenger = new Passenger(currentTarget);
             // Add the passenger to the station
             startingStation.addPassenger(newPassenger);
             if (!activeCells.contains(startingStation)) {
@@ -881,14 +913,6 @@ public class World {
         }
 
         World.map.computeWalkways();
-        for (Cell c : getAllCells()) {
-            if (c instanceof StationCell) {
-                StationCell station = (StationCell) c;
-                for (Passenger p : station.passengerList) {
-                    World.map.computePath(station.getId(), p);
-                }
-            }
-        }
     }
 
     /**
@@ -904,6 +928,7 @@ public class World {
                 c.setActive(false);
             }
         }
+        updateListeners();
     }
 
     protected void boardPassengers() {
@@ -1090,16 +1115,18 @@ public class World {
                 // Onboard wagonId Passenger passId targetStation xPass yPass lastStep (...) firstStep
                 wagonId = Integer.valueOf(split[1]);
                 Wagon w = getWagon(wagonId);
-                id = Integer.valueOf(split[3]);
-                targetStationId = Integer.valueOf(split[4]);
-                x = Double.valueOf(split[5]);
-                y = Double.valueOf(split[6]);
-                newPassenger = new Passenger(id, targetStationId, x, y);
-                for (rank = 7; rank < split.length; rank++) {
-                    int newItineraryStep = Integer.valueOf(split[rank]);
-                    newPassenger.addPathStep(newItineraryStep);
+                if (w != null) {
+                    id = Integer.valueOf(split[3]);
+                    targetStationId = Integer.valueOf(split[4]);
+                    x = Double.valueOf(split[5]);
+                    y = Double.valueOf(split[6]);
+                    newPassenger = new Passenger(id, targetStationId, x, y);
+                    for (rank = 7; rank < split.length; rank++) {
+                        int newItineraryStep = Integer.valueOf(split[rank]);
+                        newPassenger.addPathStep(newItineraryStep);
+                    }
+                    w.receivePassenger(newPassenger, true);
                 }
-                w.receivePassenger(newPassenger, true);
                 break;
             case PASSENGER:
                 // Passenger id targetId x y pathsteps

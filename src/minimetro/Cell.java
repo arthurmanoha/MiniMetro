@@ -83,6 +83,8 @@ public class Cell {
             this.stopTimerDuration = previousCell.stopTimerDuration;
             this.isActive = previousCell.isActive;
             this.altitude = previousCell.altitude;
+            this.row = previousCell.row;
+            this.col = previousCell.col;
         }
     }
 
@@ -797,7 +799,7 @@ public class Cell {
      * tracks, or 0 to 3 for switches)
      * @return
      */
-    protected boolean isLinked(CardinalPoint cardinalPoint, int index0, int index1) {
+    private boolean isLinked(CardinalPoint cardinalPoint, int index0, int index1) {
         try {
             if (links.isEmpty()) {
                 return false;
@@ -809,6 +811,12 @@ public class Cell {
         }
     }
 
+    /**
+     * Test if a cell has a rail link in the given direction.
+     *
+     * @param cardinalPoint
+     * @return
+     */
     protected boolean isLinked(CardinalPoint cardinalPoint) {
         return isLinked(cardinalPoint, 0, 1);
     }
