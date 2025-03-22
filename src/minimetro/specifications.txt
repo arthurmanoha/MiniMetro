@@ -17,7 +17,7 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
-A loco shall stop after leaving a cell with a stop signal only if the next cell does not have one. That allows for multi-cell stations.
+A tool shall find the shortest path between two specified cells using the A* pathfinding algorithm.
 Stations shall be drawn to be visually different from grass or water tiles.
 Stations shall have a built-in stop signal.
 Stations shall have built-in speed limits.
@@ -132,6 +132,8 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Temporary version of the Dijkstra algorithm for pathfinding.
+A loco shall stop after leaving a cell with a stop signal only if the next cell does not have one. That allows for multi-cell stations.
 Scale change: one cell is as long as a single TrainElement.
 Fixed: A switch no longer can be deleted when hosting a train.
 A StationCell may not host a switch.

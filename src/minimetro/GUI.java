@@ -272,6 +272,12 @@ public class GUI extends JFrame implements PropertyChangeListener {
         createButton("stop_30.png", GuiTool.STOP_TIMER.toString(), 10, 1, 1, "10");
         createButton("generate_terrain.png", "displayTerrain", 11, 0);
 
+        createButton("A_start.png", GuiTool.A_STAR_START.toString(), 12, 0);
+        createButton("A_end.png", GuiTool.A_STAR_END.toString(), 12, 1);
+        createButton("A_raz.png", "astarRAZ", 13, 0);
+        createButton("A_step.png", "astarStep", 13, 1);
+        createButton("A_go", "astarFull", 14, 0);
+
         System.out.println("Creating itineraryTextField");
         itineraryTextField = new JTextField("", 3);
         itineraryTextField.setSize(10, 10);
@@ -427,4 +433,15 @@ public class GUI extends JFrame implements PropertyChangeListener {
         panel.toggleDisplayTerrain();
     }
 
+    public void astarRAZ() {
+        panel.astarRAZ();
+    }
+
+    public void astarStep() {
+        panel.astarStep();
+    }
+
+    public void astarFull() {
+        panel.astarFull();
+    }
 }

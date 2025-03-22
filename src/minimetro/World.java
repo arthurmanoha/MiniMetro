@@ -414,6 +414,7 @@ public class World {
      * @param newStationId
      */
     protected void toggleStation(int row, int col, int newStationId) {
+        System.out.println("station row " + row + ", col " + col);
         Cell oldCell = this.getCellOrCreateIfNull(row, col);
         if (oldCell != null) {
             Cell newCell;

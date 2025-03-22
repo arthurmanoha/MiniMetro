@@ -16,5 +16,7 @@ enum GuiTool {
     SPEED_INDICATOR,
     STOP_TIMER,
     LONG_DISTANCE_TRACKS,
-    SWITCH
+    SWITCH,
+    A_STAR_START,
+    A_STAR_END
 }

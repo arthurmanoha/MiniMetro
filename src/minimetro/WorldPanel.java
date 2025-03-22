@@ -53,6 +53,8 @@ public class WorldPanel extends JPanel implements MouseListener,
 
     private Color defaultBackgroundColor;
 
+    private AStarSolver solver;
+
     public WorldPanel(World w) {
         super();
         setSize(new Dimension(800, 600));
@@ -89,6 +91,7 @@ public class WorldPanel extends JPanel implements MouseListener,
 
         mustDisplayTerrain = true;
 
+        solver = new AStarSolver(world);
     }
 
     @Override
@@ -141,6 +144,9 @@ public class WorldPanel extends JPanel implements MouseListener,
         g.setColor(Color.orange);
         g.drawLine((int) x0, (int) (graphicsCurrentHeight - y0), (int) (x0 + 50), (int) (graphicsCurrentHeight - y0));
         g.drawLine((int) x0, (int) (graphicsCurrentHeight - y0), (int) x0, (int) (graphicsCurrentHeight - y0 - 50));
+
+        // Draw the path found by the solver
+        solver.paint(g, x0, y0, zoomLevel);
     }
 
     private void paintStraightTracksPossibilities(Graphics g) {
@@ -308,6 +314,14 @@ public class WorldPanel extends JPanel implements MouseListener,
             }
             case STOP_TIMER -> {
                 world.setStopTimer((int) currentRow, (int) currentCol);
+            }
+            case A_STAR_START -> {
+                solver.setStart((int) currentRow, (int) currentCol);
+                repaint();
+            }
+            case A_STAR_END -> {
+                solver.setEnd((int) currentRow, (int) currentCol);
+                repaint();
             }
             }
         }
@@ -616,6 +630,22 @@ public class WorldPanel extends JPanel implements MouseListener,
 
     protected void toggleDisplayTerrain() {
         mustDisplayTerrain = !mustDisplayTerrain;
+        repaint();
+    }
+
+    protected void astarRAZ() {
+        solver.reset();
+        repaint();
+    }
+
+    protected void astarStep() {
+        solver.step();
+        repaint();
+
+    }
+
+    protected void astarFull() {
+        solver.fullSolve();
         repaint();
     }
 }
