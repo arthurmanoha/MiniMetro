@@ -645,8 +645,6 @@ public class WorldPanel extends JPanel implements MouseListener,
     }
 
     protected void astarFull() {
-        System.out.println("WorldPanel.astarFull() start");
         solver.fullSolve();
-        System.out.println("WorldPanel.astarFull() after solve");
     }
 }

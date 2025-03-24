@@ -1344,4 +1344,24 @@ public class World {
 
         return altitude > -0.05;
     }
+
+    public ArrayList<Cell> getAvailableNeighbors(int row, int col) {
+
+        ArrayList<Cell> neighbors = new ArrayList<>();
+
+        for (int dRow = -1; dRow <= 1; dRow++) {
+            for (int dCol = -1; dCol <= 1; dCol++) {
+                if (dRow != 0 || dCol != 0) {
+                    Cell candidateNeighbor = getCell(row + dRow, col + dCol);
+                    if (candidateNeighbor != null // Cell actually exists
+                            && candidateNeighbor.altitude >= -0.05 // not sea
+                            && candidateNeighbor.altitude <= 0.1) { // not mountains
+                        // The cell is buildable.
+                        neighbors.add(candidateNeighbor);
+                    }
+                }
+            }
+        }
+        return neighbors;
+    }
 }

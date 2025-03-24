@@ -348,22 +348,16 @@ public class GUI extends JFrame implements PropertyChangeListener {
                 if (method.getParameterCount() == 0) {
                     newButton.addActionListener((e) -> {
                         try {
-                            System.out.println("    before method");
                             method.invoke(this);
-                            System.out.println("    after method");
                         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
                             System.out.println("    Error: method " + method.getName() + " from class " + method.getDeclaringClass());
                             Logger.getLogger(WorldPanel.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                        System.out.println("    End of action listener");
                     });
-                    System.out.println("    After setting up the action listener");
                 } else {
                     newButton.addActionListener((e) -> {
                         try {
-                            System.out.println("    method with parameters being invoked START");
                             method.invoke(this, parameter);
-                            System.out.println("    method with parameters being invoked END");
                         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
                             Logger.getLogger(WorldPanel.class.getName()).log(Level.SEVERE, null, ex);
                         }
@@ -444,16 +438,11 @@ public class GUI extends JFrame implements PropertyChangeListener {
     }
 
     public void astarStep() {
-        System.out.println("    GUI.asterStep start");
         panel.astarStep();
-        System.out.println("    GUI.asterStep end");
     }
 
     public void astarFull() {
-        System.out.println("    GUI.asterFull start");
         panel.astarFull();
-        System.out.println("    GUI astarFull repaint");
         repaint();
-        System.out.println("    GUI.asterFull end");
     }
 }

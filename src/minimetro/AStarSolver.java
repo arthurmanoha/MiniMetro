@@ -51,37 +51,38 @@ public class AStarSolver {
             // Center color is specified as a parameter
             if (this.isInFinalPath) {
                 g.setColor(Color.orange);
+                g.fillRect((int) xApp + margin, (int) yApp + margin, (int) appSize - 2 * margin, (int) appSize - 2 * margin);
             } else {
                 g.setColor(c);
+                g.drawRect((int) xApp + margin, (int) yApp + margin, (int) appSize - 2 * margin, (int) appSize - 2 * margin);
             }
-            g.fillRect((int) xApp + margin, (int) yApp + margin, (int) appSize - 2 * margin, (int) appSize - 2 * margin);
 
-            // Paint predecessor
-            if (predecessor == null) {
-                g.setColor(Color.black);
-                g.drawRect(
-                        (int) (xApp + appSize / 4),
-                        (int) (yApp + appSize / 4),
-                        (int) (appSize / 2),
-                        (int) (appSize / 2));
-
-            } else {
-                g.setColor(Color.yellow);
-                int scale = 20;
-
-                int dx = predecessor.x - this.x;
-                int dy = predecessor.y - this.y;
-                g.drawLine((int) (xApp + appSize / 2), (int) (yApp + appSize / 2),
-                        (int) (xApp + appSize / 2 + scale * dx), (int) (yApp + appSize / 2 + scale * dy));
-            }
-////            // Print cost
-            g.setColor(Color.black);
-            g.drawString("g: " + gScore, (int) xApp, (int) (yApp + appSize / 3));
-            g.drawString("h: " + hScore, (int) xApp, (int) (yApp + 2 * appSize / 3));
+//            // Paint predecessor
+//            if (predecessor == null) {
+//                g.setColor(Color.black);
+//                g.drawRect(
+//                        (int) (xApp + appSize / 4),
+//                        (int) (yApp + appSize / 4),
+//                        (int) (appSize / 2),
+//                        (int) (appSize / 2));
+//
+//            } else {
+//                g.setColor(Color.yellow);
+//                int scale = 20;
+//
+//                int dx = predecessor.x - this.x;
+//                int dy = predecessor.y - this.y;
+//                g.drawLine((int) (xApp + appSize / 2), (int) (yApp + appSize / 2),
+//                        (int) (xApp + appSize / 2 + scale * dx), (int) (yApp + appSize / 2 + scale * dy));
+//            }
+//            // Print cost
+//            g.setColor(Color.black);
+//            g.drawString("g: " + gScore, (int) xApp, (int) (yApp + appSize / 3));
+//            g.drawString("h: " + hScore, (int) xApp, (int) (yApp + 2 * appSize / 3));
         }
 
         private void computeHeuristic() {
-            hScore = 1000; // Math.abs(end.x - this.x) + Math.abs(end.y - this.y);
+            hScore = Math.abs(end.x - this.x) + Math.abs(end.y - this.y);
         }
 
         private double getF() {
@@ -128,14 +129,26 @@ public class AStarSolver {
     public void reset() {
         openList.clear();
         closedList.clear();
+//        for (PathPoint p : finalPath) {
+//            p.isInFinalPath = false;
+//        }
         finalPath.clear();
         openList.add(start);
         isEndReached = false;
     }
 
     public void fullSolve() {
-        while (!isEndReached) {
-            step();
+
+        // TODO: limit the search to a few seconds in case the end of the requested path is inaccessible.
+        boolean loop = true;
+        int step = 0;
+
+        while (loop && step < 30000) {
+            int result = step();
+            if (result != 0) { // result !=0 means either a solution was found or no solution exists.
+                loop = false;
+            }
+            step++;
         }
     }
 
@@ -145,6 +158,9 @@ public class AStarSolver {
         while (p != null) {
             finalPath.add(p);
             p = p.predecessor;
+            if (p != null) {
+                p.isInFinalPath = true;
+            }
         }
     }
 
@@ -176,12 +192,26 @@ public class AStarSolver {
         }
     }
 
-    public void step() {
+    /**
+     * Compute one step of the A* algorithm.
+     *
+     * @return +1 if the solution was found, -1 if there is no solution, 0 if
+     * the computation is not done or stuck yet.
+     */
+    public int step() {
 
-//        System.out.println("Step Start.");
+        if (isEndReached) {
+            return 1;
+        }
+
+        if (start == null || end == null) {
+            // No start or end specified
+            System.out.println("Need to specify both start and end.");
+            return -1;
+        }
+
         if (openList.isEmpty()) {
-            System.out.println("Open list is empty.");
-            return;
+            return -1; // No solution.
         }
 
         // Get the lowest f-score node
@@ -191,7 +221,7 @@ public class AStarSolver {
         if (currentNode.equals(end)) {
             isEndReached = true;
             computeFinalPath(currentNode);
-            return;
+            return 1; // Solution found !
         }
 
         ArrayList<PathPoint> neighbors = computeNeighbors(currentNode);
@@ -204,23 +234,17 @@ public class AStarSolver {
 
                 if (openList.contains(neighbor)) {
                     // Test if the new potential score is better
-//                    System.out.println("current F + unit: " + (currentNode.getF() + 1)
-//                            + ", neighbor F: " + neighbor.getF());
 
                     if (currentNode.getF() + unitCost > neighbor.getF()) {
-                        System.out.println("            BETTER PATH");
                         // Found a better way to reach this neighbor.
                         neighbor.predecessor = currentNode;
-//                        System.out.println("neighbor.gScore was " + neighbor.gScore);
                         neighbor.gScore = currentNode.gScore + unitCost;
-//                        System.out.println("neighbor.gScore is now " + neighbor.gScore);
 
                         // TEST START
                         if (!openList.contains(neighbor)) {
                             openList.add(neighbor);
                         }
                         // TEST END
-
                     }
                 } else {
                     // Neighbor not in open list, we add it.
@@ -231,13 +255,10 @@ public class AStarSolver {
                 neighbor.gScore = currentNode.gScore + unitCost; // ???
             }
         }
-//        if (!isEndReached) {
         closedList.add(currentNode);
         openList.sort(comparator);
 
-        // Test list sorting
-//        }
-//        System.out.println("Step End");
+        return 0; // No solution found yet.
     }
 
     private ArrayList<PathPoint> computeNeighbors(PathPoint currentNode) {
@@ -245,15 +266,11 @@ public class AStarSolver {
         // the cells where rails may be built, not the oceans or mountains.
 
         ArrayList<PathPoint> neighbors = new ArrayList<>();
-
-        for (int dRow = -1; dRow <= 1; dRow++) {
-            for (int dCol = -1; dCol <= 1; dCol++) {
-                if (dRow != 0 || dCol != 0) {
-                    neighbors.add(new PathPoint(currentNode.x + dCol, currentNode.y + dRow, currentNode));
-                }
-            }
+        // Request the available neighbors from the terrain, i.e. the cells where rails can be built.
+        for (Cell c : world.getAvailableNeighbors(currentNode.y, currentNode.x)) {
+            neighbors.add(new PathPoint(c.col, c.row, currentNode));
         }
-//        System.out.println("Computed " + neighbors.size() + " neighbors.");
+
         return neighbors;
     }
 
