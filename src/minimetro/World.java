@@ -1338,4 +1338,10 @@ public class World {
             }
         }
     }
+
+    protected boolean canUseRails(int row, int col) {
+        double altitude = cells[row][col].altitude;
+
+        return altitude > -0.05;
+    }
 }
