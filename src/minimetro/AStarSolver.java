@@ -3,6 +3,9 @@ package minimetro;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
+import static java.lang.Double.max;
+import static java.lang.Double.min;
+import static java.lang.Math.abs;
 import java.util.ArrayList;
 import java.util.Comparator;
 import static minimetro.Cell.cellSize;
@@ -78,11 +81,14 @@ public class AStarSolver {
 //            // Print cost
 //            g.setColor(Color.black);
 //            g.drawString("g: " + gScore, (int) xApp, (int) (yApp + appSize / 3));
-//            g.drawString("h: " + hScore, (int) xApp, (int) (yApp + 2 * appSize / 3));
+//            g.drawString("h: " + hScore, (int) xApp, (int) (yApp + 3 * appSize / 6));
+//            g.drawString("f: " + getF(), (int) xApp, (int) (yApp + 5 * appSize / 6));
         }
 
         private void computeHeuristic() {
-            hScore = Math.abs(end.x - this.x) + Math.abs(end.y - this.y);
+            double dx = end.x - this.x;
+            double dy = end.y - this.y;
+            hScore = 0.5 * Math.sqrt(dx * dx + dy * dy);
         }
 
         private double getF() {
@@ -235,7 +241,7 @@ public class AStarSolver {
                 if (openList.contains(neighbor)) {
                     // Test if the new potential score is better
 
-                    if (currentNode.getF() + unitCost > neighbor.getF()) {
+                    if (currentNode.getF() + unitCost < neighbor.getF()) {
                         // Found a better way to reach this neighbor.
                         neighbor.predecessor = currentNode;
                         neighbor.gScore = currentNode.gScore + unitCost;
@@ -281,7 +287,10 @@ public class AStarSolver {
             return 1;
         } else {
             // Different row AND different column, i.e. diagonal.
-            return 1.414;
+            return 1.5; // YES
+//            return 1.49; // YES
+//            return 1.45; // NO
+// "NO" values return a path with too much zig-zag
         }
     }
 }

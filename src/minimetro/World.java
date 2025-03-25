@@ -1339,12 +1339,6 @@ public class World {
         }
     }
 
-    protected boolean canUseRails(int row, int col) {
-        double altitude = cells[row][col].altitude;
-
-        return altitude > -0.05;
-    }
-
     public ArrayList<Cell> getAvailableNeighbors(int row, int col) {
 
         ArrayList<Cell> neighbors = new ArrayList<>();
@@ -1355,7 +1349,8 @@ public class World {
                     Cell candidateNeighbor = getCell(row + dRow, col + dCol);
                     if (candidateNeighbor != null // Cell actually exists
                             && candidateNeighbor.altitude >= -0.05 // not sea
-                            && candidateNeighbor.altitude <= 0.1) { // not mountains
+                            && candidateNeighbor.altitude <= 0.2 // not mountains
+                            ) {
                         // The cell is buildable.
                         neighbors.add(candidateNeighbor);
                     }
