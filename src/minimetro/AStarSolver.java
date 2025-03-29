@@ -6,9 +6,6 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JPanel;
 import static minimetro.Cell.cellSize;
 
 /**
@@ -39,7 +36,7 @@ public class AStarSolver {
         STILL_COMPUTING
     }
 
-    private class PathPoint extends Point {
+    public class PathPoint extends Point {
 
         public PathPoint predecessor;
         public boolean isInFinalPath;
@@ -153,12 +150,22 @@ public class AStarSolver {
         isEndReached = false;
     }
 
+    public void fullReset() {
+        reset();
+        start = null;
+        end = null;
+        openList.clear();
+    }
+
     public void fullSolve() {
 
         fullSolve(1000);
     }
 
     /**
+     * @param maxComputationTime maximum duration allowed for this computation
+     * step. If no solution was found, the search will pick up where it left
+     * off.
      * @return +1 if the solution was found, -1 if there is no solution, 0 if
      * the computation is not done or stuck yet.
      */
@@ -327,5 +334,18 @@ public class AStarSolver {
 //            return 1.45; // NO
 // "NO" values return a path with too much zig-zag
         }
+    }
+
+    /**
+     * Export the final path
+     *
+     * @return the final path
+     */
+    public ArrayList<PathPoint> getFinalPath() {
+        ArrayList<PathPoint> list = new ArrayList<>();
+        for (PathPoint p : finalPath) {
+            list.add(p);
+        }
+        return list;
     }
 }

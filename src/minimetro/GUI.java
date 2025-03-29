@@ -277,6 +277,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
         createButton("A_raz.png", "astarRAZ", 13, 0);
         createButton("A_step.png", "astarStep", 13, 1);
         createButton("A_go", "astarFull", 14, 0);
+        createButton("A_convert", "astarToTracks", 14, 1);
 
         System.out.println("Creating itineraryTextField");
         itineraryTextField = new JTextField("", 3);
@@ -443,6 +444,11 @@ public class GUI extends JFrame implements PropertyChangeListener {
 
     public void astarFull() {
         panel.astarFull();
+        repaint();
+    }
+
+    public void astarToTracks() {
+        panel.astarToTracks();
         repaint();
     }
 }

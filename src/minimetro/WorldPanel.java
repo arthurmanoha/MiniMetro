@@ -16,8 +16,11 @@ import java.io.IOException;
 import static java.lang.Double.max;
 import static java.lang.Double.min;
 import static java.lang.Math.floor;
+import java.util.ArrayList;
 import java.util.Scanner;
 import javax.swing.JPanel;
+
+import minimetro.AStarSolver.PathPoint;
 
 /**
  *
@@ -656,5 +659,27 @@ public class WorldPanel extends JPanel implements MouseListener,
         });
         astarThread.start();
         return 0;
+    }
+
+    protected void astarToTracks() {
+        System.out.println("Converting A* to tracks...");
+        ArrayList<PathPoint> path = solver.getFinalPath();
+        PathPoint previous = null;
+        for (PathPoint current : path) {
+            // Link current and previous
+
+            if (previous != null && current != null) {
+                int colPrev = previous.x;
+                int rowPrev = previous.y;
+                int colCurr = current.x;
+                int rowCurr = current.y;
+                world.setNewTrack(rowPrev, colPrev, rowCurr, colCurr);
+                world.setNewTrack(rowCurr, colCurr, rowPrev, colPrev);
+            }
+            previous = current;
+        }
+        solver.reset();
+        solver.fullReset();
+        System.out.println("Converting A* to tracks done.");
     }
 }
