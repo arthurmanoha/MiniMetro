@@ -1339,6 +1339,21 @@ public class World {
         }
     }
 
+    private boolean isBuildable(Cell c) {
+        return c.altitude >= -0.05 // not sea
+                && c.altitude <= 0.15 // not mountains
+                ;
+    }
+
+    /**
+     * Any cell shall have 8 available neighbors: horizontal, vertical and
+     * diagonal movements are allowed.
+     *
+     * @param row the row of the cell of which we get the neighbors
+     * @param col the columns of the cell of which we get the neighbors
+     * @return the list of all neighbors that may be linked to the specified
+     * cell
+     */
     public ArrayList<Cell> getAvailableNeighbors(int row, int col) {
 
         ArrayList<Cell> neighbors = new ArrayList<>();
@@ -1348,11 +1363,21 @@ public class World {
                 if (dRow != 0 || dCol != 0) {
                     Cell candidateNeighbor = getCell(row + dRow, col + dCol);
                     if (candidateNeighbor != null // Cell actually exists
-                            && candidateNeighbor.altitude >= -0.05 // not sea
-                            && candidateNeighbor.altitude <= 0.2 // not mountains
-                            ) {
+                            && isBuildable(candidateNeighbor)) {
                         // The cell is buildable.
-                        neighbors.add(candidateNeighbor);
+
+                        if (dRow != 0 && dCol != 0) {
+                            // The path is diagonal, check that the other 2 cells are both terrain.
+                            Cell neighbor1 = getCell(row + dRow, col);
+                            Cell neighbor2 = getCell(row, col + dCol);
+                            if (isBuildable(neighbor1) && isBuildable(neighbor2)) {
+                                // Add this neighbor only if the diagonal has 2 buildable borders
+                                neighbors.add(candidateNeighbor);
+                            }
+                        } else {
+                            // Not a diagonal, not a problem
+                            neighbors.add(candidateNeighbor);
+                        }
                     }
                 }
             }
