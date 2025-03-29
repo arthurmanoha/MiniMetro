@@ -54,6 +54,7 @@ public class WorldPanel extends JPanel implements MouseListener,
     private Color defaultBackgroundColor;
 
     private AStarSolver solver;
+    private Thread astarThread;
 
     public WorldPanel(World w) {
         super();
@@ -644,7 +645,16 @@ public class WorldPanel extends JPanel implements MouseListener,
 
     }
 
-    protected void astarFull() {
-        solver.fullSolve();
+    protected int astarFull() {
+        long singleStepTimeMs = 100;
+        astarThread = new Thread(() -> {
+            int result = 0;
+            while (result == 0) {
+                result = solver.fullSolve(singleStepTimeMs);
+                repaint();
+            }
+        });
+        astarThread.start();
+        return 0;
     }
 }

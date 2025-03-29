@@ -3,11 +3,12 @@ package minimetro;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
-import static java.lang.Double.max;
-import static java.lang.Double.min;
-import static java.lang.Math.abs;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JPanel;
 import static minimetro.Cell.cellSize;
 
 /**
@@ -25,6 +26,18 @@ public class AStarSolver {
     private PathPoint start, end;
     private ArrayList<PathPoint> openList, closedList, finalPath;
     private Comparator<PathPoint> comparator;
+
+    private int nbStepsMax = 50;
+
+    private enum LockObject {
+        INSTANCE
+    }
+
+    public enum ComputationState {
+        SOLUTION_FOUND,
+        NO_SOLUTION,
+        STILL_COMPUTING
+    }
 
     private class PathPoint extends Point {
 
@@ -135,9 +148,6 @@ public class AStarSolver {
     public void reset() {
         openList.clear();
         closedList.clear();
-//        for (PathPoint p : finalPath) {
-//            p.isInFinalPath = false;
-//        }
         finalPath.clear();
         openList.add(start);
         isEndReached = false;
@@ -145,17 +155,31 @@ public class AStarSolver {
 
     public void fullSolve() {
 
-        // TODO: limit the search to a few seconds in case the end of the requested path is inaccessible.
-        boolean loop = true;
-        int step = 0;
+        fullSolve(1000);
+    }
 
-        while (loop && step < 30000) {
-            int result = step();
+    /**
+     * @return +1 if the solution was found, -1 if there is no solution, 0 if
+     * the computation is not done or stuck yet.
+     */
+    public int fullSolve(double maxComputationTime) {
+
+        boolean loop = true;
+        long startTime = System.currentTimeMillis();
+        long currentTime = startTime;
+        int result = -1;
+
+        while (loop && (currentTime - startTime) < maxComputationTime) {
+            synchronized (LockObject.INSTANCE) {
+                result = step();
+            }
             if (result != 0) { // result !=0 means either a solution was found or no solution exists.
                 loop = false;
             }
-            step++;
+            currentTime = System.currentTimeMillis();
         }
+
+        return result;
     }
 
     private void computeFinalPath(PathPoint currentNode) {
@@ -171,30 +195,41 @@ public class AStarSolver {
     }
 
     protected void paint(Graphics g, double x0, double y0, double zoom) {
+        synchronized (LockObject.INSTANCE) {
+            Iterator<PathPoint> iter;
 
-        for (PathPoint p : openList) {
-            p.paint(g, x0, y0, zoom, Color.blue);
-        }
-        for (PathPoint p : closedList) {
-            p.paint(g, x0, y0, zoom, Color.gray);
-        }
-        for (PathPoint p : finalPath) {
-            p.paint(g, x0, y0, zoom, Color.YELLOW);
-        }
-        if (isEndReached) {
-            // Paint solution
-            PathPoint current = end.predecessor;
-            while (current != start && current != null) {// TEST NULL
-                current.paint(g, x0, y0, zoom, Color.YELLOW);
+            iter = openList.iterator();
+            while (iter.hasNext()) {
+                PathPoint p = iter.next();
+                p.paint(g, x0, y0, zoom, Color.blue);
             }
-        }
 
-        if (start != null && start.x != Integer.MAX_VALUE) {
-            // Draw start
-            start.paint(g, x0, y0, zoom, Color.red);
-        }
-        if (end != null && end.x != Integer.MAX_VALUE) {
-            end.paint(g, x0, y0, zoom, Color.red);
+            iter = closedList.iterator();
+            while (iter.hasNext()) {
+                PathPoint p = iter.next();
+                p.paint(g, x0, y0, zoom, Color.gray);
+            }
+
+            iter = finalPath.iterator();
+            while (iter.hasNext()) {
+                PathPoint p = iter.next();
+                p.paint(g, x0, y0, zoom, Color.yellow);
+            }
+            if (isEndReached) {
+                // Paint solution
+                PathPoint current = end.predecessor;
+                while (current != start && current != null) {// TEST NULL
+                    current.paint(g, x0, y0, zoom, Color.YELLOW);
+                }
+            }
+
+            if (start != null && start.x != Integer.MAX_VALUE) {
+                // Draw start
+                start.paint(g, x0, y0, zoom, Color.red);
+            }
+            if (end != null && end.x != Integer.MAX_VALUE) {
+                end.paint(g, x0, y0, zoom, Color.red);
+            }
         }
     }
 
