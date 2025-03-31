@@ -17,7 +17,7 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
-The A* too shall run in a thread.
+An undo tool shall allow to undo the A* track-adding operation.
 Stations shall be drawn to be visually different from grass or water tiles.
 Stations shall have a built-in stop signal.
 Stations shall have built-in speed limits.
@@ -132,6 +132,10 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+The A* tool now run in a thread.
+A* does not cut corners on water.
+A* path is converted to tracks.
+A* avoids seas and mountains.
 A tool shall find the shortest path between two specified cells using the A* pathfinding algorithm.
 Temporary version of the Dijkstra algorithm for pathfinding.
 A loco shall stop after leaving a cell with a stop signal only if the next cell does not have one. That allows for multi-cell stations.
