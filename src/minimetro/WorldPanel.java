@@ -4,6 +4,8 @@ import colorramp.ColorRamp;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -18,7 +20,10 @@ import static java.lang.Double.min;
 import static java.lang.Math.floor;
 import java.util.ArrayList;
 import java.util.Scanner;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 
 import minimetro.AStarSolver.PathPoint;
 
@@ -30,6 +35,13 @@ public class WorldPanel extends JPanel implements MouseListener,
         MouseMotionListener, MouseWheelListener, PropertyChangeListener {
 
     private static boolean DISPLAY_ACTIVE_CELLS_BORDERS = true;
+    private static String PAN_LEFT = "PAN_LEFT";
+    private static String PAN_RIGHT = "PAN_RIGHT";
+    private static String PAN_UP = "PAN_UP";
+    private static String PAN_DOWN = "PAN_DOWN";
+    private static String ZOOM_IN = "ZOOM_IN";
+    private static String ZOOM_OUT = "ZOOM_OUT";
+    private int panSize = 50;
 
     World world;
     private double zoomLevel;
@@ -96,7 +108,81 @@ public class WorldPanel extends JPanel implements MouseListener,
         mustDisplayTerrain = true;
 
         solver = new AStarSolver(world);
+
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), PAN_LEFT);
+        getActionMap().put(PAN_LEFT, panLeft);
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), PAN_RIGHT);
+        getActionMap().put(PAN_RIGHT, panRight);
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), PAN_UP);
+        getActionMap().put(PAN_UP, panUp);
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), PAN_DOWN);
+        getActionMap().put(PAN_DOWN, panDown);
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_NUMPAD0, 0), ZOOM_IN);
+        getActionMap().put(ZOOM_IN, zoomIn);
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_NUMPAD1, 0), ZOOM_OUT);
+        getActionMap().put(ZOOM_OUT, zoomOut);
     }
+
+    private Action panLeft = new AbstractAction(PAN_LEFT) {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            x0 += panSize * zoomLevel;
+            repaint();
+        }
+    };
+
+    private Action panRight = new AbstractAction(PAN_RIGHT) {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            x0 -= panSize * zoomLevel;
+            repaint();
+        }
+    };
+
+    private Action panUp = new AbstractAction(PAN_UP) {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            y0 -= panSize * zoomLevel;
+            repaint();
+        }
+    };
+
+    private Action panDown = new AbstractAction(PAN_DOWN) {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            y0 += panSize * zoomLevel;
+            repaint();
+        }
+    };
+
+    private Action zoomIn = new AbstractAction(ZOOM_IN) {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            zoomLevel *= zoomLevelFactor;
+            int xMid = getWidth() / 2;
+            int yMid = getHeight() / 2;
+//            x0F - xMid = k*(x0I - xMid);
+            x0 = zoomLevelFactor * (x0 - xMid) + xMid;
+            y0 = zoomLevelFactor * (y0 - yMid) + yMid;
+
+            System.out.println("zoom in");
+            repaint();
+        }
+    };
+
+    private Action zoomOut = new AbstractAction(ZOOM_OUT) {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            zoomLevel /= zoomLevelFactor;
+            int xMid = getWidth() / 2;
+            int yMid = getHeight() / 2;
+            x0 = (x0 - xMid) / zoomLevelFactor + xMid;
+            y0 = (y0 - yMid) / zoomLevelFactor + yMid;
+
+            System.out.println("zoom out");
+            repaint();
+        }
+    };
 
     @Override
     public void paintComponent(Graphics g) {
