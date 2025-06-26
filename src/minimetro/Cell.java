@@ -44,6 +44,7 @@ public class Cell {
     private boolean isActive;
 
     protected double altitude;
+    protected int biome;
 
     private static int NB_CELLS_CREATED = 0;
     protected int id;

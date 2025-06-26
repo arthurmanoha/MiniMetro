@@ -10,46 +10,83 @@ import java.util.ArrayList;
  */
 public class BiomePerlinNoise extends PerlinNoise {
 
+    /*
+      Biome centers shall be generated from the origin out. It not enough
+        centers exist to find the biome of any coordinates, we regenerate that list
+        with more elements.
+     */
     private ArrayList<Point> biomeCenters;
+    private int nbBiomes = 500;
+    private int maxDistance = 5;
 
-    public BiomePerlinNoise(double initLargestSpatialPeriod) {
-        super(initLargestSpatialPeriod);
+    public BiomePerlinNoise(double initLargestSpatialPeriod, long seed) {
+        super(initLargestSpatialPeriod, seed);
+        initBiomeCenters();
+        System.out.println("Constructing BiomePerlinNoise "
+                + "with period " + initLargestSpatialPeriod
+                + " and seed " + seed);
     }
 
     @Override
     public double getNoise(double x, double y) {
 
-        double factor = 0.3;
-//        // Stretch half of the map:
-//        double rescaledX = x, rescaledY = y;
-//        double threshold = 2500;
-//        if (x > threshold) {
-//            rescaledX = threshold + factor * (x - threshold);
-//        }
-//        x = rescaledX;
+        return super.getNoise(x, y);
+    }
 
-        double r0 = 1500;
-        double x0 = 2500, y0 = 2500;
+    private void initBiomeCenters() {
+        int size = (int) Cell.cellSize;
+        biomeCenters = new ArrayList<>();
+        double radius = 0;
+        for (int i = 0; i < nbBiomes; i++) {
+            // Generate the coordinates of one biome vertex
+
+            // Each biome center is positioned at random in an annular region around the origin;
+            // all such regions have the same area so that the points are spread evenly.
+            if (i > 0) {
+                radius += 1 / Math.sqrt((double) i);
+            }
+            double bearing = r.nextDouble() * 2 * Math.PI;
+
+            double radiusMultiplier = 250;
+
+            int xBiome = size * (((int) (radiusMultiplier * radius * Math.cos(bearing))) / size);
+            int yBiome = size * (((int) (radiusMultiplier * radius * Math.sin(bearing))) / size);
+            biomeCenters.add(new Point(xBiome, yBiome));
+        }
+    }
+
+    /**
+     * Find which biome the point (x, y) belongs to.
+     *
+     * @param x
+     * @param y
+     * @return
+     */
+    protected int getBiome(double x, double y) {
+        double minDistance = Double.MAX_VALUE;
+        int closestBiomeIndex = -1;
+        for (int currentIndex = 0; currentIndex < biomeCenters.size(); currentIndex++) {
+            Point biomeCenter = biomeCenters.get(currentIndex);
+            double currentDistance = getDistance(biomeCenter.x, biomeCenter.y, x, y);
+            if (currentDistance < minDistance) {
+                minDistance = currentDistance;
+                closestBiomeIndex = currentIndex;
+            }
+        }
+        return closestBiomeIndex;
+    }
+
+    private double getDistance(int x, int y, double x0, double y0) {
         double dx = x - x0;
         double dy = y - y0;
-        double radius = Math.sqrt(dx * dx + dy * dy);
-        if (radius < r0) {
-            x = factor * (x - x0);
-            y = factor * (y - y0);
-        }
+        return Math.sqrt(dx * dx + dy * dy);
+    }
 
-////        System.out.println("radius2: " + radiusSquared + ", min: " + minRadius + ", max: " + maxRadius);
-//        if (y > 4000) {
-//            return super.getNoise(rescaledX, rescaledY) - 0.2;
-//        } else if (y > 3000) {
-//            return super.getNoise(rescaledX, rescaledY) + 0.0;
-//        } else if (y > 2000) {
-//            return super.getNoise(rescaledX, rescaledY) + 0.1;
-//        } else if (y > 1000) {
-//            return super.getNoise(rescaledX, rescaledY) / 3;
-//        } else {
-//            return super.getNoise(rescaledX, rescaledY) * 3;
-//        }
-        return super.getNoise(x, y);
+    public ArrayList<Point> getCenters() {
+        ArrayList centersClone = new ArrayList();
+        for (Point p : biomeCenters) {
+            centersClone.add(new Point(p));
+        }
+        return centersClone;
     }
 }
