@@ -1,5 +1,6 @@
 package minimetro;
 
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
@@ -22,6 +23,8 @@ import static minimetro.CardinalPoint.*;
  * @author arthu
  */
 public class World {
+
+    private long seed;
 
     private static final String RAIL_LINK = "rail_link";
     private static final String SWITCH = "switch";
@@ -74,19 +77,21 @@ public class World {
     private ArrayList<StationCell> stationList;
 
     public World() {
-        this(600, 600);
+        this(10, 10);
     }
 
     public World(int newNbRows, int newNbCols) {
         nbRows = newNbRows;
         nbCols = newNbCols;
+        System.out.println("init world, nbRows: " + nbRows + " cols: " + nbCols);
 
         perlinCellSize = 16;
         perlinScale = perlinCellSize * Cell.cellSize;
-        noiseGenerator = new PerlinNoise(perlinScale);
+        noiseGenerator = new BiomePerlinNoise(perlinScale, 0);
 
         initializeGrid();
         isSettingLongDistanceTracks = false;
+        System.out.println("end world init");
     }
 
     /**
@@ -132,6 +137,8 @@ public class World {
             for (int col = 0; col < nbCols; col++) {
                 Cell newCell = new Cell(row, col);
                 newCell.altitude = getAltitude(col, row);
+                newCell.biome = getBiome(col, row) % 3;
+                newCell.color = null;
                 newCell.absolutePosition = new Point2D.Double(col * Cell.cellSize, (nbRows - row - 1) * Cell.cellSize);
                 cells[row][col] = newCell;
                 newCell.setRow(row);
@@ -954,6 +961,9 @@ public class World {
 
     protected void save(FileWriter writer) {
         try {
+
+            writer.write(seed + "\n");
+
             writer.write(nbRows + " " + nbCols + "\n");
 
             writer.write("isRunning " + (isRunning ? YES : NO) + "\n");
@@ -1010,6 +1020,13 @@ public class World {
     protected void load(Scanner scanner) {
         TrainElement.NB_TRAIN_ELEMENTS_CREATED = 0;
         String text = "";
+
+        // World seed
+        text = scanner.nextLine();
+        seed = Integer.valueOf(text);
+        System.out.println("Loaded seed: " + seed);
+
+        noiseGenerator = new BiomePerlinNoise(perlinScale, seed);
 
         // Grid dimensions
         try {
@@ -1329,6 +1346,16 @@ public class World {
         return noiseGenerator.getNoise(xCell, yCell);
     }
 
+    protected int getBiome(int col, int row) {
+        if (noiseGenerator instanceof PerlinNoise) {
+            double xCell = col * Cell.cellSize;
+            double yCell = (getNbRows() - row - 1) * Cell.cellSize;
+
+            return ((BiomePerlinNoise) noiseGenerator).getBiome(xCell, yCell);
+        }
+        return 0;
+    }
+
     private void removeCell(Cell oldCell) {
         for (int row = 0; row < nbRows; row++) {
             for (int col = 0; col < nbCols; col++) {
@@ -1383,5 +1410,18 @@ public class World {
             }
         }
         return neighbors;
+    }
+
+    protected Iterable<Point> getBiomeCenters() {
+        if (noiseGenerator instanceof BiomePerlinNoise) {
+            // Return a copy of the list of all the biome centers
+            return ((BiomePerlinNoise) noiseGenerator).getCenters();
+        } else {
+            return null;
+        }
+    }
+
+    protected boolean hasBiomes() {
+        return (noiseGenerator instanceof BiomePerlinNoise);
     }
 }

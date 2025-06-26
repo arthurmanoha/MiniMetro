@@ -17,6 +17,8 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Biomes shall be defined via a Voronoi diagram or a method inspired from the Minecraft biome generator.
+A* shall use multiple parallel threads.
 An undo tool shall allow to undo the A* track-adding operation.
 Stations shall be drawn to be visually different from grass or water tiles.
 Stations shall have a built-in stop signal.
@@ -28,7 +30,6 @@ Individual cells of the terrain may be defined manually and stored in the save f
 Tracks shall have a simplified drawing version for large-scale visualization.
 Trains shall have a simplified drawing version for large-scale visualization, with the name, speed and stop info only visible when zoomed in.
 Speed limits and stop signs shall spread to the whole tile at large scales.
-Biomes shall be defined via a Voronoi diagram or a method inspired from the Minecraft biome generator.
 Switches shall have an auto-toggle mode, and toggle after each train crosses.
 A pathfinder tool shall find the shortest path between two stations, with constraints on the terrain, altitude, high-speed tracks, etc.
 Stations shall encompass several cells, including one with rails and its neighbors without rails as a platform.
@@ -132,6 +133,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Keybindings for pan/zoom.
 The A* tool now run in a thread.
 A* does not cut corners on water.
 A* path is converted to tracks.

@@ -8,14 +8,16 @@ import java.util.Random;
  */
 public class PerlinNoise {
 
-    private static final long SEED = 264305296l;
-    private static Random r = new Random(SEED);
+    private static long seed = 264305296l;
+    protected static Random r;
 
     // The largest spatial period of the noise, i.e. the smallest frequency
     private double largestSpatialPeriod;
 
-    public PerlinNoise(double initLargestSpatialPeriod) {
+    public PerlinNoise(double initLargestSpatialPeriod, long newSeed) {
         largestSpatialPeriod = initLargestSpatialPeriod;
+        seed = newSeed;
+        r = new Random(seed);
     }
 
     public double getNoise(double x, double y) {
@@ -84,12 +86,12 @@ public class PerlinNoise {
     }
 
     public double getGradX(int row, int col) {
-        r.setSeed(SEED * 73 * (row + 23) * (col + 37));
+        r.setSeed(seed * 73 * (row + 23) * (col + 37));
         return r.nextDouble() - 0.5;
     }
 
     public double getGradY(int row, int col) {
-        r.setSeed(SEED * 19 * (row + 13) * (col + 19));
+        r.setSeed(seed * 19 * (row + 13) * (col + 19));
         return r.nextDouble() - 0.5;
     }
 

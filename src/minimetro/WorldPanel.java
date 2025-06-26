@@ -4,6 +4,9 @@ import colorramp.ColorRamp;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -18,8 +21,10 @@ import static java.lang.Double.min;
 import static java.lang.Math.floor;
 import java.util.ArrayList;
 import java.util.Scanner;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JPanel;
-
+import javax.swing.KeyStroke;
 import minimetro.AStarSolver.PathPoint;
 
 /**
@@ -30,6 +35,13 @@ public class WorldPanel extends JPanel implements MouseListener,
         MouseMotionListener, MouseWheelListener, PropertyChangeListener {
 
     private static boolean DISPLAY_ACTIVE_CELLS_BORDERS = true;
+    private static String PAN_LEFT = "PAN_LEFT";
+    private static String PAN_RIGHT = "PAN_RIGHT";
+    private static String PAN_UP = "PAN_UP";
+    private static String PAN_DOWN = "PAN_DOWN";
+    private static String ZOOM_IN = "ZOOM_IN";
+    private static String ZOOM_OUT = "ZOOM_OUT";
+    private int panSize = 50;
 
     World world;
     private double zoomLevel;
@@ -51,7 +63,7 @@ public class WorldPanel extends JPanel implements MouseListener,
     private int straightOriginRow;
     private int straightOriginCol;
 
-    private ColorRamp colorRamp;
+    private ArrayList<ColorRamp> allColorRamps;
     private boolean mustDisplayTerrain;
 
     private Color defaultBackgroundColor;
@@ -82,21 +94,88 @@ public class WorldPanel extends JPanel implements MouseListener,
         this.addMouseMotionListener(this);
         this.addMouseWheelListener(this);
 
-        colorRamp = new ColorRamp();
+        loadColorRamps();
 
-        double seaLevel = -0.05;
-        double delta = 0.001;
-        colorRamp.addValue(seaLevel - delta, Color.blue);
-        colorRamp.addValue(seaLevel, Color.green);
-        colorRamp.addValue(0.18, Color.green.darker());
-        colorRamp.addValue(0.2, Color.gray);
-        colorRamp.addValue(0.3, Color.white);
         defaultBackgroundColor = Color.gray;
 
         mustDisplayTerrain = true;
 
         solver = new AStarSolver(world);
+
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), PAN_LEFT);
+        getActionMap().put(PAN_LEFT, panLeft);
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), PAN_RIGHT);
+        getActionMap().put(PAN_RIGHT, panRight);
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), PAN_UP);
+        getActionMap().put(PAN_UP, panUp);
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), PAN_DOWN);
+        getActionMap().put(PAN_DOWN, panDown);
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_NUMPAD0, 0), ZOOM_IN);
+        getActionMap().put(ZOOM_IN, zoomIn);
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_NUMPAD1, 0), ZOOM_OUT);
+        getActionMap().put(ZOOM_OUT, zoomOut);
     }
+
+    private Action panLeft = new AbstractAction(PAN_LEFT) {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            x0 += panSize * zoomLevel;
+            repaint();
+        }
+    };
+
+    private Action panRight = new AbstractAction(PAN_RIGHT) {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            x0 -= panSize * zoomLevel;
+            repaint();
+        }
+    };
+
+    private Action panUp = new AbstractAction(PAN_UP) {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            y0 -= panSize * zoomLevel;
+            repaint();
+        }
+    };
+
+    private Action panDown = new AbstractAction(PAN_DOWN) {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            y0 += panSize * zoomLevel;
+            repaint();
+        }
+    };
+
+    private Action zoomIn = new AbstractAction(ZOOM_IN) {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            zoomLevel *= zoomLevelFactor;
+            int xMid = getWidth() / 2;
+            int yMid = getHeight() / 2;
+//            x0F - xMid = k*(x0I - xMid);
+            x0 = zoomLevelFactor * (x0 - xMid) + xMid;
+            y0 = zoomLevelFactor * (y0 - yMid) + yMid;
+
+            System.out.println("zoom in");
+            repaint();
+        }
+    };
+
+    private Action zoomOut = new AbstractAction(ZOOM_OUT) {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            zoomLevel /= zoomLevelFactor;
+            int xMid = getWidth() / 2;
+            int yMid = getHeight() / 2;
+            x0 = (x0 - xMid) / zoomLevelFactor + xMid;
+            y0 = (y0 - yMid) / zoomLevelFactor + yMid;
+
+            System.out.println("zoom out");
+            repaint();
+        }
+    };
 
     @Override
     public void paintComponent(Graphics g) {
@@ -112,7 +191,11 @@ public class WorldPanel extends JPanel implements MouseListener,
         for (int row = getMinVisibleRow(); row <= getMaxVisibleRow(); row++) {
             for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
                 Cell c = world.getCell(row, col);
-                Color color = colorRamp.getValue(c.altitude);
+                if (c.color == null) {
+                    // The color of this cell is defined once now.
+                    c.color = computeCellColor(c.altitude, c.biome);
+                }
+                Color color = c.color;
                 if (mustDisplayTerrain) {
                     c.paintBackground(g, x0, y0, zoomLevel, color);
                 }
@@ -148,6 +231,20 @@ public class WorldPanel extends JPanel implements MouseListener,
         g.setColor(Color.orange);
         g.drawLine((int) x0, (int) (graphicsCurrentHeight - y0), (int) (x0 + 50), (int) (graphicsCurrentHeight - y0));
         g.drawLine((int) x0, (int) (graphicsCurrentHeight - y0), (int) x0, (int) (graphicsCurrentHeight - y0 - 50));
+
+        // Draw the biomeCenters
+        if (world.hasBiomes()) {
+            for (Point p : world.getBiomeCenters()) {
+
+                double xCenter = (int) (x0 + zoomLevel * p.x);
+                double yCenter = g.getClipBounds().height - (int) (y0 + zoomLevel * p.y);
+                g.setColor(Color.RED);
+                int size = 3;
+                g.fillRect((int) (xCenter - size), (int) (yCenter - size), (int) (2 * size), (int) (2 * size));
+                g.setColor(Color.BLACK);
+                g.drawRect((int) (xCenter - size), (int) (yCenter - size), (int) (2 * size), (int) (2 * size));
+            }
+        }
 
         // Draw the path found by the solver
         solver.paint(g, x0, y0, zoomLevel);
@@ -681,5 +778,47 @@ public class WorldPanel extends JPanel implements MouseListener,
         solver.reset();
         solver.fullReset();
         System.out.println("Converting A* to tracks done.");
+    }
+
+    /**
+     * Create all the color chart, with one color ramp for each biome.
+     * TODO: these values and the biome names must be defined in a file and
+     * loaded dynamically.
+     */
+    private void loadColorRamps() {
+        // Two different possible biomes
+        allColorRamps = new ArrayList<>();
+        allColorRamps.add(new ColorRamp());
+        allColorRamps.add(new ColorRamp());
+        allColorRamps.add(new ColorRamp());
+
+        ColorRamp ramp0 = allColorRamps.get(0);
+        ColorRamp ramp1 = allColorRamps.get(1);
+        ColorRamp ramp2 = allColorRamps.get(2);
+
+        double seaLevel = -0.05;
+        double delta = 0.001;
+
+        ramp0.addValue(seaLevel - delta, Color.blue.brighter());
+        ramp0.addValue(seaLevel, Color.green.brighter());
+        ramp0.addValue(0.18, Color.green.darker());
+        ramp0.addValue(0.2, Color.gray);
+        ramp0.addValue(0.3, Color.white);
+
+        ramp1.addValue(seaLevel - delta, Color.blue.darker());
+        ramp1.addValue(seaLevel, Color.green);
+        ramp1.addValue(0.18, Color.green.darker().darker());
+        ramp1.addValue(0.2, Color.gray.darker());
+        ramp1.addValue(0.3, Color.white.darker());
+
+        ramp2.addValue(seaLevel - delta, Color.gray);
+        ramp2.addValue(seaLevel, Color.cyan.darker());
+        ramp2.addValue(0.18, Color.orange.darker().darker());
+        ramp2.addValue(0.2, Color.gray);
+        ramp2.addValue(0.3, Color.green.brighter().brighter());
+    }
+
+    private Color computeCellColor(double altitude, int biome) {
+        return allColorRamps.get(biome).getValue(altitude);
     }
 }
