@@ -65,6 +65,8 @@ public class GUI extends JFrame implements PropertyChangeListener {
     private CustomKeyListener keyListener;
     private ArrayList<Component> allComponents;
 
+    private NoiseSettingsWindow noiseWindow;
+
     public GUI(World newWorld) {
         super();
 
@@ -74,6 +76,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
         this.add(panel, BorderLayout.CENTER);
 
         createMenu();
+        noiseWindow = new NoiseSettingsWindow(world);
 
         world.addPropertyChangeListener("currentStep", panel);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -279,6 +282,8 @@ public class GUI extends JFrame implements PropertyChangeListener {
         createButton("A_go", "astarFull", 14, 0);
         createButton("A_convert", "astarToTracks", 14, 1);
 
+        createButton("noiseWindow.png", "toggleNoiseWindow", 15, 0);
+
         System.out.println("Creating itineraryTextField");
         itineraryTextField = new JTextField("", 3);
         itineraryTextField.setSize(10, 10);
@@ -450,5 +455,14 @@ public class GUI extends JFrame implements PropertyChangeListener {
     public void astarToTracks() {
         panel.astarToTracks();
         repaint();
+    }
+
+    public void toggleNoiseWindow() {
+        System.out.println("toggleNoiseWindow start");
+        if (noiseWindow != null) {
+            System.out.println("toggleNoiseWindow toggle");
+            noiseWindow.setVisible(!noiseWindow.isVisible());
+        }
+        System.out.println("toggleNoiseWindow end");
     }
 }
