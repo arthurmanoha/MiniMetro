@@ -85,9 +85,9 @@ public class World {
         nbCols = newNbCols;
         System.out.println("init world, nbRows: " + nbRows + " cols: " + nbCols);
 
-        perlinCellSize = 16;
+        perlinCellSize = 128;
         perlinScale = perlinCellSize * Cell.cellSize;
-        noiseGenerator = new BiomePerlinNoise(perlinScale, 0);
+        noiseGenerator = new PerlinNoise(perlinScale, 0);
 
         initializeGrid();
         isSettingLongDistanceTracks = false;
@@ -129,6 +129,17 @@ public class World {
         }
     }
 
+    public void computeAltitudes() {
+        for (int row = 0; row < nbRows; row++) {
+            for (int col = 0; col < nbCols; col++) {
+                Cell c = getCell(row, col);
+                c.altitude = getAltitude(col, row);
+                c.color = null;
+            }
+        }
+        updateListeners();
+    }
+
     private void initializeGrid() {
         System.out.println("World.initializeGrid()");
         cells = new Cell[nbRows][];
@@ -145,6 +156,8 @@ public class World {
                 newCell.setCol(col);
             }
         }
+        computeAltitudes();
+
         System.out.println("End cells initialization");
         activeCells = new ArrayList<>();
         newlyActiveCells = new ArrayList<>();
@@ -1025,8 +1038,9 @@ public class World {
         text = scanner.nextLine();
         seed = Integer.valueOf(text);
         System.out.println("Loaded seed: " + seed);
+        System.out.println("                TODO biomes should be optional and that flag should be saved.");
 
-        noiseGenerator = new BiomePerlinNoise(perlinScale, seed);
+        noiseGenerator = new PerlinNoise(perlinScale, seed);
 
         // Grid dimensions
         try {
@@ -1347,7 +1361,8 @@ public class World {
     }
 
     protected int getBiome(int col, int row) {
-        if (noiseGenerator instanceof PerlinNoise) {
+        if (noiseGenerator instanceof BiomePerlinNoise) {
+            System.out.println("is a biome noise");
             double xCell = col * Cell.cellSize;
             double yCell = (getNbRows() - row - 1) * Cell.cellSize;
 
@@ -1423,5 +1438,9 @@ public class World {
 
     protected boolean hasBiomes() {
         return (noiseGenerator instanceof BiomePerlinNoise);
+    }
+
+    protected void setAmplitudes(int newAmplitude, int level) {
+        noiseGenerator.setAmplitudes(newAmplitude, level);
     }
 }

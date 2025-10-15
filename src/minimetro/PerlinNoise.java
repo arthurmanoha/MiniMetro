@@ -1,5 +1,6 @@
 package minimetro;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -14,18 +15,28 @@ public class PerlinNoise {
     // The largest spatial period of the noise, i.e. the smallest frequency
     private double largestSpatialPeriod;
 
+    private ArrayList<Integer> amplitudesPercentagesList;
+    private int nbLevels = 7;
+
     public PerlinNoise(double initLargestSpatialPeriod, long newSeed) {
         largestSpatialPeriod = initLargestSpatialPeriod;
         seed = newSeed;
         r = new Random(seed);
+
+        // Set all harmonics to 100%.
+        amplitudesPercentagesList = new ArrayList<>(nbLevels);
+        for (int level = 0; level < nbLevels; level++) {
+            amplitudesPercentagesList.add(level, 100);
+        }
     }
 
     public double getNoise(double x, double y) {
         double result = 0;
         double spatialPeriod = largestSpatialPeriod;
         double divisor = 1;
-        for (int level = 0; level < 6; level++) {
-            result += getNoise(x, y, spatialPeriod) / divisor;
+        for (int level = 0; level < nbLevels; level++) {
+            double amplitude = ((double) amplitudesPercentagesList.get(level)) / 100;
+            result += amplitude * getNoise(x, y, spatialPeriod) / divisor;
             spatialPeriod = spatialPeriod / 2;
             divisor = divisor * 2;
         }
@@ -107,5 +118,10 @@ public class PerlinNoise {
 
         // Linear interpolation
         return x * val1 + (1 - x) * val0;
+    }
+
+    public void setAmplitudes(int newAmplitude, int level) {
+
+        amplitudesPercentagesList.set(level, newAmplitude);
     }
 }
