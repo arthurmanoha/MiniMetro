@@ -17,6 +17,9 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Finite light speed.
+A* shall add more cost to each turn.
+Biomes shall be optional and that flag shall be saved.
 Biomes shall be defined via a Voronoi diagram or a method inspired from the Minecraft biome generator.
 A* shall use multiple parallel threads.
 An undo tool shall allow to undo the A* track-adding operation.
@@ -133,6 +136,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Fixed save file.
 Keybindings for pan/zoom.
 The A* tool now run in a thread.
 A* does not cut corners on water.
