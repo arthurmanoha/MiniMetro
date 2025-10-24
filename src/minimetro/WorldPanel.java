@@ -25,7 +25,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
-import minimetro.AStarSolver.PathPoint;
 
 /**
  *

@@ -2,11 +2,10 @@ package minimetro;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
-import static minimetro.Cell.cellSize;
 
 /**
  *
@@ -26,6 +25,10 @@ public class AStarSolver {
 
     private int nbStepsMax = 50;
 
+    private static double TURN_COST = 5.0;
+    private static double HORIZ_VERTIC_COST = 1;
+    private static double DIAGONAL_COST = 1.5;
+
     private enum LockObject {
         INSTANCE
     }
@@ -34,81 +37,6 @@ public class AStarSolver {
         SOLUTION_FOUND,
         NO_SOLUTION,
         STILL_COMPUTING
-    }
-
-    public class PathPoint extends Point {
-
-        public PathPoint predecessor;
-        public boolean isInFinalPath;
-        public double gScore, hScore;
-
-        public PathPoint(int x, int y, PathPoint other) {
-            super(x, y);
-            this.predecessor = other;
-            gScore = 1000;
-            hScore = 1000;
-        }
-
-        public PathPoint() {
-            this(0, 0, null);
-        }
-
-        private void paint(Graphics g, double x0, double y0, double zoom, Color c) {
-
-            final double appSize = zoom * cellSize;
-            double xApp = cellSize * (this.x - 0.5) * zoom + x0;
-            double yApp = g.getClipBounds().height - (cellSize * (world.getNbRows() - this.y - 0.5) * zoom + y0);
-
-            int margin = 0;
-
-            // Center color is specified as a parameter
-            if (this.isInFinalPath) {
-                g.setColor(Color.orange);
-                g.fillRect((int) xApp + margin, (int) yApp + margin, (int) appSize - 2 * margin, (int) appSize - 2 * margin);
-            } else {
-                g.setColor(c);
-                g.drawRect((int) xApp + margin, (int) yApp + margin, (int) appSize - 2 * margin, (int) appSize - 2 * margin);
-            }
-
-//            // Paint predecessor
-//            if (predecessor == null) {
-//                g.setColor(Color.black);
-//                g.drawRect(
-//                        (int) (xApp + appSize / 4),
-//                        (int) (yApp + appSize / 4),
-//                        (int) (appSize / 2),
-//                        (int) (appSize / 2));
-//
-//            } else {
-//                g.setColor(Color.yellow);
-//                int scale = 20;
-//
-//                int dx = predecessor.x - this.x;
-//                int dy = predecessor.y - this.y;
-//                g.drawLine((int) (xApp + appSize / 2), (int) (yApp + appSize / 2),
-//                        (int) (xApp + appSize / 2 + scale * dx), (int) (yApp + appSize / 2 + scale * dy));
-//            }
-//            // Print cost
-//            g.setColor(Color.black);
-//            g.drawString("g: " + gScore, (int) xApp, (int) (yApp + appSize / 3));
-//            g.drawString("h: " + hScore, (int) xApp, (int) (yApp + 3 * appSize / 6));
-//            g.drawString("f: " + getF(), (int) xApp, (int) (yApp + 5 * appSize / 6));
-        }
-
-        private void computeHeuristic() {
-            double dx = end.x - this.x;
-            double dy = end.y - this.y;
-            hScore = 0.5 * Math.sqrt(dx * dx + dy * dy);
-        }
-
-        private double getF() {
-            return this.gScore + this.hScore;
-        }
-
-        @Override
-        public String toString() {
-            return super.toString() + ", pred " + predecessor;
-        }
     }
 
     public AStarSolver(World w) {
@@ -132,6 +60,7 @@ public class AStarSolver {
     }
 
     public void setStart(int row, int col) {
+        System.out.println("solver.setStart(" + row + ", " + col + ")");
         start = new PathPoint(col, row, null);
         start.gScore = 0;
         start.hScore = 0;
@@ -139,6 +68,7 @@ public class AStarSolver {
     }
 
     public void setEnd(int row, int col) {
+        System.out.println("solver.setEnd(" + row + ", " + col + ")");
         end = new PathPoint(col, row, null);
     }
 
@@ -190,6 +120,13 @@ public class AStarSolver {
     }
 
     private void computeFinalPath(PathPoint currentNode) {
+
+        System.out.println("******************");
+        System.out.println("*** FINAL PATH ***");
+        System.out.println("******************");
+
+        int nbTurns = 0;
+
         finalPath.add(currentNode);
         PathPoint p = currentNode.predecessor;
         while (p != null) {
@@ -198,44 +135,62 @@ public class AStarSolver {
             if (p != null) {
                 p.isInFinalPath = true;
             }
+            try {
+                if (p.predecessor.computeIsStraightLine(p.predecessor.predecessor, p)) {
+                    // p.predecessor is now an official straight line of the final path.
+                    p.predecessor.isStraightLine = true;
+                } else {
+                    p.predecessor.isStraightLine = false;
+                    nbTurns++;
+                }
+            } catch (NullPointerException e) {
+                // Not all predecessors are defined; no turn is detetected at this step.
+            }
         }
+        System.out.println("Total " + nbTurns + " turns.");
     }
 
     protected void paint(Graphics g, double x0, double y0, double zoom) {
         synchronized (LockObject.INSTANCE) {
-            Iterator<PathPoint> iter;
+            try {
+                Iterator<PathPoint> iter;
 
-            iter = openList.iterator();
-            while (iter.hasNext()) {
-                PathPoint p = iter.next();
-                p.paint(g, x0, y0, zoom, Color.blue);
-            }
-
-            iter = closedList.iterator();
-            while (iter.hasNext()) {
-                PathPoint p = iter.next();
-                p.paint(g, x0, y0, zoom, Color.gray);
-            }
-
-            iter = finalPath.iterator();
-            while (iter.hasNext()) {
-                PathPoint p = iter.next();
-                p.paint(g, x0, y0, zoom, Color.yellow);
-            }
-            if (isEndReached) {
-                // Paint solution
-                PathPoint current = end.predecessor;
-                while (current != start && current != null) {// TEST NULL
-                    current.paint(g, x0, y0, zoom, Color.YELLOW);
+                iter = openList.iterator();
+                while (iter.hasNext()) {
+                    PathPoint p = iter.next();
+                    p.paint(g, x0, y0, zoom, Color.blue, world.getNbRows());
                 }
-            }
 
-            if (start != null && start.x != Integer.MAX_VALUE) {
-                // Draw start
-                start.paint(g, x0, y0, zoom, Color.red);
-            }
-            if (end != null && end.x != Integer.MAX_VALUE) {
-                end.paint(g, x0, y0, zoom, Color.red);
+                iter = closedList.iterator();
+                while (iter.hasNext()) {
+                    PathPoint p = iter.next();
+                    p.paint(g, x0, y0, zoom, Color.gray, world.getNbRows());
+                }
+
+                iter = finalPath.iterator();
+                while (iter.hasNext()) {
+                    PathPoint p = iter.next();
+                    p.paint(g, x0, y0, zoom, Color.yellow, world.getNbRows());
+                }
+                if (isEndReached) {
+                    // Paint solution
+                    PathPoint current = end.predecessor;
+                    while (current != start && current != null) {// TEST NULL
+                        current.paint(g, x0, y0, zoom, Color.YELLOW, world.getNbRows());
+                    }
+                }
+
+                if (start != null && start.x != Integer.MAX_VALUE) {
+                    // Draw start
+                    start.paint(g, x0, y0, zoom, Color.red, world.getNbRows());
+                }
+                if (end != null && end.x != Integer.MAX_VALUE) {
+                    end.paint(g, x0, y0, zoom, Color.red, world.getNbRows());
+                }
+            } catch (NullPointerException e) {
+                System.out.println("Exception in AStarSolver.paint()");
+            } catch (ConcurrentModificationException e) {
+                System.out.println("ConcurrentModificationException in AStarSolver.paint()");
             }
         }
     }
@@ -275,7 +230,7 @@ public class AStarSolver {
         ArrayList<PathPoint> neighbors = computeNeighbors(currentNode);
         // For each neighbor:
         for (PathPoint neighbor : neighbors) {
-            neighbor.computeHeuristic();
+            neighbor.computeHeuristic(end);
 
             double unitCost = computeUnitCost(currentNode, neighbor);
             if (!closedList.contains(neighbor)) {
@@ -324,16 +279,23 @@ public class AStarSolver {
 
     // Compute and return the cost of the way from one node to a neighbor
     private double computeUnitCost(PathPoint currentNode, PathPoint neighbor) {
+
+        double result = 0;
+
+        if (!currentNode.computeIsStraightLine(currentNode.predecessor, neighbor)) {
+            result += TURN_COST;
+        }
         if (currentNode.x == neighbor.x || currentNode.y == neighbor.y) {
             // Same row or same column
-            return 1;
+            result += HORIZ_VERTIC_COST;
         } else {
             // Different row AND different column, i.e. diagonal.
-            return 1.5; // YES
+            result += DIAGONAL_COST; // YES
 //            return 1.49; // YES
 //            return 1.45; // NO
 // "NO" values return a path with too much zig-zag
         }
+        return result;
     }
 
     /**
