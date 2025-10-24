@@ -975,9 +975,10 @@ public class World {
     protected void save(FileWriter writer) {
         try {
 
-            writer.write(seed + "\n");
+            writer.write("seed " + seed + "\n");
 
-            writer.write(nbRows + " " + nbCols + "\n");
+            writer.write("rows " + nbRows + "\n");
+            writer.write("cols " + nbCols + "\n");
 
             writer.write("isRunning " + (isRunning ? YES : NO) + "\n");
 
@@ -1035,10 +1036,9 @@ public class World {
         String text = "";
 
         // World seed
-        text = scanner.nextLine();
-        seed = Integer.valueOf(text);
+        text = scanner.nextLine(); // "seed " + seed + "\n"
+        seed = Integer.valueOf(text.split(" ")[1]);
         System.out.println("Loaded seed: " + seed);
-        System.out.println("                TODO biomes should be optional and that flag should be saved.");
 
         noiseGenerator = new PerlinNoise(perlinScale, seed);
 
@@ -1047,7 +1047,9 @@ public class World {
             if (scanner.hasNextLine()) {
                 text = scanner.nextLine();
                 String split[] = text.split(" ");
-                nbRows = Integer.valueOf(split[0]);
+                nbRows = Integer.valueOf(split[1]);
+                text = scanner.nextLine();
+                split = text.split(" ");
                 nbCols = Integer.valueOf(split[1]);
                 initializeGrid();
                 updateListeners();
