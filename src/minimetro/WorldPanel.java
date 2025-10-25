@@ -2,7 +2,6 @@ package minimetro;
 
 import colorramp.ColorRamp;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -12,6 +11,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.FileWriter;
@@ -70,9 +70,14 @@ public class WorldPanel extends JPanel implements MouseListener,
     private AStarSolver solver;
     private Thread astarThread;
 
+    // Speed of light in m/s
+    private double lightspeed = 1;
+    // Reference coordinates for observation
+    private double colObservationReference, rowObservationReference;
+    private Reference reference;
+
     public WorldPanel(World w) {
         super();
-        setSize(new Dimension(800, 600));
         world = w;
         zoomLevel = 0.0293;
         x0 = 83;
@@ -183,13 +188,19 @@ public class WorldPanel extends JPanel implements MouseListener,
         graphicsCurrentWidth = g.getClipBounds().width;
         graphicsCurrentHeight = g.getClipBounds().height;
 
+        // The cell at the center of the screen is displayed in real time.
+        // Any other cell shall be displayed as it was in the past.
+        int centerRow = (getMinVisibleRow() + getMaxVisibleRow()) / 2;
+        int centerCol = (getMinVisibleCol() + getMaxVisibleCol()) / 2;
+
         // Erase the whole panel
         g.setColor(defaultBackgroundColor);
         g.fillRect(0, 0, graphicsCurrentWidth, graphicsCurrentHeight);
 
         for (int row = getMinVisibleRow(); row <= getMaxVisibleRow(); row++) {
             for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
-                Cell c = world.getCell(row, col);
+                int delay = computeDelay(row, col, centerRow, centerCol);
+                Cell c = world.getCell(row, col, delay);
                 if (c.color == null) {
                     // The color of this cell is defined once now.
                     c.color = computeCellColor(c.altitude, c.biome);
@@ -219,11 +230,18 @@ public class WorldPanel extends JPanel implements MouseListener,
         paintStraightTracksPossibilities(g);
 
         // Paint the train links
-        paintTrainLinks(g, x0, y0, zoomLevel);
+        paintTrainLinks(g, x0, y0, zoomLevel, centerRow, centerCol);
 
         // Paint the trains
-        for (Cell c : world.getAllCells()) {
-            c.paintTrains(g, x0, y0, zoomLevel);
+        for (int row = 0; row < world.getNbRows(); row++) {
+            for (int col = 0; col < world.getNbCols(); col++) {
+                Cell c = world.getCell(row, col);
+                if (world.isRelativityActive() && reference != null) {
+                    c.paintTrains(g, x0, y0, zoomLevel, reference.getX(), reference.getY());
+                } else {
+                    c.paintTrains(g, x0, y0, zoomLevel);
+                }
+            }
         }
 
         // Draw origin
@@ -247,6 +265,10 @@ public class WorldPanel extends JPanel implements MouseListener,
 
         // Draw the path found by the solver
         solver.paint(g, x0, y0, zoomLevel);
+
+        if (world.isRelativityActive() && reference != null) {
+            reference.paint(g, x0, y0, zoomLevel);
+        }
     }
 
     private void paintStraightTracksPossibilities(Graphics g) {
@@ -333,7 +355,7 @@ public class WorldPanel extends JPanel implements MouseListener,
         }
     }
 
-    void paintTrainLinks(Graphics g, double x0, double y0, double zoom) {
+    void paintTrainLinks(Graphics g, double x0, double y0, double zoom, int rowRef, int colRef) {
         for (TrainLink link : world.links) {
             link.paint(g, x0, y0, zoom);
         }
@@ -421,6 +443,17 @@ public class WorldPanel extends JPanel implements MouseListener,
             }
             case A_STAR_END -> {
                 solver.setEnd((int) currentRow, (int) currentCol);
+                repaint();
+            }
+            case SET_RELATIVITY_REFERENCE -> {
+                reference = new Reference(null);
+                rowObservationReference = currentRow;
+                colObservationReference = currentCol;
+
+                double xRef = Cell.cellSize * floor((xReal + Cell.cellSize / 2) / Cell.cellSize);
+                double yRef = Cell.cellSize * floor((yReal + Cell.cellSize / 2) / Cell.cellSize);
+
+                reference.absolutePosition = new Point2D.Double(xRef, yRef);
                 repaint();
             }
             }
@@ -819,5 +852,25 @@ public class WorldPanel extends JPanel implements MouseListener,
 
     private Color computeCellColor(double altitude, int biome) {
         return allColorRamps.get(biome).getValue(altitude);
+    }
+
+    /**
+     * Compute the delay at cell (row, col) when the non-delayed cell is at
+     * (rowRef, colRef)
+     *
+     * @param row
+     * @param col
+     * @param centerRow
+     * @param centerCol
+     * @return
+     */
+    private int computeDelay(int row, int col, int rowRef, int colRef) {
+        if (world.isRelativityActive()) {
+            int dx = row - rowRef;
+            int dy = col - colRef;
+            return 3 * (Math.abs(dx) + Math.abs(dy));
+        } else {
+            return 0;
+        }
     }
 }

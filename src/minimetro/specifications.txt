@@ -17,7 +17,9 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
-Finite light speed.
+Lightspeed shall affect train links.
+Lightspeed shall affect passengers.
+Circles centered on the reference shall show the delay.
 A* shall add more cost to each turn.
 Biomes shall be optional and that flag shall be saved.
 Biomes shall be defined via a Voronoi diagram or a method inspired from the Minecraft biome generator.
@@ -136,6 +138,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Added finite light speed to locos and wagons.
 Fixed save file.
 Keybindings for pan/zoom.
 The A* tool now run in a thread.

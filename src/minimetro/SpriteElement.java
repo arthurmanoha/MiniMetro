@@ -26,4 +26,7 @@ public abstract class SpriteElement {
 
     public void paint(Graphics g, double x0, double y0, double zoom) {
     }
+
+    public void paint(Graphics g, double x0, double y0, double zoom, double delay) {
+    }
 }

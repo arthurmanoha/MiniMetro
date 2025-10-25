@@ -76,6 +76,8 @@ public class World {
     public static WorldMap map;
     private ArrayList<StationCell> stationList;
 
+    private boolean isRelativityActive = false;
+
     public World() {
         this(10, 10);
     }
@@ -187,14 +189,19 @@ public class World {
      *
      * @param row
      * @param col
+     * @param delay
      * @return
      */
-    public Cell getCell(int row, int col) {
+    public Cell getCell(int row, int col, int delay) {
         try {
             return cells[row][col];
         } catch (IndexOutOfBoundsException e) {
             return null;
         }
+    }
+
+    public Cell getCell(int row, int col) {
+        return getCell(row, col, 0);
     }
 
     /**
@@ -1444,5 +1451,14 @@ public class World {
 
     protected void setAmplitudes(int newAmplitude, int level) {
         noiseGenerator.setAmplitudes(newAmplitude, level);
+    }
+
+    protected void toggleRelativity() {
+        isRelativityActive = !isRelativityActive;
+        System.out.println("World relativity " + (isRelativityActive ? "ON" : "OFF"));
+    }
+
+    public boolean isRelativityActive() {
+        return isRelativityActive;
     }
 }

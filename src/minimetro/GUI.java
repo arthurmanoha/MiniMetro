@@ -54,9 +54,8 @@ public class GUI extends JFrame implements PropertyChangeListener {
     JLabel worldMapLabel;
     JTextField itineraryTextField;
 
-    int windowWidth = 1100;
-    int windowHeight = 1035;
-
+    int windowWidth = 1900;
+    int windowHeight = 1000;
     private World world;
     private JTextField speedIndicatorTextField;
     private JTextField stopTimerTextField;
@@ -283,6 +282,8 @@ public class GUI extends JFrame implements PropertyChangeListener {
         createButton("A_convert", "astarToTracks", 14, 1);
 
         createButton("noiseWindow.png", "toggleNoiseWindow", 15, 0);
+        createButton("toggleRelativity.png", "toggleRelativity", 16, 0);
+        createButton("relativityReference.png", "setRelativityReference", 16, 1);
 
         System.out.println("Creating itineraryTextField");
         itineraryTextField = new JTextField("", 3);
@@ -464,5 +465,14 @@ public class GUI extends JFrame implements PropertyChangeListener {
             noiseWindow.setVisible(!noiseWindow.isVisible());
         }
         System.out.println("toggleNoiseWindow end");
+    }
+
+    public void toggleRelativity() {
+        world.toggleRelativity();
+        panel.repaint();
+    }
+
+    public void setRelativityReference() {
+        panel.setTool(GuiTool.SET_RELATIVITY_REFERENCE);
     }
 }

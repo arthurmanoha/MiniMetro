@@ -14,6 +14,7 @@ import static java.lang.Math.PI;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
+import java.util.ArrayList;
 
 /**
  * This class represents either a locomotive or a passenger carriage.
@@ -23,8 +24,10 @@ import static java.lang.Math.sqrt;
 public abstract class TrainElement extends SpriteElement implements ImageObserver {
 
     protected Point2D.Double absolutePosition;
+    protected ArrayList<Point2D.Double> absolutionPositionHistory;
     protected int row, col; // Position on the grid.
     protected double headingDegrees; // 0:N, 90:E, 180:S, 270:W, MAX_VALUE: not set yet.
+    protected ArrayList<Double> headingHistory;
     protected double linearSpeed;
 
     // Highest speed physically achievable.
@@ -45,7 +48,7 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
 
     protected double size; // Physical size of the object
     protected Color color;
-    private double spriteZoomLevel;
+    protected double spriteZoomLevel;
     protected double spriteWidth, spriteHeight;
 
     protected int id; // Single value for each element
@@ -70,7 +73,9 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         trainNumber = -1;
         currentForce = new Point2D.Double();
         absolutePosition = new Point2D.Double();
+        absolutionPositionHistory = new ArrayList<>();
         headingDegrees = Double.MAX_VALUE;
+        headingHistory = new ArrayList<>();
         linearSpeed = 0;
         size = 3;
         spriteZoomLevel = 0.15;
@@ -92,39 +97,46 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
 
     @Override
     public void paint(Graphics g, double x0, double y0, double zoom) {
+        paint(g, x0, y0, zoom, 0);
+    }
 
-        super.paint(g, x0, y0, zoom);
+    @Override
+    public void paint(Graphics g, double x0, double y0, double zoom, double delay) {
+        super.paint(g, x0, y0, zoom, delay);
+        try {
+            if (image != null) {
+                // Paint the image
+                spriteWidth = (int) Math.max(5, (image.getWidth(this) * zoom) * spriteZoomLevel);
+                spriteHeight = (int) Math.max(5, (image.getHeight(this) * zoom) * spriteZoomLevel);
+                Image scaledImage = image.getScaledInstance((int) spriteWidth, -1, Image.SCALE_DEFAULT);
 
-        if (image != null) {
-            // Paint the image
-            spriteWidth = (int) Math.max(5, (image.getWidth(this) * zoom) * spriteZoomLevel);
-            spriteHeight = (int) Math.max(5, (image.getHeight(this) * zoom) * spriteZoomLevel);
-            Image scaledImage = image.getScaledInstance((int) spriteWidth, -1, Image.SCALE_DEFAULT);
+                int xCenter = (int) (x0 + zoom * this.getAbsolutePosition((int) delay).x);
 
-            int xCenter = (int) (x0 + zoom * this.absolutePosition.x);
-            int yCenter = (int) (g.getClipBounds().height - (y0 + zoom * this.absolutePosition.y));
-            int xImage = (int) (xCenter - spriteWidth / 2);
-            int yImage = (int) (yCenter - spriteHeight / 2);
+                int yCenter = (int) (g.getClipBounds().height - (y0 + zoom * this.getAbsolutePosition((int) delay).y));
+                int xImage = (int) (xCenter - spriteWidth / 2);
+                int yImage = (int) (yCenter - spriteHeight / 2);
 
-            Graphics2D g2d = (Graphics2D) g;
-            double headingRad = degToRad(headingDegrees);
+                Graphics2D g2d = (Graphics2D) g;
+                double headingRad = degToRad(getHeading((int) delay));
 
-            AffineTransform initGraphicsTransform = g2d.getTransform();
-            g2d.rotate(-headingRad, xCenter, yCenter);
-            g2d.drawImage(scaledImage, xImage, yImage, (ImageObserver) this);
-            g2d.setTransform(initGraphicsTransform);
-
-        } else {
-            // Default drawing
-            double xCenter = (int) (x0 + zoom * this.absolutePosition.x);
-            double yCenter = g.getClipBounds().height - (int) (y0 + zoom * this.absolutePosition.y);
-            // Default painting
-            int radiusApp = (int) (zoom * size);
-            ((Graphics2D) g).setStroke(new BasicStroke());
-            g.setColor(this.color);
-            g.fillOval((int) (xCenter - radiusApp), (int) (yCenter - radiusApp), 2 * radiusApp, 2 * radiusApp);
-            g.setColor(Color.black);
-            g.drawOval((int) (xCenter - radiusApp), (int) (yCenter - radiusApp), 2 * radiusApp, 2 * radiusApp);
+                AffineTransform initGraphicsTransform = g2d.getTransform();
+                g2d.rotate(-headingRad, xCenter, yCenter);
+                g2d.drawImage(scaledImage, xImage, yImage, (ImageObserver) this);
+                g2d.setTransform(initGraphicsTransform);
+            } else {
+                // Default drawing
+                double xCenter = (int) (x0 + zoom * this.getAbsolutePosition((int) delay).x);
+                double yCenter = g.getClipBounds().height - (int) (y0 + zoom * this.getAbsolutePosition((int) delay).y);
+                // Default painting
+                int radiusApp = (int) (zoom * size);
+                ((Graphics2D) g).setStroke(new BasicStroke());
+                g.setColor(this.color);
+                g.fillOval((int) (xCenter - radiusApp), (int) (yCenter - radiusApp), 2 * radiusApp, 2 * radiusApp);
+                g.setColor(Color.black);
+                g.drawOval((int) (xCenter - radiusApp), (int) (yCenter - radiusApp), 2 * radiusApp, 2 * radiusApp);
+            }
+        } catch (RelativityException e) {
+            // Do not paint anything.
         }
     }
 
@@ -231,6 +243,9 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         if (stopTimerDuration > 0 && getLinearSpeed() < MAX_SPEED_FOR_STOPPED) {
             stopTimerDuration -= dt;
         }
+        // Add the current position and heading to the history.
+        absolutionPositionHistory.add(0, absolutePosition);
+        headingHistory.add(0, headingDegrees);
     }
 
     double getX() {
@@ -363,4 +378,23 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         return this.col;
     }
 
+    protected Point2D.Double getAbsolutePosition(int delay) throws RelativityException {
+        if (absolutionPositionHistory == null) {
+            return absolutePosition;
+        } else if (delay < absolutionPositionHistory.size()) {
+            return absolutionPositionHistory.get(delay);
+        } else {
+            throw new RelativityException();
+        }
+    }
+
+    protected double getHeading(int delay) throws RelativityException {
+        if (headingHistory == null) {
+            return headingDegrees;
+        } else if (delay < headingHistory.size()) {
+            return headingHistory.get(delay);
+        } else {
+            throw new RelativityException();
+        }
+    }
 }
