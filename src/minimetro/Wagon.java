@@ -18,7 +18,7 @@ public class Wagon extends TrainElement {
     private int nbPassengerPerRow;
 
     public Wagon(int newId) {
-        super(newId);
+        super(newId, null);
         maxSpeed = 10;
         color = Color.blue;
         imagePath = "src\\img\\Wagon.png";
@@ -34,7 +34,7 @@ public class Wagon extends TrainElement {
 
     public Wagon(int newId, Point2D.Double newAbsolutePosition) {
         this(newId);
-        this.absolutePosition = newAbsolutePosition;
+        setPosition(newAbsolutePosition);
     }
 
     @Override
@@ -70,10 +70,10 @@ public class Wagon extends TrainElement {
             double col = passengerRank % nbPassengerPerRow + (isEven(nbRows) ? 0.0 : 0.5);
             double passengerX = (row - nbRows / 2) * rowMargin;
             double passengerY = (col - nbCols / 2) * colMargin;
-            double headingRad = degToRad(headingDegrees);
+            double headingRad = degToRad(getHeading());
             double xRotated = this.getX() + passengerX * cos(headingRad) - passengerY * sin(headingRad);
             double yRotated = this.getY() + passengerY * cos(headingRad) + passengerX * sin(headingRad);
-            p.setCoordinates(xRotated, yRotated);
+            p.setPosition(xRotated, yRotated);
             passengerRank++;
         }
     }

@@ -382,9 +382,9 @@ public class SwitchCell extends Cell {
     }
 
     @Override
-    protected void setStopTimer(double newStopTimerDuration) {
-        cellA.setStopTimer(newStopTimerDuration);
-        cellB.setStopTimer(newStopTimerDuration);
+    protected void toggleStopTimer(double newStopTimerDuration) {
+        cellA.toggleStopTimer(newStopTimerDuration);
+        cellB.toggleStopTimer(newStopTimerDuration);
     }
 
     private void paintActiveCellIndicator(Graphics g, double xApp, double yApp, double appSize) {

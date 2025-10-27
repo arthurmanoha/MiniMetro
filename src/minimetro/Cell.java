@@ -192,7 +192,7 @@ public class Cell {
             Point2D.Double locoPosition = new Point2D.Double(absolutePosition.x,
                     absolutePosition.y);
             this.trainElements.add(0, new Locomotive(locoPosition));
-            this.trainElements.get(0).headingDegrees = this.getCenterHeading();
+            this.trainElements.get(0).setHeading(this.getCenterHeading());
         }
         snapToRail();
     }
@@ -202,7 +202,7 @@ public class Cell {
             Point2D.Double wagonPosition = new Point2D.Double(absolutePosition.x,
                     absolutePosition.y);
             this.trainElements.add(0, new Wagon(wagonPosition));
-            this.trainElements.get(0).headingDegrees = this.getCenterHeading();
+            this.trainElements.get(0).setHeading(this.getCenterHeading());
         }
         snapToRail();
     }
@@ -333,7 +333,7 @@ public class Cell {
      * @return the 2d position relative to the current cell.
      */
     Point2D.Double getTrainPosition(TrainElement te) {
-        return te.absolutePosition;
+        return te.getAbsolutePosition();
     }
 
     /**
@@ -889,12 +889,21 @@ public class Cell {
 
     /**
      * Set how long locos have to remain stopped at this cell.
+     *
+     * @param newStopTimerDuration
+     */
+    protected void setStopTimer(double newStopTimerDuration) {
+        stopTimerDuration = newStopTimerDuration;
+    }
+
+    /**
+     * Set how long locos have to remain stopped at this cell.
      * Setting the same value as the cell already has shall deactivate the stop
      * timer.
      *
      * @param newStopTimerDuration
      */
-    protected void setStopTimer(double newStopTimerDuration) {
+    protected void toggleStopTimer(double newStopTimerDuration) {
         if (stopTimerDuration == newStopTimerDuration) {
             stopTimerDuration = -1;
         } else {

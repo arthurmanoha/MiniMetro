@@ -14,8 +14,8 @@ public class Locomotive extends TrainElement {
 
     protected double motorPower;
 
-    public Locomotive(int newId) {
-        super(newId);
+    public Locomotive(int newId, Point2D.Double newAbsolutePosition) {
+        super(newId, newAbsolutePosition);
         maxSpeed = 300.0;
         motorPower = 30.0;
         color = Color.red;
@@ -37,11 +37,9 @@ public class Locomotive extends TrainElement {
      * Manual id assignment.
      *
      * @param newId
-     * @param newAbsolutePosition
      */
-    public Locomotive(int newId, Point2D.Double newAbsolutePosition) {
-        this(newId);
-        this.absolutePosition = newAbsolutePosition;
+    public Locomotive(int newId) {
+        this(newId, null);
     }
 
     @Override
@@ -62,8 +60,9 @@ public class Locomotive extends TrainElement {
         if (stopTimerDuration > 0) {
             text += (" STOP " + (int) stopTimerDuration);
         }
-        int xCenter = (int) (x0 + zoom * this.absolutePosition.x);
-        int yCenter = (int) (g.getClipBounds().height - (y0 + zoom * this.absolutePosition.y));
+
+        int xCenter = (int) (x0 + zoom * this.getX());
+        int yCenter = (int) (g.getClipBounds().height - (y0 + zoom * this.getY()));
         g.setColor(Color.black);
         g.setFont(new Font("helvetica", Font.PLAIN, 15));
         g.drawString(text, xCenter + 3 * (int) zoom, yCenter + 3 * (int) zoom);

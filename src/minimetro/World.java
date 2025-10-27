@@ -742,8 +742,8 @@ public class World {
      */
     private double computeDistance(TrainElement elem0, TrainElement elem1) {
 
-        Point2D.Double pos0 = elem0.absolutePosition;
-        Point2D.Double pos1 = elem1.absolutePosition;
+        Point2D.Double pos0 = elem0.getAbsolutePosition();
+        Point2D.Double pos1 = elem1.getAbsolutePosition();
 
         double x0 = pos0.x;
         double y0 = pos0.y;
@@ -883,6 +883,13 @@ public class World {
         Cell c = getCell(row, col);
         if (c != null) {
             c.setStopTimer(stopTimerValue);
+        }
+    }
+
+    protected void toggleStopTimer(int row, int col) {
+        Cell c = getCell(row, col);
+        if (c != null) {
+            c.toggleStopTimer(stopTimerValue);
         }
     }
 

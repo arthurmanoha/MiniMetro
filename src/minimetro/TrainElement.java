@@ -14,20 +14,15 @@ import static java.lang.Math.PI;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
-import java.util.ArrayList;
 
 /**
  * This class represents either a locomotive or a passenger carriage.
  *
  * @author arthu
  */
-public abstract class TrainElement extends SpriteElement implements ImageObserver {
+public abstract class TrainElement extends RelativisticElement implements ImageObserver {
 
-    protected Point2D.Double absolutePosition;
-    protected ArrayList<Point2D.Double> absolutionPositionHistory;
     protected int row, col; // Position on the grid.
-    protected double headingDegrees; // 0:N, 90:E, 180:S, 270:W, MAX_VALUE: not set yet.
-    protected ArrayList<Double> headingHistory;
     protected double linearSpeed;
 
     // Highest speed physically achievable.
@@ -59,8 +54,10 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
      * Create TE with a specific id.
      *
      * @param newId
+     * @param newAbsolutePosition
      */
-    public TrainElement(int newId) {
+    public TrainElement(int newId, Point2D.Double newAbsolutePosition) {
+        super(newId, newAbsolutePosition);
         if (newId == -1) {
             // Default numbering
             id = NB_TRAIN_ELEMENTS_CREATED;
@@ -72,10 +69,6 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         }
         trainNumber = -1;
         currentForce = new Point2D.Double();
-        absolutePosition = new Point2D.Double();
-        absolutionPositionHistory = new ArrayList<>();
-        headingDegrees = Double.MAX_VALUE;
-        headingHistory = new ArrayList<>();
         linearSpeed = 0;
         size = 3;
         spriteZoomLevel = 0.15;
@@ -92,7 +85,7 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
      * Create TE with automatic id.
      */
     public TrainElement() {
-        this(-1);
+        this(-1, null);
     }
 
     @Override
@@ -135,7 +128,8 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
                 g.setColor(Color.black);
                 g.drawOval((int) (xCenter - radiusApp), (int) (yCenter - radiusApp), 2 * radiusApp, 2 * radiusApp);
             }
-        } catch (RelativityException e) {
+        } catch (RelativityException | NullPointerException e) {
+
             // Do not paint anything.
         }
     }
@@ -172,7 +166,7 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
 
     private double computeEfficientForce(Point2D.Double f) {
         // unit is the unit vector aligned with the speed of the element.
-        double headingRad = degToRad(headingDegrees);
+        double headingRad = degToRad(super.getHeading());
 
         Point2D.Double unit = new Point2D.Double(Math.cos(headingRad), Math.sin(headingRad));
         double fDotU = f.x * unit.x + f.y * unit.y;
@@ -180,18 +174,18 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
     }
 
     double getHeadingDeg() {
-        return headingDegrees;
+        return super.getHeading();
     }
 
     double getHeadingRad() {
-        return degToRad(headingDegrees);
+        return degToRad(super.getHeading());
     }
 
     void setHeadingDegrees(double newHeading) {
         if (newHeading > 360) {
             newHeading -= 360;
         }
-        headingDegrees = newHeading;
+        setHeading(newHeading);
     }
 
     private void paintSpeed(Graphics g, int xCenter, int yCenter, int size) {
@@ -234,30 +228,17 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
     protected void setSpeed(double newVx, double newVy) {
         linearSpeed = sqrt(newVx * newVx + newVy * newVy);
         double newHeadingRad = Math.atan2(newVy, newVx);
-        headingDegrees = radToDeg(newHeadingRad);
+        setHeading(radToDeg(newHeadingRad));
     }
 
-    void move(double dt) {
+    @Override
+    protected void move(double dt) {
         Point2D.Double movement = new Point2D.Double(getVx() * dt, getVy() * dt);
-        absolutePosition = new Point2D.Double(absolutePosition.x + movement.x, absolutePosition.y + movement.y);
+        setPosition(getAbsolutePosition().x + movement.x, getAbsolutePosition().y + movement.y);
         if (stopTimerDuration > 0 && getLinearSpeed() < MAX_SPEED_FOR_STOPPED) {
             stopTimerDuration -= dt;
         }
-        // Add the current position and heading to the history.
-        absolutionPositionHistory.add(0, absolutePosition);
-        headingHistory.add(0, headingDegrees);
-    }
-
-    double getX() {
-        return absolutePosition.x;
-    }
-
-    double getY() {
-        return absolutePosition.y;
-    }
-
-    protected void setPosition(double newX, double newY) {
-        this.absolutePosition = new Point2D.Double(newX, newY);
+        super.move(dt);
     }
 
     protected double getLinearSpeed() {
@@ -342,9 +323,9 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
         elemClass = elemClass.substring(elemClass.indexOf(".") + 1);
         return elemClass
                 + " " + this.id
-                + keep2Decimals(" " + this.absolutePosition.x)
-                + keep2Decimals(" " + this.absolutePosition.y)
-                + keep2Decimals(" " + this.headingDegrees)
+                + keep2Decimals(" " + this.getAbsolutePosition().x)
+                + keep2Decimals(" " + this.getAbsolutePosition().y)
+                + keep2Decimals(" " + this.getHeading())
                 + keep2Decimals(" " + this.linearSpeed)
                 + keep2Decimals(" " + this.currentSpeedLimit);
     }
@@ -376,25 +357,5 @@ public abstract class TrainElement extends SpriteElement implements ImageObserve
 
     protected int getCol() {
         return this.col;
-    }
-
-    protected Point2D.Double getAbsolutePosition(int delay) throws RelativityException {
-        if (absolutionPositionHistory == null) {
-            return absolutePosition;
-        } else if (delay < absolutionPositionHistory.size()) {
-            return absolutionPositionHistory.get(delay);
-        } else {
-            throw new RelativityException();
-        }
-    }
-
-    protected double getHeading(int delay) throws RelativityException {
-        if (headingHistory == null) {
-            return headingDegrees;
-        } else if (delay < headingHistory.size()) {
-            return headingHistory.get(delay);
-        } else {
-            throw new RelativityException();
-        }
     }
 }

@@ -70,10 +70,7 @@ public class WorldPanel extends JPanel implements MouseListener,
     private AStarSolver solver;
     private Thread astarThread;
 
-    // Speed of light in m/s
-    private double lightspeed = 1;
-    // Reference coordinates for observation
-    private double colObservationReference, rowObservationReference;
+    // Reference for relativistic observation
     private Reference reference;
 
     public WorldPanel(World w) {
@@ -407,9 +404,11 @@ public class WorldPanel extends JPanel implements MouseListener,
             switch (currentTool) {
             case LOCO -> {
                 world.addLoco(xReal, yReal);
+                repaint();
             }
             case WAGON -> {
                 world.addWagon(xReal, yReal);
+                repaint();
             }
             case TRAIN_REMOVAL -> {
                 world.removeTrains((int) currentRow, (int) currentCol);
@@ -435,7 +434,7 @@ public class WorldPanel extends JPanel implements MouseListener,
                 world.setSpeedIndicator((int) currentRow, (int) currentCol);
             }
             case STOP_TIMER -> {
-                world.setStopTimer((int) currentRow, (int) currentCol);
+                world.toggleStopTimer((int) currentRow, (int) currentCol);
             }
             case A_STAR_START -> {
                 solver.setStart((int) currentRow, (int) currentCol);
@@ -447,13 +446,11 @@ public class WorldPanel extends JPanel implements MouseListener,
             }
             case SET_RELATIVITY_REFERENCE -> {
                 reference = new Reference(null);
-                rowObservationReference = currentRow;
-                colObservationReference = currentCol;
 
                 double xRef = Cell.cellSize * floor((xReal + Cell.cellSize / 2) / Cell.cellSize);
                 double yRef = Cell.cellSize * floor((yReal + Cell.cellSize / 2) / Cell.cellSize);
 
-                reference.absolutePosition = new Point2D.Double(xRef, yRef);
+                reference.setPosition(new Point2D.Double(xRef, yRef));
                 repaint();
             }
             }

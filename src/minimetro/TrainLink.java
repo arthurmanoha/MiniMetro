@@ -87,8 +87,8 @@ public class TrainLink {
     }
 
     void applyForce(double dt) {
-        double dx = e1.absolutePosition.x - e0.absolutePosition.x;
-        double dy = e1.absolutePosition.y - e0.absolutePosition.y;
+        double dx = e1.getX() - e0.getX();
+        double dy = e1.getY() - e0.getY();
 
         currentLength = Math.sqrt(dx * dx + dy * dy);
         double elasticForce = (defaultLength - currentLength) * strength;
@@ -108,8 +108,8 @@ public class TrainLink {
     }
 
     void paint(Graphics g, double x0, double y0, double zoom) {
-        Point2D.Double posFirst = e0.absolutePosition;
-        Point2D.Double posSecond = e1.absolutePosition;
+        Point2D.Double posFirst = e0.getAbsolutePosition();
+        Point2D.Double posSecond = e1.getAbsolutePosition();
 
         int xFirstApp = (int) (x0 + posFirst.x * zoom);
         int yFirstApp = g.getClipBounds().height - (int) (y0 + posFirst.y * zoom);

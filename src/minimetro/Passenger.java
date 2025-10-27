@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.geom.Point2D;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,9 +13,8 @@ import java.util.ArrayList;
  *
  * @author arthu
  */
-public class Passenger {
+public class Passenger extends RelativisticElement {
 
-    private double x, y;
     private double vx, vy;
     private double vMax;
     private int targetStationId;
@@ -37,6 +37,7 @@ public class Passenger {
     }
 
     public Passenger(int newId, int newTargetStationId, double newX, double newY) {
+        super(newId, null);
         if (newId > NB_PASSENGERS_CREATED) {
             id = newId;
             NB_PASSENGERS_CREATED = newId;
@@ -45,8 +46,7 @@ public class Passenger {
             NB_PASSENGERS_CREATED++;
         }
         path = new ArrayList<>();
-        x = newX;
-        y = newY;
+        setPosition(new Point2D.Double(newX, newY));
         if (newTargetStationId >= 0) {
             setTargetStationId(newTargetStationId);
         }
@@ -56,41 +56,45 @@ public class Passenger {
         this.color = StationCell.getStationColor(newTargetStationId);
     }
 
-    protected void paint(Graphics g, double x0, double y0, double zoom) {
-
-        // On-screen coordinates of the center of the cell:
-        final double xApp = x * zoom + x0;
-        final double yApp = g.getClipBounds().height - (y * zoom + y0);
-        final double appSize = zoom * size;
-
-        g.setColor(this.color);
-        g.fillOval((int) (xApp - appSize / 2), (int) (yApp - appSize / 2),
-                (int) appSize, (int) appSize);
-        g.setColor(Color.black);
-        g.drawOval((int) (xApp - appSize / 2), (int) (yApp - appSize / 2),
-                (int) appSize, (int) appSize);
-        String text = "";
-        for (int step : path) {
-            text += step + " ";
-        }
-        if (path.isEmpty()) {
-            text += "_";
-        }
-        Font font = new Font("helvetica", Font.PLAIN, (int) appSize / 2);
-        g.setFont(font);
-        FontMetrics metrics = g.getFontMetrics(font);
-        g.setColor(Color.black);
-        g.drawString(text,
-                (int) (xApp - metrics.stringWidth(text) / 2),
-                (int) (yApp - metrics.getHeight() / 2 + metrics.getAscent()));
+    @Override
+    public void paint(Graphics g, double x0, double y0, double zoom) {
+        paint(g, x0, y0, zoom, 0);
     }
 
-    protected double getX() {
-        return this.x;
-    }
+    @Override
+    public void paint(Graphics g, double x0, double y0, double zoom, double delay) {
 
-    protected double getY() {
-        return this.y;
+        try {
+            // On-screen coordinates of the center of the cell:
+            Point2D.Double position = getAbsolutePosition((int) delay);
+            final double xApp = position.x * zoom + x0;
+            final double yApp = g.getClipBounds().height - (position.y * zoom + y0);
+            final double appSize = zoom * size;
+
+            g.setColor(this.color);
+            g.fillOval((int) (xApp - appSize / 2), (int) (yApp - appSize / 2),
+                    (int) appSize, (int) appSize);
+            g.setColor(Color.black);
+            g.drawOval((int) (xApp - appSize / 2), (int) (yApp - appSize / 2),
+                    (int) appSize, (int) appSize);
+            String text = "";
+            for (int step : path) {
+                text += step + " ";
+            }
+            if (path.isEmpty()) {
+                text += "_";
+            }
+            Font font = new Font("helvetica", Font.PLAIN, (int) appSize / 2);
+            g.setFont(font);
+            FontMetrics metrics = g.getFontMetrics(font);
+            g.setColor(Color.black);
+            g.drawString(text,
+                    (int) (xApp - metrics.stringWidth(text) / 2),
+                    (int) (yApp - metrics.getHeight() / 2 + metrics.getAscent()));
+        } catch (RelativityException e) {
+            // Do not paint anything.
+            System.out.println("Passenger Relativity exception");
+        }
     }
 
     protected double getVx() {
@@ -99,11 +103,6 @@ public class Passenger {
 
     protected double getVy() {
         return this.vy;
-    }
-
-    protected void setCoordinates(double newX, double newY) {
-        this.x = newX;
-        this.y = newY;
     }
 
     protected final void setTargetStationId(int newTargetStation) {
@@ -178,9 +177,12 @@ public class Passenger {
         vy = newVy * vMax;
     }
 
+    @Override
     protected void move(double dt) {
-        this.x += vx * dt;
-        this.y += vy * dt;
+        double newX = getX() + vx * dt;
+        double newY = getY() + vy * dt;
+        this.setPosition(new Point2D.Double(newX, newY));
+        super.move(dt);
     }
 
     protected void stopWalking() {
@@ -191,7 +193,7 @@ public class Passenger {
     @Override
     public String toString() {
         String result = World.PASSENGER + " " + id + " " + this.targetStationId
-                + " " + this.x + " " + this.y;
+                + " " + this.getX() + " " + this.getY();
         for (Integer step : path) {
             result += " " + step;
         }

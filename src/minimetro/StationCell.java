@@ -133,7 +133,7 @@ public class StationCell extends Cell {
         if (passenger.getX() == Double.MAX_VALUE) {
             double newX = this.absolutePosition.x + (new Random().nextDouble() - 0.5) * cellSize;
             double newY = this.absolutePosition.y + (new Random().nextDouble() - 0.5) * cellSize;
-            passenger.setCoordinates(newX, newY);
+            passenger.setPosition(newX, newY);
         }
 
         if (shouldStopWalking) {

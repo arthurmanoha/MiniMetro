@@ -10,9 +10,9 @@ import java.awt.geom.Point2D;
 public class Reference extends TrainElement {
 
     public Reference(Point2D.Double newAbsolutePosition) {
-        super(0);
-        this.absolutePosition = newAbsolutePosition;
-        this.headingDegrees = 0;
+        super(0, null);
+        this.setPosition(newAbsolutePosition);
+        this.setHeading(0);
         spriteZoomLevel *= 2;
         imagePath = "src\\menuIcons\\relativityReference.png";
         loadImage();
@@ -33,12 +33,12 @@ public class Reference extends TrainElement {
 
     @Override
     protected Point2D.Double getAbsolutePosition(int delay) throws RelativityException {
-        return this.absolutePosition;
+        return this.getAbsolutePosition();
     }
 
     @Override
     protected double getHeading(int delay) throws RelativityException {
-        return headingDegrees;
+        return getHeading();
     }
 
     @Override
