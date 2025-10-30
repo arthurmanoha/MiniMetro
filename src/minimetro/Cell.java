@@ -49,7 +49,9 @@ public class Cell {
     private static int NB_CELLS_CREATED = 0;
     protected int id;
     // Speed of light in m/s
-    private double lightspeed = 2;
+    private double lightspeed = 70;
+    // Timestep used for evolution
+    private double currentDt;
 
     public Cell() {
         color = Color.gray;
@@ -63,6 +65,7 @@ public class Cell {
         isActive = false;
         id = NB_CELLS_CREATED;
         NB_CELLS_CREATED++;
+        currentDt = 0;
     }
 
     public Cell(int row, int col) {
@@ -168,10 +171,7 @@ public class Cell {
     protected void paintTrains(Graphics g, double x0, double y0, double zoom, double xRef, double yRef) {
         if (hasTrain()) {
             for (TrainElement te : trainElements) {
-                double dx = te.getX() - xRef;
-                double dy = te.getY() - yRef;
-                double distance = Math.sqrt(dx * dx + dy * dy);
-                double delay = computeDelay(distance);
+                double delay = te.findVisibilityDelay(xRef, yRef, lightspeed, currentDt);
                 te.paint(g, x0, y0, zoom, delay);
             }
         }
@@ -306,6 +306,9 @@ public class Cell {
      * @param dt
      */
     protected void moveTrains(double dt) {
+
+        currentDt = dt;
+
         for (TrainElement trainElement : trainElements) {
 
             trainElement.move(dt);

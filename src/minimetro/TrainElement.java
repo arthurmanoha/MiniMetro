@@ -94,6 +94,10 @@ public abstract class TrainElement extends RelativisticElement implements ImageO
     }
 
     @Override
+    protected void paint(Graphics g, double x0, double y0, double zoom, double xRef, double yRef) {
+    }
+
+    @Override
     public void paint(Graphics g, double x0, double y0, double zoom, double delay) {
         super.paint(g, x0, y0, zoom, delay);
         try {
