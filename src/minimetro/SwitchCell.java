@@ -124,6 +124,16 @@ public class SwitchCell extends Cell {
     }
 
     /**
+     * Paint the trainElements alone, with relativity
+     * (to be used after all cells were drawn).
+     */
+    @Override
+    protected void paintTrains(Graphics g, double x0, double y0, double zoom, double xRef, double yRef) {
+        cellA.paintTrains(g, x0, y0, zoom, xRef, yRef);
+        cellB.paintTrains(g, x0, y0, zoom, xRef, yRef);
+    }
+
+    /**
      * Add a new direction at the end.
      * The second direction becomes the shared first one, third becomes second.
      *
