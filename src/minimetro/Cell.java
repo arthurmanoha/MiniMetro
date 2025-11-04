@@ -49,9 +49,9 @@ public class Cell {
     private static int NB_CELLS_CREATED = 0;
     protected int id;
     // Speed of light in m/s
-    private double lightspeed = 70;
+    protected double lightspeed = 70;
     // Timestep used for evolution
-    private double currentDt;
+    protected double currentDt;
 
     public Cell() {
         color = Color.gray;
@@ -127,6 +127,13 @@ public class Cell {
 
     /**
      * Paint the cell's foreground.
+     */
+    protected void paintForeground(Graphics g, double x0, double y0, double zoom, double refX, double refY, boolean isRelativityActive) {
+        this.paintForeground(g, x0, y0, zoom);
+    }
+
+    /**
+     * Paint the cell's foreground.
      * Rails, speed signs. Trains are painted by the paintTrains method.
      */
     protected void paintForeground(Graphics g, double x0, double y0, double zoom) {
@@ -154,6 +161,14 @@ public class Cell {
     }
 
     /**
+     * Paint passengers with relativity. This method shall be redefined in
+     * StationCell.
+     *
+     */
+    public void paintPassengers(Graphics g, double x0, double y0, double zoom, double refX, double refY, boolean isRelativityActive) {
+    }
+
+    /**
      * Paint the trainElements alone.
      * (to be used after all cells were drawn).
      */
@@ -175,11 +190,6 @@ public class Cell {
                 te.paint(g, x0, y0, zoom, delay);
             }
         }
-    }
-
-    private double computeDelay(double distance) {
-        // TODO include speed of light here
-        return distance / lightspeed;
     }
 
     // A cell has tracks if it is linked to at least one neighbor.
@@ -1091,5 +1101,11 @@ public class Cell {
 
     protected int getCol() {
         return this.col;
+    }
+
+    protected void updateHistory() {
+        for (TrainElement te : trainElements) {
+            te.updateHistory();
+        }
     }
 }

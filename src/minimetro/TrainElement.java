@@ -235,14 +235,12 @@ public abstract class TrainElement extends RelativisticElement implements ImageO
         setHeading(radToDeg(newHeadingRad));
     }
 
-    @Override
     protected void move(double dt) {
         Point2D.Double movement = new Point2D.Double(getVx() * dt, getVy() * dt);
         setPosition(getAbsolutePosition().x + movement.x, getAbsolutePosition().y + movement.y);
         if (stopTimerDuration > 0 && getLinearSpeed() < MAX_SPEED_FOR_STOPPED) {
             stopTimerDuration -= dt;
         }
-        super.move(dt);
     }
 
     protected double getLinearSpeed() {

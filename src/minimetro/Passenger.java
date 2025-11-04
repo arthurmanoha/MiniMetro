@@ -91,9 +91,8 @@ public class Passenger extends RelativisticElement {
             g.drawString(text,
                     (int) (xApp - metrics.stringWidth(text) / 2),
                     (int) (yApp - metrics.getHeight() / 2 + metrics.getAscent()));
-        } catch (RelativityException e) {
+        } catch (RelativityException | NullPointerException e) {
             // Do not paint anything.
-            System.out.println("Passenger Relativity exception");
         }
     }
 
@@ -177,12 +176,10 @@ public class Passenger extends RelativisticElement {
         vy = newVy * vMax;
     }
 
-    @Override
     protected void move(double dt) {
         double newX = getX() + vx * dt;
         double newY = getY() + vy * dt;
         this.setPosition(new Point2D.Double(newX, newY));
-        super.move(dt);
     }
 
     protected void stopWalking() {
@@ -207,5 +204,10 @@ public class Passenger extends RelativisticElement {
         } catch (IOException e) {
             System.out.println("Error writing Passenger to file.");
         }
+    }
+
+    @Override
+    protected void updateHistory() {
+        super.updateHistory();
     }
 }

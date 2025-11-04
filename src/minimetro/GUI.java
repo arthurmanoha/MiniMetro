@@ -283,7 +283,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
 
         createButton("noiseWindow.png", "toggleNoiseWindow", 15, 0);
         createButton("toggleRelativity.png", "toggleRelativity", 16, 0);
-        createButton("relativityReference.png", "setRelativityReference", 16, 1);
+        createButton("relativityReference_inactive.png", "setRelativityReference", 16, 1);
 
         System.out.println("Creating itineraryTextField");
         itineraryTextField = new JTextField("", 3);
@@ -468,7 +468,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
     }
 
     public void toggleRelativity() {
-        world.toggleRelativity();
+        panel.toggleRelativity();
         panel.repaint();
     }
 

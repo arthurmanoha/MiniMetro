@@ -4,6 +4,7 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
+A Cell does not recompute its color after a StationCell is removed.
 Game crashes when loading onboard passengers that were saved before their wagon.
 Wagons saved on a the inactive side of a SwitchCell are not properly loaded.
 Speed indicators may be placed on switch cells but are not saved and loaded.
@@ -141,6 +142,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Fixed relativistic display for passengers
 Improved algorithm for relativistic delay computation.
 Added new class RelativisticElement to encapsulate relativistic behaviors
 Passengers are now Relativistic Elements.

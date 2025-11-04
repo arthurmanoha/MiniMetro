@@ -208,16 +208,15 @@ public class WorldPanel extends JPanel implements MouseListener,
                 }
             }
         }
+
         for (int row = getMinVisibleRow(); row <= getMaxVisibleRow(); row++) {
             for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
                 Cell c = world.getCell(row, col);
-                c.paintForeground(g, x0, y0, zoomLevel);
-            }
-        }
-
-        if (DISPLAY_ACTIVE_CELLS_BORDERS) {
-            for (Cell c : world.activeCells) {
-                c.outlineCell(g, x0, y0, zoomLevel);
+                if (isRelativityActive()) {
+                    c.paintForeground(g, x0, y0, zoomLevel, reference.getX(), reference.getY(), true);
+                } else {
+                    c.paintForeground(g, x0, y0, zoomLevel);
+                }
             }
         }
 
@@ -233,10 +232,21 @@ public class WorldPanel extends JPanel implements MouseListener,
         for (int row = 0; row < world.getNbRows(); row++) {
             for (int col = 0; col < world.getNbCols(); col++) {
                 Cell c = world.getCell(row, col);
-                if (world.isRelativityActive() && reference != null) {
+                if (isRelativityActive()) {
                     c.paintTrains(g, x0, y0, zoomLevel, reference.getX(), reference.getY());
                 } else {
                     c.paintTrains(g, x0, y0, zoomLevel);
+                }
+            }
+        }
+
+        for (int row = getMinVisibleRow(); row <= getMaxVisibleRow(); row++) {
+            for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
+                Cell c = world.getCell(row, col);
+                if (isRelativityActive()) {
+                    c.paintPassengers(g, x0, y0, zoomLevel, reference.getX(), reference.getY(), true);
+                } else {
+                    c.paintPassengers(g, x0, y0, zoomLevel, 0, 0, false);
                 }
             }
         }
@@ -263,8 +273,14 @@ public class WorldPanel extends JPanel implements MouseListener,
         // Draw the path found by the solver
         solver.paint(g, x0, y0, zoomLevel);
 
-        if (world.isRelativityActive() && reference != null) {
+        if (reference != null) {
             reference.paint(g, x0, y0, zoomLevel);
+        }
+
+        if (DISPLAY_ACTIVE_CELLS_BORDERS) {
+            for (Cell c : world.activeCells) {
+                c.outlineCell(g, x0, y0, zoomLevel);
+            }
         }
     }
 
@@ -445,12 +461,14 @@ public class WorldPanel extends JPanel implements MouseListener,
                 repaint();
             }
             case SET_RELATIVITY_REFERENCE -> {
-                reference = new Reference(null);
 
                 double xRef = Cell.cellSize * floor((xReal + Cell.cellSize / 2) / Cell.cellSize);
                 double yRef = Cell.cellSize * floor((yReal + Cell.cellSize / 2) / Cell.cellSize);
+                reference = new Reference(new Point2D.Double(xRef, yRef));
 
-                reference.setPosition(new Point2D.Double(xRef, yRef));
+                System.out.println("New Reference at (x,y)=(" + xRef + ", " + yRef + ");"
+                        + " row " + currentRow + ", col " + currentCol);
+
                 repaint();
             }
             }
@@ -862,12 +880,24 @@ public class WorldPanel extends JPanel implements MouseListener,
      * @return
      */
     private int computeDelay(int row, int col, int rowRef, int colRef) {
-        if (world.isRelativityActive()) {
+        if (isRelativityActive()) {
             int dx = row - rowRef;
             int dy = col - colRef;
             return 3 * (Math.abs(dx) + Math.abs(dy));
         } else {
             return 0;
         }
+    }
+
+    protected void toggleRelativity() {
+        if (reference != null) {
+            reference.toggleRelativity();
+            System.out.println("WorldPanel.toggleRelativity()");
+            repaint();
+        }
+    }
+
+    private boolean isRelativityActive() {
+        return reference != null && reference.isActive();
     }
 }

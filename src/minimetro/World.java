@@ -14,7 +14,6 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.Scanner;
 import javax.swing.Timer;
-import static minimetro.CardinalPoint.*;
 
 /**
  * This class represents the terrain that contains the tracks, trains,
@@ -76,8 +75,7 @@ public class World {
     public static WorldMap map;
     private ArrayList<StationCell> stationList;
 
-    private boolean isRelativityActive = false;
-
+//    private boolean isRelativityActive = false;
     public World() {
         this(10, 10);
     }
@@ -315,6 +313,11 @@ public class World {
                 iter.remove();
                 c.setActive(false);
             }
+        }
+
+        // Update the history of all relativistic elements
+        for (Cell c : getAllCells()) {
+            c.updateHistory();
         }
 
         step++;
@@ -1460,12 +1463,12 @@ public class World {
         noiseGenerator.setAmplitudes(newAmplitude, level);
     }
 
-    protected void toggleRelativity() {
-        isRelativityActive = !isRelativityActive;
-        System.out.println("World relativity " + (isRelativityActive ? "ON" : "OFF"));
-    }
-
-    public boolean isRelativityActive() {
-        return isRelativityActive;
-    }
+//    protected void toggleRelativity() {
+//        isRelativityActive = !isRelativityActive;
+//        System.out.println("World relativity " + (isRelativityActive ? "ON" : "OFF"));
+//    }
+//
+//    public boolean isRelativityActive() {
+//        return isRelativityActive;
+//    }
 }

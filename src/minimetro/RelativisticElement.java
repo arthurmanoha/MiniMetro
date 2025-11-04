@@ -52,6 +52,7 @@ public abstract class RelativisticElement extends SpriteElement {
     }
 
     protected void setPosition(Point2D.Double newPos) {
+
         this.absolutePosition = newPos;
     }
 
@@ -79,11 +80,33 @@ public abstract class RelativisticElement extends SpriteElement {
         }
     }
 
-    protected void move(double dt) {
+    protected void updateHistory() {
 
         // Add the current position and heading to the history.
         absolutePositionHistory.add(0, absolutePosition);
         headingHistory.add(0, headingDegrees);
+    }
+
+    protected int getHistorySize() {
+        if (absolutePositionHistory != null) {
+            return absolutePositionHistory.size();
+        } else {
+            return -1;
+        }
+    }
+
+    protected void printHistory() {
+        System.out.println("HISTORY{");
+        for (int rank = 0; rank < 10; rank++) {
+            try {
+                System.out.println("    " + rank + ": "
+                        + "x = " + absolutePositionHistory.get(rank).x
+                        + "y = " + absolutePositionHistory.get(rank).y);
+            } catch (NullPointerException | IndexOutOfBoundsException e) {
+
+            }
+        }
+        System.out.println("}END");
     }
 
     protected void paint(Graphics g, double x0, double y0, double zoom, double xRef, double yRef) {
