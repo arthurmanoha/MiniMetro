@@ -36,7 +36,7 @@ public class StationCell extends Cell {
      */
     public StationCell(Cell previousCell, int newId) {
         super(previousCell);
-        this.color = Color.yellow;
+        this.setColor(Color.yellow);
         if (newId == -1) {
             stationId = NB_STATIONS_CREATED;
             NB_STATIONS_CREATED++;
@@ -51,7 +51,7 @@ public class StationCell extends Cell {
         passengerList = new ArrayList<>();
         passengersLeavingCell = new ArrayList<>();
         walkways = new HashMap<>();
-        color = getStationColor(stationId);
+        setColor(getStationColor(stationId));
         this.stopTimerDuration = 2.0;
     }
 
@@ -114,13 +114,13 @@ public class StationCell extends Cell {
         g.setColor(Color.white);
         g.fillRect((int) (xApp - appSize * 0.5), (int) (yApp - appSize * 0.5),
                 (int) appSize, (int) appSize);
-        g.setColor(this.color);
+        g.setColor(this.getColor());
         g.fillRect((int) (xApp - appSize * 0.5 + 3), (int) (yApp - appSize * 0.5 + 3),
                 (int) appSize - 6, (int) appSize - 6);
 
-        int rr = this.color.getRed();
-        int gg = this.color.getGreen();
-        int bb = this.color.getBlue();
+        int rr = this.getColor().getRed();
+        int gg = this.getColor().getGreen();
+        int bb = this.getColor().getBlue();
         int grayLevel = (rr + gg + bb);
         if (grayLevel > 255) {
             g.setColor(Color.black);

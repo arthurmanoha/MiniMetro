@@ -134,7 +134,7 @@ public class World {
             for (int col = 0; col < nbCols; col++) {
                 Cell c = getCell(row, col);
                 c.altitude = getAltitude(col, row);
-                c.color = null;
+                c.setColor(null);
             }
         }
         updateListeners();
@@ -149,14 +149,14 @@ public class World {
                 Cell newCell = new Cell(row, col);
                 newCell.altitude = getAltitude(col, row);
                 newCell.biome = getBiome(col, row) % 3;
-                newCell.color = null;
+                newCell.setColor(null);
                 newCell.absolutePosition = new Point2D.Double(col * Cell.cellSize, (nbRows - row - 1) * Cell.cellSize);
                 cells[row][col] = newCell;
                 newCell.setRow(row);
                 newCell.setCol(col);
             }
         }
-        computeAltitudes();
+        updateListeners();
 
         System.out.println("End cells initialization");
         activeCells = new ArrayList<>();

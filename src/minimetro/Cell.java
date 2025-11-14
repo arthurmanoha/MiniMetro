@@ -24,7 +24,7 @@ public class Cell {
 
     protected static double cellSize = 10;
 
-    protected Color color;
+    private Color color;
 
     protected ArrayList<TrainElement> trainElements;
     protected ArrayList<TransferringTrain> trainsLeavingCell;
@@ -89,6 +89,7 @@ public class Cell {
             this.stopTimerDuration = previousCell.stopTimerDuration;
             this.isActive = previousCell.isActive;
             this.altitude = previousCell.altitude;
+            this.color = previousCell.color;
             this.row = previousCell.row;
             this.col = previousCell.col;
         }
@@ -99,16 +100,27 @@ public class Cell {
         this.absolutePosition = newAbsPos;
     }
 
+    public Color getColor() {
+        return this.color;
+    }
+
+    public void setColor(Color newColor) {
+        this.color = newColor;
+    }
+
     /**
      * Paint the cell's background. This represents the nature of the terrain
      * (grass, sea, ...).
      */
-    protected void paintBackground(Graphics g, double x0, double y0, double zoom, Color c) {
+    protected void paintBackground(Graphics g, double x0, double y0, double zoom) {
         final int xApp = (int) ((absolutePosition.x - cellSize / 2) * zoom + x0);
         final int yApp = (int) (g.getClipBounds().height - ((absolutePosition.y + cellSize / 2) * zoom + y0));
         final int appSize = (int) (zoom * cellSize) + 1;
         Graphics2D g2 = (Graphics2D) g;
-        g2.setColor(c);
+        if (this.color == null) {
+            this.color = Color.red;
+        }
+        g2.setColor(this.color);
         g2.fillRect(xApp, yApp, appSize, appSize);
     }
 

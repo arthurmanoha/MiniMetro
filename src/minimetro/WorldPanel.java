@@ -198,13 +198,12 @@ public class WorldPanel extends JPanel implements MouseListener,
             for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
                 int delay = computeDelay(row, col, centerRow, centerCol);
                 Cell c = world.getCell(row, col, delay);
-                if (c.color == null) {
+                if (c.getColor() == null) {
                     // The color of this cell is defined once now.
-                    c.color = computeCellColor(c.altitude, c.biome);
+                    c.setColor(computeCellColor(c.altitude, c.biome));
                 }
-                Color color = c.color;
                 if (mustDisplayTerrain) {
-                    c.paintBackground(g, x0, y0, zoomLevel, color);
+                    c.paintBackground(g, x0, y0, zoomLevel);
                 }
             }
         }

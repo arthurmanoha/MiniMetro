@@ -65,6 +65,25 @@ public class SwitchCell extends Cell {
     }
 
     @Override
+    public void setColor(Color newColor) {
+        cellA.setColor(newColor);
+        cellB.setColor(newColor);
+    }
+
+    @Override
+    protected void paintBackground(Graphics g, double x0, double y0, double zoom) {
+        if (isToggled) {
+            // B is active and painted last
+            cellA.paintBackground(g, x0, y0, zoom);
+            cellB.paintBackground(g, x0, y0, zoom);
+        } else {
+            // A is active and painted last
+            cellB.paintBackground(g, x0, y0, zoom);
+            cellA.paintBackground(g, x0, y0, zoom);
+        }
+    }
+
+    @Override
     protected void paintForeground(Graphics g, double x0, double y0, double zoom) {
         if (isToggled) {
             // B is active and painted last
