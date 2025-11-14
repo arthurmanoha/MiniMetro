@@ -66,7 +66,7 @@ public class Passenger extends RelativisticElement {
 
         try {
             // On-screen coordinates of the center of the cell:
-            Point2D.Double position = getAbsolutePosition((int) delay);
+            Point2D.Double position = getAbsolutePosition(delay);
             final double xApp = position.x * zoom + x0;
             final double yApp = g.getClipBounds().height - (position.y * zoom + y0);
             final double appSize = zoom * size;

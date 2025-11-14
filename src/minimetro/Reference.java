@@ -23,10 +23,14 @@ public class Reference extends TrainElement {
 
     @Override
     protected void start() {
+        isActive = true;
+        updateImage();
     }
 
     @Override
     protected void stop() {
+        isActive = false;
+        updateImage();
     }
 
     @Override
@@ -51,15 +55,16 @@ public class Reference extends TrainElement {
 
     protected void toggleRelativity() {
         isActive = !isActive;
+        updateImage();
+    }
+
+    private void updateImage() {
         if (isActive) {
             imagePath = "src\\menuIcons\\relativityReference_active.png";
         } else {
             imagePath = "src\\menuIcons\\relativityReference_inactive.png";
         }
-        System.out.println("imagePath was defined to " + imagePath);
         loadImage();
-        System.out.println("image was loaded.");
-        System.out.println("Reference is now " + (isActive ? "" : "in") + "active.");
     }
 
     public boolean isActive() {

@@ -682,6 +682,19 @@ public class WorldPanel extends JPanel implements MouseListener,
             writer.write("zoom " + zoomLevel + "\n");
             writer.write("x0 " + x0 + "\n");
             writer.write("y0 " + y0 + "\n");
+
+            writer.write("reference");
+            if (isRelativityActive()) {
+                writer.write(" on");
+            } else {
+                writer.write(" off");
+            }
+            if (reference == null) {
+                writer.write(" null");
+            } else {
+                writer.write(" " + reference.getX() + " " + reference.getY());
+            }
+            writer.write("\n");
         } catch (IOException e) {
             System.out.println("WorldPanel: error occured when saving to file.");
         }
@@ -707,6 +720,25 @@ public class WorldPanel extends JPanel implements MouseListener,
         split = text.split(" ");
         if (split[0].equals("y0")) {
             y0 = Double.valueOf(split[1]);
+        }
+
+        text = scanner.nextLine();
+        split = text.split(" ");
+        boolean loadWithRelativityActive = false;
+
+        if (split.length >= 2 && split[0].equals("reference")) {
+            loadWithRelativityActive = (split[1].equals("on"));
+        }
+        if (split.length >= 3 && split[2].equals("null")) {
+            reference = null;
+        } else if (split.length >= 4) {
+            double newX = Double.valueOf(split[2]);
+            double newY = Double.valueOf(split[3]);
+            Point2D.Double newRefCoords = new Point2D.Double(newX, newY);
+            reference = new Reference(newRefCoords);
+            if (loadWithRelativityActive) {
+                reference.start();
+            }
         }
     }
 
