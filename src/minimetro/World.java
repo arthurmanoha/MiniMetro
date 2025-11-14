@@ -1007,7 +1007,8 @@ public class World {
                     // Save rails
                     if (c instanceof SwitchCell) {
                         // Save a switch cell
-                        String switchText = SWITCH + " " + rowIndex + " " + colIndex + " " + ((SwitchCell) c).getLinks() + "\n";
+                        String switchText = SWITCH + " " + rowIndex + " " + colIndex + " " + ((SwitchCell) c).getLinks()
+                                + " " + (((SwitchCell) c).isToggled() ? "true" : "false") + "\n";
                         writer.write(switchText);
                     } else {
                         String cellLinks = c.getLinks();
@@ -1118,6 +1119,10 @@ public class World {
                 // SWITCH 1 1 NORTH EAST WEST EAST
                 c = getCellOrCreateIfNull(row, col);
                 SwitchCell sc = new SwitchCell(c);
+                boolean isToggled = Boolean.valueOf(split[6]);
+                if (isToggled) {
+                    sc.toggle();
+                }
                 setCell(row, col, sc);
                 try {
                     sc.addConnections(
