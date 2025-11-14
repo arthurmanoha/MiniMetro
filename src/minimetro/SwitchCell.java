@@ -514,4 +514,10 @@ public class SwitchCell extends Cell {
     protected void toggle() {
         isToggled = !isToggled;
     }
+
+    @Override
+    protected void updateHistory() {
+        cellA.updateHistory();
+        cellB.updateHistory();
+    }
 }
