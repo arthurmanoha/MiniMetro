@@ -107,14 +107,14 @@ public abstract class TrainElement extends RelativisticElement implements ImageO
                 spriteHeight = (int) Math.max(5, (image.getHeight(this) * zoom) * spriteZoomLevel);
                 Image scaledImage = image.getScaledInstance((int) spriteWidth, -1, Image.SCALE_DEFAULT);
 
-                int xCenter = (int) (x0 + zoom * this.getAbsolutePosition((int) delay).x);
+                int xCenter = (int) (x0 + zoom * this.getAbsolutePosition(delay).x);
 
-                int yCenter = (int) (g.getClipBounds().height - (y0 + zoom * this.getAbsolutePosition((int) delay).y));
+                int yCenter = (int) (g.getClipBounds().height - (y0 + zoom * this.getAbsolutePosition(delay).y));
                 int xImage = (int) (xCenter - spriteWidth / 2);
                 int yImage = (int) (yCenter - spriteHeight / 2);
 
                 Graphics2D g2d = (Graphics2D) g;
-                double headingRad = degToRad(getHeading((int) delay));
+                double headingRad = degToRad(getHeading(delay));
 
                 AffineTransform initGraphicsTransform = g2d.getTransform();
                 g2d.rotate(-headingRad, xCenter, yCenter);
@@ -122,8 +122,8 @@ public abstract class TrainElement extends RelativisticElement implements ImageO
                 g2d.setTransform(initGraphicsTransform);
             } else {
                 // Default drawing
-                double xCenter = (int) (x0 + zoom * this.getAbsolutePosition((int) delay).x);
-                double yCenter = g.getClipBounds().height - (int) (y0 + zoom * this.getAbsolutePosition((int) delay).y);
+                double xCenter = (int) (x0 + zoom * this.getAbsolutePosition(delay).x);
+                double yCenter = g.getClipBounds().height - (int) (y0 + zoom * this.getAbsolutePosition(delay).y);
                 // Default painting
                 int radiusApp = (int) (zoom * size);
                 ((Graphics2D) g).setStroke(new BasicStroke());

@@ -41,14 +41,25 @@ public abstract class RelativisticElement extends SpriteElement {
         return absolutePosition;
     }
 
-    protected Point2D.Double getAbsolutePosition(int delay) throws RelativityException {
-        if (absolutePositionHistory == null) {
-            return absolutePosition;
-        } else if (delay >= 0 && delay < absolutePositionHistory.size()) {
-            return absolutePositionHistory.get(delay);
-        } else {
-            throw new RelativityException();
+    protected Point2D.Double getAbsolutePosition(double delay) throws RelativityException {
+        try {
+            if (absolutePositionHistory == null) {
+                return absolutePosition;
+            } else if (delay >= 0 && delay < absolutePositionHistory.size()) {
+
+                double decimalPart = delay - (int) delay;
+                Point2D.Double positionBefore = absolutePositionHistory.get((int) delay);
+                Point2D.Double positionAfter = absolutePositionHistory.get((int) delay + 1);
+
+                double newX = positionBefore.x * (1 - decimalPart) + positionAfter.x * decimalPart;
+                double newY = positionBefore.y * (1 - decimalPart) + positionAfter.y * decimalPart;
+
+                return new Point2D.Double(newX, newY);
+            }
+        } catch (IndexOutOfBoundsException e) {
+            // Do nothing here and throw a RelativityException immediately afterwards.
         }
+        throw new RelativityException();
     }
 
     protected void setPosition(Point2D.Double newPos) {
@@ -70,11 +81,16 @@ public abstract class RelativisticElement extends SpriteElement {
         return headingDegrees;
     }
 
-    protected double getHeading(int delay) throws RelativityException {
+    protected double getHeading(double delay) throws RelativityException {
         if (headingHistory == null) {
             return headingDegrees;
         } else if (delay < headingHistory.size()) {
-            return headingHistory.get(delay);
+
+            double decimalPart = delay - (int) delay;
+            double headingBefore = headingHistory.get((int) delay);
+            double headingAfter = headingHistory.get((int) delay + 1);
+
+            return headingBefore * (1 - decimalPart) + headingAfter * decimalPart;
         } else {
             throw new RelativityException();
         }
@@ -123,11 +139,12 @@ public abstract class RelativisticElement extends SpriteElement {
      * @return the rank in history of the position currently visible from the
      * reference.
      */
-    protected int findVisibilityDelay(double xRef, double yRef, double lightspeed, double dt) {
+    protected double findVisibilityDelay(double xRef, double yRef, double lightspeed, double dt) {
 
         boolean foundVisibility = false;
 
         int rank = 0;
+        double prevVisibility = 0;
         try {
             while (rank < absolutePositionHistory.size() && !foundVisibility) {
 
@@ -140,18 +157,23 @@ public abstract class RelativisticElement extends SpriteElement {
                 double ageOfPhoton = rank * dt;
                 // How long light takes to reach the reference from that position (in seconds)
                 double necessaryTravelTime = distance / lightspeed;
-                if (ageOfPhoton > necessaryTravelTime) {
+                double visibility = ageOfPhoton - necessaryTravelTime;
+
+                if (visibility > 0 && prevVisibility < 0) {
                     // The object's state at this rank is visible from the reference
-                    return rank;
+
+                    double result = rank - visibility / (visibility - prevVisibility);
+                    return result;
                 }
 
+                prevVisibility = visibility;
                 rank++;
             }
         } catch (NullPointerException e) {
             // The object is not visible because even the first light it emitted has not reached the ref yet.
-            return -1;
+            return -1.0;
         }
         // This function should return before this step.
-        return -2;
+        return -2.0;
     }
 }

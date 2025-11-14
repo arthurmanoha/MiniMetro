@@ -35,12 +35,12 @@ public class Reference extends TrainElement {
     }
 
     @Override
-    protected Point2D.Double getAbsolutePosition(int delay) throws RelativityException {
+    protected Point2D.Double getAbsolutePosition(double delay) throws RelativityException {
         return this.getAbsolutePosition();
     }
 
     @Override
-    protected double getHeading(int delay) throws RelativityException {
+    protected double getHeading(double delay) throws RelativityException {
         return getHeading();
     }
 
