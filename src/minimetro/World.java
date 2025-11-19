@@ -1468,12 +1468,9 @@ public class World {
         noiseGenerator.setAmplitudes(newAmplitude, level);
     }
 
-//    protected void toggleRelativity() {
-//        isRelativityActive = !isRelativityActive;
-//        System.out.println("World relativity " + (isRelativityActive ? "ON" : "OFF"));
-//    }
-//
-//    public boolean isRelativityActive() {
-//        return isRelativityActive;
-//    }
+    public void setLightspeed(double newLightSpeed) {
+        for (Cell c : getAllCells()) {
+            c.lightspeed = newLightSpeed;
+        }
+    }
 }

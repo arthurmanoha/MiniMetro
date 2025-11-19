@@ -931,4 +931,8 @@ public class WorldPanel extends JPanel implements MouseListener,
     private boolean isRelativityActive() {
         return reference != null && reference.isActive();
     }
+
+    public void setLightspeed(double newLightSpeed) {
+        world.setLightspeed(newLightSpeed);
+    }
 }

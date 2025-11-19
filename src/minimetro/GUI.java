@@ -52,6 +52,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
     JPanel mainToolbar;
     JScrollPane mainToolbarScrollpane;
     JLabel worldMapLabel;
+    JTextField lightspeedTextField;
     JTextField itineraryTextField;
 
     int windowWidth = 1900;
@@ -285,10 +286,18 @@ public class GUI extends JFrame implements PropertyChangeListener {
         createButton("toggleRelativity.png", "toggleRelativity", 16, 0);
         createButton("relativityReference_inactive.png", "setRelativityReference", 16, 1);
 
+        createButton("lightspeed", "setLightspeed", 17, 0);
+        lightspeedTextField = new JTextField();
+        lightspeedTextField.setPreferredSize(new Dimension(50, 20));
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 17;
+        constraints.gridy = 1;
+        buttonPanel.add(lightspeedTextField, constraints);
+
         System.out.println("Creating itineraryTextField");
         itineraryTextField = new JTextField("", 3);
         itineraryTextField.setSize(10, 10);
-        GridBagConstraints constraints = new GridBagConstraints();
+        constraints = new GridBagConstraints();
         constraints.gridx = 11;
         constraints.gridy = 1;
         constraints.gridwidth = 1;
@@ -474,5 +483,10 @@ public class GUI extends JFrame implements PropertyChangeListener {
 
     public void setRelativityReference() {
         panel.setTool(GuiTool.SET_RELATIVITY_REFERENCE);
+    }
+
+    public void setLightspeed() {
+        double newLightspeed = Double.valueOf(lightspeedTextField.getText());
+        panel.setLightspeed(newLightspeed);
     }
 }
