@@ -23,7 +23,6 @@ import static java.lang.Math.sqrt;
 public abstract class TrainElement extends RelativisticElement implements ImageObserver {
 
     protected int row, col; // Position on the grid.
-    protected double linearSpeed;
 
     // Highest speed physically achievable.
     protected double maxSpeed;
@@ -91,10 +90,6 @@ public abstract class TrainElement extends RelativisticElement implements ImageO
     @Override
     public void paint(Graphics g, double x0, double y0, double zoom) {
         paint(g, x0, y0, zoom, 0);
-    }
-
-    @Override
-    protected void paint(Graphics g, double x0, double y0, double zoom, double xRef, double yRef) {
     }
 
     @Override
@@ -177,21 +172,6 @@ public abstract class TrainElement extends RelativisticElement implements ImageO
         return fDotU;
     }
 
-    double getHeadingDeg() {
-        return super.getHeading();
-    }
-
-    double getHeadingRad() {
-        return degToRad(super.getHeading());
-    }
-
-    void setHeadingDegrees(double newHeading) {
-        if (newHeading > 360) {
-            newHeading -= 360;
-        }
-        setHeading(newHeading);
-    }
-
     private void paintSpeed(Graphics g, int xCenter, int yCenter, int size) {
         g.setColor(Color.white);
         double headingRad = getHeadingRad();
@@ -229,15 +209,9 @@ public abstract class TrainElement extends RelativisticElement implements ImageO
         linearSpeed += efficientForce * dt / mass;
     }
 
-    protected void setSpeed(double newVx, double newVy) {
-        linearSpeed = sqrt(newVx * newVx + newVy * newVy);
-        double newHeadingRad = Math.atan2(newVy, newVx);
-        setHeading(radToDeg(newHeadingRad));
-    }
-
+    @Override
     protected void move(double dt) {
-        Point2D.Double movement = new Point2D.Double(getVx() * dt, getVy() * dt);
-        setPosition(getAbsolutePosition().x + movement.x, getAbsolutePosition().y + movement.y);
+        super.move(dt);
         if (stopTimerDuration > 0 && getLinearSpeed() < MAX_SPEED_FOR_STOPPED) {
             stopTimerDuration -= dt;
         }
@@ -285,22 +259,6 @@ public abstract class TrainElement extends RelativisticElement implements ImageO
 
     protected void setTimedStop(double newStopTimerDuration) {
         stopTimerDuration = newStopTimerDuration;
-    }
-
-    protected double degToRad(double headingDegrees) {
-        return ((90 - headingDegrees) * 2 * PI) / 360;
-    }
-
-    private double radToDeg(double headingRad) {
-        return 90 - headingRad * 360 / (2 * PI);
-    }
-
-    protected double getVx() {
-        return linearSpeed * cos(getHeadingRad());
-    }
-
-    protected double getVy() {
-        return linearSpeed * sin(getHeadingRad());
     }
 
     protected void addStationToLine(StationCell newStation) {

@@ -1470,7 +1470,7 @@ public class World {
 
     public void setLightspeed(double newLightSpeed) {
         for (Cell c : getAllCells()) {
-            c.lightspeed = newLightSpeed;
+            c.setLightspeed(newLightSpeed);
         }
     }
 }

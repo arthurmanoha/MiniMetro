@@ -18,13 +18,14 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
+Circles centered on the reference shall show the delay.
+When drawing tracks, cells shall be outlined.
+Wagon-generator cells shall create a new wagon connected to the closest one.
 A cleaning tool shall remove any disconnected track section.
 The visibility delay shall interpolate values for a smooth result.
 Window dimensions shall be saved to file.
 Lightspeed shall affect train links.
 Lightspeed shall affect passengers.
-Lightspeed effects shall be computed exactly.
-Circles centered on the reference shall show the delay.
 A* shall add more cost to each turn.
 Biomes shall be optional and that flag shall be saved.
 Biomes shall be defined via a Voronoi diagram or a method inspired from the Minecraft biome generator.
@@ -142,6 +143,7 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Lightspeed effects are now computed exactly.
 Fixed relativistic display for passengers
 Improved algorithm for relativistic delay computation.
 Added new class RelativisticElement to encapsulate relativistic behaviors

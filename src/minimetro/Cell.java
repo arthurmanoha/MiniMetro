@@ -198,8 +198,7 @@ public class Cell {
     protected void paintTrains(Graphics g, double x0, double y0, double zoom, double xRef, double yRef) {
         if (hasTrain()) {
             for (TrainElement te : trainElements) {
-                double delay = te.findVisibilityDelay(xRef, yRef, lightspeed, currentDt);
-                te.paint(g, x0, y0, zoom, delay);
+                te.paint(g, x0, y0, zoom, xRef, yRef, lightspeed, currentDt);
             }
         }
     }
@@ -1119,5 +1118,9 @@ public class Cell {
         for (TrainElement te : trainElements) {
             te.updateHistory();
         }
+    }
+
+    protected void setLightspeed(double newLightSpeed) {
+        this.lightspeed = newLightSpeed;
     }
 }

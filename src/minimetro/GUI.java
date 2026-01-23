@@ -42,6 +42,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
     private String configFileName = "config.txt";
     private File configFile;
 
+    private World world;
     WorldPanel panel;
     JPanel buttonPanel;
     JPanel topToolbar;
@@ -57,7 +58,6 @@ public class GUI extends JFrame implements PropertyChangeListener {
 
     int windowWidth = 1900;
     int windowHeight = 1000;
-    private World world;
     private JTextField speedIndicatorTextField;
     private JTextField stopTimerTextField;
     double defaultStopTimerDuration = 5;

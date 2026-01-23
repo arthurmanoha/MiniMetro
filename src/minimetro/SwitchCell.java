@@ -318,6 +318,7 @@ public class SwitchCell extends Cell {
 
     @Override
     protected void moveTrains(double dt) {
+        currentDt = dt;
         cellA.moveTrains(dt);
         cellB.moveTrains(dt);
 
@@ -523,5 +524,12 @@ public class SwitchCell extends Cell {
     protected void updateHistory() {
         cellA.updateHistory();
         cellB.updateHistory();
+    }
+
+    @Override
+    protected void setLightspeed(double newLightSpeed) {
+        super.setLightspeed(newLightSpeed);
+        cellA.setLightspeed(newLightSpeed);
+        cellB.setLightspeed(newLightSpeed);
     }
 }

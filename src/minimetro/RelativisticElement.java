@@ -2,6 +2,10 @@ package minimetro;
 
 import java.awt.Graphics;
 import java.awt.geom.Point2D;
+import static java.lang.Math.PI;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+import static java.lang.Math.sqrt;
 import java.util.ArrayList;
 
 /**
@@ -13,6 +17,7 @@ import java.util.ArrayList;
 public abstract class RelativisticElement extends SpriteElement {
 
     private Point2D.Double absolutePosition;
+    protected double linearSpeed;
     private double headingDegrees; // 0:N, 90:E, 180:S, 270:W, MAX_VALUE: not set yet.
     private ArrayList<Point2D.Double> absolutePositionHistory;
     private ArrayList<Double> headingHistory;
@@ -72,6 +77,12 @@ public abstract class RelativisticElement extends SpriteElement {
         setPosition(new Point2D.Double(newX, newY));
     }
 
+    protected void setSpeed(double newVx, double newVy) {
+        linearSpeed = sqrt(newVx * newVx + newVy * newVy);
+        double newHeadingRad = Math.atan2(newVy, newVx);
+        setHeading(radToDeg(newHeadingRad));
+    }
+
     protected void setHeading(double newHeading) {
 
         this.headingDegrees = newHeading;
@@ -79,6 +90,21 @@ public abstract class RelativisticElement extends SpriteElement {
 
     protected double getHeading() {
         return headingDegrees;
+    }
+
+    double getHeadingDeg() {
+        return getHeading();
+    }
+
+    double getHeadingRad() {
+        return degToRad(getHeading());
+    }
+
+    void setHeadingDegrees(double newHeading) {
+        if (newHeading > 360) {
+            newHeading -= 360;
+        }
+        setHeading(newHeading);
     }
 
     protected double getHeading(double delay) throws RelativityException {
@@ -94,6 +120,19 @@ public abstract class RelativisticElement extends SpriteElement {
         } else {
             throw new RelativityException();
         }
+    }
+
+    protected double getVx() {
+        return linearSpeed * cos(getHeadingRad());
+    }
+
+    protected double getVy() {
+        return linearSpeed * sin(getHeadingRad());
+    }
+
+    protected void move(double dt) {
+        Point2D.Double movement = new Point2D.Double(getVx() * dt, getVy() * dt);
+        setPosition(getAbsolutePosition().x + movement.x, getAbsolutePosition().y + movement.y);
     }
 
     protected void updateHistory() {
@@ -125,7 +164,9 @@ public abstract class RelativisticElement extends SpriteElement {
         System.out.println("}END");
     }
 
-    protected void paint(Graphics g, double x0, double y0, double zoom, double xRef, double yRef) {
+    protected void paint(Graphics g, double x0, double y0, double zoom, double xRef, double yRef, double lightspeed, double currentDt) {
+        double delay = findVisibilityDelay(xRef, yRef, lightspeed, currentDt);
+        paint(g, x0, y0, zoom, delay);
     }
 
     /**
@@ -176,4 +217,13 @@ public abstract class RelativisticElement extends SpriteElement {
         // This function should return before this step.
         return -2.0;
     }
+
+    protected double degToRad(double headingDegrees) {
+        return ((90 - headingDegrees) * 2 * PI) / 360;
+    }
+
+    private double radToDeg(double headingRad) {
+        return 90 - headingRad * 360 / (2 * PI);
+    }
+
 }

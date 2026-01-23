@@ -39,6 +39,11 @@ public class Reference extends TrainElement {
     }
 
     @Override
+    public void paint(Graphics g, double x0, double y0, double zoom, double delay) {
+        super.paint(g, x0, y0, zoom, delay);
+    }
+
+    @Override
     protected Point2D.Double getAbsolutePosition(double delay) throws RelativityException {
         return this.getAbsolutePosition();
     }
