@@ -18,7 +18,7 @@ public class Wagon extends TrainElement {
     private int nbPassengerPerRow;
 
     public Wagon(int newId) {
-        super(newId);
+        super(newId, null);
         maxSpeed = 10;
         color = Color.blue;
         imagePath = "src\\img\\Wagon.png";
@@ -34,7 +34,7 @@ public class Wagon extends TrainElement {
 
     public Wagon(int newId, Point2D.Double newAbsolutePosition) {
         this(newId);
-        this.absolutePosition = newAbsolutePosition;
+        setPosition(newAbsolutePosition);
     }
 
     @Override
@@ -42,6 +42,17 @@ public class Wagon extends TrainElement {
         super.paint(g, x0, y0, zoom);
         for (Passenger p : passengersList) {
             p.paint(g, x0, y0, zoom);
+        }
+    }
+
+    @Override
+    public void paint(Graphics g, double x0, double y0, double zoom, double delay) {
+        super.paint(g, x0, y0, zoom, delay);
+        for (Passenger p : passengersList) {
+            p.paint(g, x0, y0, zoom, delay);
+//            for (int rank = 0; rank < 100; rank++) {
+//                p.paint(g, x0, y0, zoom, 10 * rank);
+//            }
         }
     }
 
@@ -66,14 +77,15 @@ public class Wagon extends TrainElement {
         int nbCols = maxCapacity / nbRows;
         int passengerRank = 0;
         for (Passenger p : passengersList) {
-            double row = passengerRank / nbPassengerPerRow + (isEven(nbCols) ? 0.0 : 0.5);
-            double col = passengerRank % nbPassengerPerRow + (isEven(nbRows) ? 0.0 : 0.5);
-            double passengerX = (row - nbRows / 2) * rowMargin;
-            double passengerY = (col - nbCols / 2) * colMargin;
-            double headingRad = degToRad(headingDegrees);
+            double rowInWagon = passengerRank / nbPassengerPerRow + (isEven(nbCols) ? 0.0 : 0.5);
+            double colInWagon = passengerRank % nbPassengerPerRow + (isEven(nbRows) ? 0.0 : 0.5);
+            double passengerX = (rowInWagon - nbRows / 2) * rowMargin;
+            double passengerY = (colInWagon - nbCols / 2) * colMargin;
+            double headingRad = degToRad(getHeading());
             double xRotated = this.getX() + passengerX * cos(headingRad) - passengerY * sin(headingRad);
             double yRotated = this.getY() + passengerY * cos(headingRad) + passengerX * sin(headingRad);
-            p.setCoordinates(xRotated, yRotated);
+            p.setPosition(xRotated, yRotated);
+//            p.move(0);
             passengerRank++;
         }
     }
@@ -156,5 +168,15 @@ public class Wagon extends TrainElement {
 
     protected ArrayList<Passenger> getPassengers() {
         return passengersList;
+    }
+
+    @Override
+    protected void updateHistory() {
+        super.updateHistory();
+//        System.out.println("Wagon.updateHistory(), " + getHistorySize());
+        for (Passenger p : passengersList) {
+            p.updateHistory();
+        }
+//        printHistory();
     }
 }

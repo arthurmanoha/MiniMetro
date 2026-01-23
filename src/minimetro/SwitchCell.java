@@ -65,6 +65,25 @@ public class SwitchCell extends Cell {
     }
 
     @Override
+    public void setColor(Color newColor) {
+        cellA.setColor(newColor);
+        cellB.setColor(newColor);
+    }
+
+    @Override
+    protected void paintBackground(Graphics g, double x0, double y0, double zoom) {
+        if (isToggled) {
+            // B is active and painted last
+            cellA.paintBackground(g, x0, y0, zoom);
+            cellB.paintBackground(g, x0, y0, zoom);
+        } else {
+            // A is active and painted last
+            cellB.paintBackground(g, x0, y0, zoom);
+            cellA.paintBackground(g, x0, y0, zoom);
+        }
+    }
+
+    @Override
     protected void paintForeground(Graphics g, double x0, double y0, double zoom) {
         if (isToggled) {
             // B is active and painted last
@@ -121,6 +140,16 @@ public class SwitchCell extends Cell {
     protected void paintTrains(Graphics g, double x0, double y0, double zoom) {
         cellA.paintTrains(g, x0, y0, zoom);
         cellB.paintTrains(g, x0, y0, zoom);
+    }
+
+    /**
+     * Paint the trainElements alone, with relativity
+     * (to be used after all cells were drawn).
+     */
+    @Override
+    protected void paintTrains(Graphics g, double x0, double y0, double zoom, double xRef, double yRef) {
+        cellA.paintTrains(g, x0, y0, zoom, xRef, yRef);
+        cellB.paintTrains(g, x0, y0, zoom, xRef, yRef);
     }
 
     /**
@@ -289,6 +318,7 @@ public class SwitchCell extends Cell {
 
     @Override
     protected void moveTrains(double dt) {
+        currentDt = dt;
         cellA.moveTrains(dt);
         cellB.moveTrains(dt);
 
@@ -382,9 +412,9 @@ public class SwitchCell extends Cell {
     }
 
     @Override
-    protected void setStopTimer(double newStopTimerDuration) {
-        cellA.setStopTimer(newStopTimerDuration);
-        cellB.setStopTimer(newStopTimerDuration);
+    protected void toggleStopTimer(double newStopTimerDuration) {
+        cellA.toggleStopTimer(newStopTimerDuration);
+        cellB.toggleStopTimer(newStopTimerDuration);
     }
 
     private void paintActiveCellIndicator(Graphics g, double xApp, double yApp, double appSize) {
@@ -484,5 +514,22 @@ public class SwitchCell extends Cell {
      */
     protected void toggle() {
         isToggled = !isToggled;
+    }
+
+    protected boolean isToggled() {
+        return this.isToggled;
+    }
+
+    @Override
+    protected void updateHistory() {
+        cellA.updateHistory();
+        cellB.updateHistory();
+    }
+
+    @Override
+    protected void setLightspeed(double newLightSpeed) {
+        super.setLightspeed(newLightSpeed);
+        cellA.setLightspeed(newLightSpeed);
+        cellB.setLightspeed(newLightSpeed);
     }
 }

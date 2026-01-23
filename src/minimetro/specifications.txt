@@ -4,6 +4,7 @@
 KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS KNOWN BUGS 
 ---------------------------------------------------------------------------------------------------
 
+A Cell does not recompute its color after a StationCell is removed.
 Game crashes when loading onboard passengers that were saved before their wagon.
 Wagons saved on a the inactive side of a SwitchCell are not properly loaded.
 Speed indicators may be placed on switch cells but are not saved and loaded.
@@ -17,7 +18,14 @@ A Locomotive does not brake hard enough at low speed.
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 ---------------------------------------------------------------------------------------------------
 
-Finite light speed.
+Circles centered on the reference shall show the delay.
+When drawing tracks, cells shall be outlined.
+Wagon-generator cells shall create a new wagon connected to the closest one.
+A cleaning tool shall remove any disconnected track section.
+The visibility delay shall interpolate values for a smooth result.
+Window dimensions shall be saved to file.
+Lightspeed shall affect train links.
+Lightspeed shall affect passengers.
 A* shall add more cost to each turn.
 Biomes shall be optional and that flag shall be saved.
 Biomes shall be defined via a Voronoi diagram or a method inspired from the Minecraft biome generator.
@@ -26,7 +34,6 @@ An undo tool shall allow to undo the A* track-adding operation.
 Stations shall be drawn to be visually different from grass or water tiles.
 Stations shall have a built-in stop signal.
 Stations shall have built-in speed limits.
-A cleaning tool shall remove any disconnected track section.
 Train-specific switch: a switch shall be given a list of the locos that it will bring to one exit, the other locos will take the other exit.
 An undo tool shall be available for some actions, such as the cleaning tool.
 Individual cells of the terrain may be defined manually and stored in the save file.
@@ -136,6 +143,12 @@ When the user requests a track be created outside the world bounds, the world mu
 DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE DONE
 ---------------------------------------------------------------------------------------------------
 
+Lightspeed effects are now computed exactly.
+Fixed relativistic display for passengers
+Improved algorithm for relativistic delay computation.
+Added new class RelativisticElement to encapsulate relativistic behaviors
+Passengers are now Relativistic Elements.
+Added finite light speed to locos and wagons.
 Fixed save file.
 Keybindings for pan/zoom.
 The A* tool now run in a thread.

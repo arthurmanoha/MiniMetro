@@ -42,6 +42,7 @@ public class GUI extends JFrame implements PropertyChangeListener {
     private String configFileName = "config.txt";
     private File configFile;
 
+    private World world;
     WorldPanel panel;
     JPanel buttonPanel;
     JPanel topToolbar;
@@ -52,12 +53,11 @@ public class GUI extends JFrame implements PropertyChangeListener {
     JPanel mainToolbar;
     JScrollPane mainToolbarScrollpane;
     JLabel worldMapLabel;
+    JTextField lightspeedTextField;
     JTextField itineraryTextField;
 
-    int windowWidth = 1100;
-    int windowHeight = 1035;
-
-    private World world;
+    int windowWidth = 1900;
+    int windowHeight = 1000;
     private JTextField speedIndicatorTextField;
     private JTextField stopTimerTextField;
     double defaultStopTimerDuration = 5;
@@ -283,11 +283,21 @@ public class GUI extends JFrame implements PropertyChangeListener {
         createButton("A_convert", "astarToTracks", 14, 1);
 
         createButton("noiseWindow.png", "toggleNoiseWindow", 15, 0);
+        createButton("toggleRelativity.png", "toggleRelativity", 16, 0);
+        createButton("relativityReference_inactive.png", "setRelativityReference", 16, 1);
+
+        createButton("lightspeed", "setLightspeed", 17, 0);
+        lightspeedTextField = new JTextField();
+        lightspeedTextField.setPreferredSize(new Dimension(50, 20));
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 17;
+        constraints.gridy = 1;
+        buttonPanel.add(lightspeedTextField, constraints);
 
         System.out.println("Creating itineraryTextField");
         itineraryTextField = new JTextField("", 3);
         itineraryTextField.setSize(10, 10);
-        GridBagConstraints constraints = new GridBagConstraints();
+        constraints = new GridBagConstraints();
         constraints.gridx = 11;
         constraints.gridy = 1;
         constraints.gridwidth = 1;
@@ -464,5 +474,19 @@ public class GUI extends JFrame implements PropertyChangeListener {
             noiseWindow.setVisible(!noiseWindow.isVisible());
         }
         System.out.println("toggleNoiseWindow end");
+    }
+
+    public void toggleRelativity() {
+        panel.toggleRelativity();
+        panel.repaint();
+    }
+
+    public void setRelativityReference() {
+        panel.setTool(GuiTool.SET_RELATIVITY_REFERENCE);
+    }
+
+    public void setLightspeed() {
+        double newLightspeed = Double.valueOf(lightspeedTextField.getText());
+        panel.setLightspeed(newLightspeed);
     }
 }

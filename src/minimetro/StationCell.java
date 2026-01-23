@@ -36,7 +36,7 @@ public class StationCell extends Cell {
      */
     public StationCell(Cell previousCell, int newId) {
         super(previousCell);
-        this.color = Color.yellow;
+        this.setColor(Color.yellow);
         if (newId == -1) {
             stationId = NB_STATIONS_CREATED;
             NB_STATIONS_CREATED++;
@@ -51,7 +51,7 @@ public class StationCell extends Cell {
         passengerList = new ArrayList<>();
         passengersLeavingCell = new ArrayList<>();
         walkways = new HashMap<>();
-        color = getStationColor(stationId);
+        setColor(getStationColor(stationId));
         this.stopTimerDuration = 2.0;
     }
 
@@ -87,8 +87,24 @@ public class StationCell extends Cell {
         return colorList.get(stationNumber % colorList.size());
     }
 
+    /**
+     * Paint the cell
+     *
+     */
     @Override
     protected void paintForeground(Graphics g, double x0, double y0, double zoom) {
+        paintForeground(g, x0, y0, zoom, 0, 0, false);
+    }
+
+    /**
+     * Paint the cell with a delay caused by a finite lightspeed
+     *
+     * @param refX x-coordinate of the reference
+     * @param refY y-coordinate of the reference
+     * @param isRelativityActive true when relativity is active
+     */
+    @Override
+    protected void paintForeground(Graphics g, double x0, double y0, double zoom, double refX, double refY, boolean isRelativityActive) {
 
         // On-screen coordinates of the center of the cell:
         final double xApp = absolutePosition.x * zoom + x0;
@@ -98,13 +114,13 @@ public class StationCell extends Cell {
         g.setColor(Color.white);
         g.fillRect((int) (xApp - appSize * 0.5), (int) (yApp - appSize * 0.5),
                 (int) appSize, (int) appSize);
-        g.setColor(this.color);
+        g.setColor(this.getColor());
         g.fillRect((int) (xApp - appSize * 0.5 + 3), (int) (yApp - appSize * 0.5 + 3),
                 (int) appSize - 6, (int) appSize - 6);
 
-        int rr = this.color.getRed();
-        int gg = this.color.getGreen();
-        int bb = this.color.getBlue();
+        int rr = this.getColor().getRed();
+        int gg = this.getColor().getGreen();
+        int bb = this.getColor().getBlue();
         int grayLevel = (rr + gg + bb);
         if (grayLevel > 255) {
             g.setColor(Color.black);
@@ -117,8 +133,19 @@ public class StationCell extends Cell {
         g.drawString(stationId + "",
                 (int) (xApp - appSize * 0.25 + 1),
                 (int) (yApp - appSize / 2 + textHeight));
+    }
+
+    @Override
+    public void paintPassengers(Graphics g, double x0, double y0, double zoom, double refX, double refY, boolean isRelativityActive) {
+
         for (Passenger p : passengerList) {
-            p.paint(g, x0, y0, zoom);
+
+            if (isRelativityActive) {
+                double delay = p.findVisibilityDelay(refX, refY, lightspeed, currentDt);
+                p.paint(g, x0, y0, zoom, delay);
+            } else {
+                p.paint(g, x0, y0, zoom);
+            }
         }
 
         super.paintForeground(g, x0, y0, zoom);
@@ -133,7 +160,9 @@ public class StationCell extends Cell {
         if (passenger.getX() == Double.MAX_VALUE) {
             double newX = this.absolutePosition.x + (new Random().nextDouble() - 0.5) * cellSize;
             double newY = this.absolutePosition.y + (new Random().nextDouble() - 0.5) * cellSize;
-            passenger.setCoordinates(newX, newY);
+            passenger.setPosition(newX, newY);
+            // Force the creation of a history.
+            passenger.move(0);
         }
 
         if (shouldStopWalking) {
@@ -343,5 +372,13 @@ public class StationCell extends Cell {
     @Override
     protected boolean isEmpty() {
         return false;
+    }
+
+    @Override
+    protected void updateHistory() {
+        super.updateHistory();
+        for (Passenger p : passengerList) {
+            p.updateHistory();
+        }
     }
 }

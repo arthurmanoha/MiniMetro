@@ -14,7 +14,6 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.Scanner;
 import javax.swing.Timer;
-import static minimetro.CardinalPoint.*;
 
 /**
  * This class represents the terrain that contains the tracks, trains,
@@ -76,6 +75,7 @@ public class World {
     public static WorldMap map;
     private ArrayList<StationCell> stationList;
 
+//    private boolean isRelativityActive = false;
     public World() {
         this(10, 10);
     }
@@ -134,7 +134,7 @@ public class World {
             for (int col = 0; col < nbCols; col++) {
                 Cell c = getCell(row, col);
                 c.altitude = getAltitude(col, row);
-                c.color = null;
+                c.setColor(null);
             }
         }
         updateListeners();
@@ -149,14 +149,14 @@ public class World {
                 Cell newCell = new Cell(row, col);
                 newCell.altitude = getAltitude(col, row);
                 newCell.biome = getBiome(col, row) % 3;
-                newCell.color = null;
+                newCell.setColor(null);
                 newCell.absolutePosition = new Point2D.Double(col * Cell.cellSize, (nbRows - row - 1) * Cell.cellSize);
                 cells[row][col] = newCell;
                 newCell.setRow(row);
                 newCell.setCol(col);
             }
         }
-        computeAltitudes();
+        updateListeners();
 
         System.out.println("End cells initialization");
         activeCells = new ArrayList<>();
@@ -187,14 +187,19 @@ public class World {
      *
      * @param row
      * @param col
+     * @param delay
      * @return
      */
-    public Cell getCell(int row, int col) {
+    public Cell getCell(int row, int col, int delay) {
         try {
             return cells[row][col];
         } catch (IndexOutOfBoundsException e) {
             return null;
         }
+    }
+
+    public Cell getCell(int row, int col) {
+        return getCell(row, col, 0);
     }
 
     /**
@@ -308,6 +313,11 @@ public class World {
                 iter.remove();
                 c.setActive(false);
             }
+        }
+
+        // Update the history of all relativistic elements
+        for (Cell c : getAllCells()) {
+            c.updateHistory();
         }
 
         step++;
@@ -735,8 +745,8 @@ public class World {
      */
     private double computeDistance(TrainElement elem0, TrainElement elem1) {
 
-        Point2D.Double pos0 = elem0.absolutePosition;
-        Point2D.Double pos1 = elem1.absolutePosition;
+        Point2D.Double pos0 = elem0.getAbsolutePosition();
+        Point2D.Double pos1 = elem1.getAbsolutePosition();
 
         double x0 = pos0.x;
         double y0 = pos0.y;
@@ -879,6 +889,13 @@ public class World {
         }
     }
 
+    protected void toggleStopTimer(int row, int col) {
+        Cell c = getCell(row, col);
+        if (c != null) {
+            c.toggleStopTimer(stopTimerValue);
+        }
+    }
+
     protected void generatePassengers() {
 
         int nbNewPassengers;
@@ -990,7 +1007,8 @@ public class World {
                     // Save rails
                     if (c instanceof SwitchCell) {
                         // Save a switch cell
-                        String switchText = SWITCH + " " + rowIndex + " " + colIndex + " " + ((SwitchCell) c).getLinks() + "\n";
+                        String switchText = SWITCH + " " + rowIndex + " " + colIndex + " " + ((SwitchCell) c).getLinks()
+                                + " " + (((SwitchCell) c).isToggled() ? "true" : "false") + "\n";
                         writer.write(switchText);
                     } else {
                         String cellLinks = c.getLinks();
@@ -1101,6 +1119,10 @@ public class World {
                 // SWITCH 1 1 NORTH EAST WEST EAST
                 c = getCellOrCreateIfNull(row, col);
                 SwitchCell sc = new SwitchCell(c);
+                boolean isToggled = Boolean.valueOf(split[6]);
+                if (isToggled) {
+                    sc.toggle();
+                }
                 setCell(row, col, sc);
                 try {
                     sc.addConnections(
@@ -1444,5 +1466,11 @@ public class World {
 
     protected void setAmplitudes(int newAmplitude, int level) {
         noiseGenerator.setAmplitudes(newAmplitude, level);
+    }
+
+    public void setLightspeed(double newLightSpeed) {
+        for (Cell c : getAllCells()) {
+            c.setLightspeed(newLightSpeed);
+        }
     }
 }

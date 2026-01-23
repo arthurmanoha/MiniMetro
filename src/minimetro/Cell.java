@@ -24,7 +24,7 @@ public class Cell {
 
     protected static double cellSize = 10;
 
-    protected Color color;
+    private Color color;
 
     protected ArrayList<TrainElement> trainElements;
     protected ArrayList<TransferringTrain> trainsLeavingCell;
@@ -48,6 +48,10 @@ public class Cell {
 
     private static int NB_CELLS_CREATED = 0;
     protected int id;
+    // Speed of light in m/s
+    protected double lightspeed = 70;
+    // Timestep used for evolution
+    protected double currentDt;
 
     public Cell() {
         color = Color.gray;
@@ -61,6 +65,7 @@ public class Cell {
         isActive = false;
         id = NB_CELLS_CREATED;
         NB_CELLS_CREATED++;
+        currentDt = 0;
     }
 
     public Cell(int row, int col) {
@@ -84,6 +89,7 @@ public class Cell {
             this.stopTimerDuration = previousCell.stopTimerDuration;
             this.isActive = previousCell.isActive;
             this.altitude = previousCell.altitude;
+            this.color = previousCell.color;
             this.row = previousCell.row;
             this.col = previousCell.col;
         }
@@ -94,16 +100,27 @@ public class Cell {
         this.absolutePosition = newAbsPos;
     }
 
+    public Color getColor() {
+        return this.color;
+    }
+
+    public void setColor(Color newColor) {
+        this.color = newColor;
+    }
+
     /**
      * Paint the cell's background. This represents the nature of the terrain
      * (grass, sea, ...).
      */
-    protected void paintBackground(Graphics g, double x0, double y0, double zoom, Color c) {
+    protected void paintBackground(Graphics g, double x0, double y0, double zoom) {
         final int xApp = (int) ((absolutePosition.x - cellSize / 2) * zoom + x0);
         final int yApp = (int) (g.getClipBounds().height - ((absolutePosition.y + cellSize / 2) * zoom + y0));
         final int appSize = (int) (zoom * cellSize) + 1;
         Graphics2D g2 = (Graphics2D) g;
-        g2.setColor(c);
+        if (this.color == null) {
+            this.color = Color.red;
+        }
+        g2.setColor(this.color);
         g2.fillRect(xApp, yApp, appSize, appSize);
     }
 
@@ -118,6 +135,13 @@ public class Cell {
 
         g.setColor(Color.cyan);
         g.drawRect(xApp - appSize / 2, yApp - appSize / 2, appSize, appSize);
+    }
+
+    /**
+     * Paint the cell's foreground.
+     */
+    protected void paintForeground(Graphics g, double x0, double y0, double zoom, double refX, double refY, boolean isRelativityActive) {
+        this.paintForeground(g, x0, y0, zoom);
     }
 
     /**
@@ -149,6 +173,14 @@ public class Cell {
     }
 
     /**
+     * Paint passengers with relativity. This method shall be redefined in
+     * StationCell.
+     *
+     */
+    public void paintPassengers(Graphics g, double x0, double y0, double zoom, double refX, double refY, boolean isRelativityActive) {
+    }
+
+    /**
      * Paint the trainElements alone.
      * (to be used after all cells were drawn).
      */
@@ -156,6 +188,17 @@ public class Cell {
         if (hasTrain()) {
             for (TrainElement te : trainElements) {
                 te.paint(g, x0, y0, zoom);
+            }
+        }
+    }
+
+    /**
+     * Paint the trainElements alone, with a delay due to the speed of light.
+     */
+    protected void paintTrains(Graphics g, double x0, double y0, double zoom, double xRef, double yRef) {
+        if (hasTrain()) {
+            for (TrainElement te : trainElements) {
+                te.paint(g, x0, y0, zoom, xRef, yRef, lightspeed, currentDt);
             }
         }
     }
@@ -170,7 +213,7 @@ public class Cell {
             Point2D.Double locoPosition = new Point2D.Double(absolutePosition.x,
                     absolutePosition.y);
             this.trainElements.add(0, new Locomotive(locoPosition));
-            this.trainElements.get(0).headingDegrees = this.getCenterHeading();
+            this.trainElements.get(0).setHeading(this.getCenterHeading());
         }
         snapToRail();
     }
@@ -180,7 +223,7 @@ public class Cell {
             Point2D.Double wagonPosition = new Point2D.Double(absolutePosition.x,
                     absolutePosition.y);
             this.trainElements.add(0, new Wagon(wagonPosition));
-            this.trainElements.get(0).headingDegrees = this.getCenterHeading();
+            this.trainElements.get(0).setHeading(this.getCenterHeading());
         }
         snapToRail();
     }
@@ -284,6 +327,9 @@ public class Cell {
      * @param dt
      */
     protected void moveTrains(double dt) {
+
+        currentDt = dt;
+
         for (TrainElement trainElement : trainElements) {
 
             trainElement.move(dt);
@@ -311,7 +357,7 @@ public class Cell {
      * @return the 2d position relative to the current cell.
      */
     Point2D.Double getTrainPosition(TrainElement te) {
-        return te.absolutePosition;
+        return te.getAbsolutePosition();
     }
 
     /**
@@ -867,12 +913,21 @@ public class Cell {
 
     /**
      * Set how long locos have to remain stopped at this cell.
+     *
+     * @param newStopTimerDuration
+     */
+    protected void setStopTimer(double newStopTimerDuration) {
+        stopTimerDuration = newStopTimerDuration;
+    }
+
+    /**
+     * Set how long locos have to remain stopped at this cell.
      * Setting the same value as the cell already has shall deactivate the stop
      * timer.
      *
      * @param newStopTimerDuration
      */
-    protected void setStopTimer(double newStopTimerDuration) {
+    protected void toggleStopTimer(double newStopTimerDuration) {
         if (stopTimerDuration == newStopTimerDuration) {
             stopTimerDuration = -1;
         } else {
@@ -1057,5 +1112,15 @@ public class Cell {
 
     protected int getCol() {
         return this.col;
+    }
+
+    protected void updateHistory() {
+        for (TrainElement te : trainElements) {
+            te.updateHistory();
+        }
+    }
+
+    protected void setLightspeed(double newLightSpeed) {
+        this.lightspeed = newLightSpeed;
     }
 }

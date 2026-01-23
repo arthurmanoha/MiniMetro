@@ -2,7 +2,6 @@ package minimetro;
 
 import colorramp.ColorRamp;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -12,6 +11,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.Point2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.FileWriter;
@@ -70,9 +70,11 @@ public class WorldPanel extends JPanel implements MouseListener,
     private AStarSolver solver;
     private Thread astarThread;
 
+    // Reference for relativistic observation
+    private Reference reference;
+
     public WorldPanel(World w) {
         super();
-        setSize(new Dimension(800, 600));
         world = w;
         zoomLevel = 0.0293;
         x0 = 83;
@@ -183,33 +185,37 @@ public class WorldPanel extends JPanel implements MouseListener,
         graphicsCurrentWidth = g.getClipBounds().width;
         graphicsCurrentHeight = g.getClipBounds().height;
 
+        // The cell at the center of the screen is displayed in real time.
+        // Any other cell shall be displayed as it was in the past.
+        int centerRow = (getMinVisibleRow() + getMaxVisibleRow()) / 2;
+        int centerCol = (getMinVisibleCol() + getMaxVisibleCol()) / 2;
+
         // Erase the whole panel
         g.setColor(defaultBackgroundColor);
         g.fillRect(0, 0, graphicsCurrentWidth, graphicsCurrentHeight);
 
         for (int row = getMinVisibleRow(); row <= getMaxVisibleRow(); row++) {
             for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
-                Cell c = world.getCell(row, col);
-                if (c.color == null) {
+                int delay = computeDelay(row, col, centerRow, centerCol);
+                Cell c = world.getCell(row, col, delay);
+                if (c.getColor() == null) {
                     // The color of this cell is defined once now.
-                    c.color = computeCellColor(c.altitude, c.biome);
+                    c.setColor(computeCellColor(c.altitude, c.biome));
                 }
-                Color color = c.color;
                 if (mustDisplayTerrain) {
-                    c.paintBackground(g, x0, y0, zoomLevel, color);
+                    c.paintBackground(g, x0, y0, zoomLevel);
                 }
-            }
-        }
-        for (int row = getMinVisibleRow(); row <= getMaxVisibleRow(); row++) {
-            for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
-                Cell c = world.getCell(row, col);
-                c.paintForeground(g, x0, y0, zoomLevel);
             }
         }
 
-        if (DISPLAY_ACTIVE_CELLS_BORDERS) {
-            for (Cell c : world.activeCells) {
-                c.outlineCell(g, x0, y0, zoomLevel);
+        for (int row = getMinVisibleRow(); row <= getMaxVisibleRow(); row++) {
+            for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
+                Cell c = world.getCell(row, col);
+                if (isRelativityActive()) {
+                    c.paintForeground(g, x0, y0, zoomLevel, reference.getX(), reference.getY(), true);
+                } else {
+                    c.paintForeground(g, x0, y0, zoomLevel);
+                }
             }
         }
 
@@ -219,11 +225,29 @@ public class WorldPanel extends JPanel implements MouseListener,
         paintStraightTracksPossibilities(g);
 
         // Paint the train links
-        paintTrainLinks(g, x0, y0, zoomLevel);
+        paintTrainLinks(g, x0, y0, zoomLevel, centerRow, centerCol);
 
         // Paint the trains
-        for (Cell c : world.getAllCells()) {
-            c.paintTrains(g, x0, y0, zoomLevel);
+        for (int row = 0; row < world.getNbRows(); row++) {
+            for (int col = 0; col < world.getNbCols(); col++) {
+                Cell c = world.getCell(row, col);
+                if (isRelativityActive()) {
+                    c.paintTrains(g, x0, y0, zoomLevel, reference.getX(), reference.getY());
+                } else {
+                    c.paintTrains(g, x0, y0, zoomLevel);
+                }
+            }
+        }
+
+        for (int row = getMinVisibleRow(); row <= getMaxVisibleRow(); row++) {
+            for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
+                Cell c = world.getCell(row, col);
+                if (isRelativityActive()) {
+                    c.paintPassengers(g, x0, y0, zoomLevel, reference.getX(), reference.getY(), true);
+                } else {
+                    c.paintPassengers(g, x0, y0, zoomLevel, 0, 0, false);
+                }
+            }
         }
 
         // Draw origin
@@ -247,6 +271,16 @@ public class WorldPanel extends JPanel implements MouseListener,
 
         // Draw the path found by the solver
         solver.paint(g, x0, y0, zoomLevel);
+
+        if (reference != null) {
+            reference.paint(g, x0, y0, zoomLevel);
+        }
+
+        if (DISPLAY_ACTIVE_CELLS_BORDERS) {
+            for (Cell c : world.activeCells) {
+                c.outlineCell(g, x0, y0, zoomLevel);
+            }
+        }
     }
 
     private void paintStraightTracksPossibilities(Graphics g) {
@@ -333,7 +367,7 @@ public class WorldPanel extends JPanel implements MouseListener,
         }
     }
 
-    void paintTrainLinks(Graphics g, double x0, double y0, double zoom) {
+    void paintTrainLinks(Graphics g, double x0, double y0, double zoom, int rowRef, int colRef) {
         for (TrainLink link : world.links) {
             link.paint(g, x0, y0, zoom);
         }
@@ -385,9 +419,11 @@ public class WorldPanel extends JPanel implements MouseListener,
             switch (currentTool) {
             case LOCO -> {
                 world.addLoco(xReal, yReal);
+                repaint();
             }
             case WAGON -> {
                 world.addWagon(xReal, yReal);
+                repaint();
             }
             case TRAIN_REMOVAL -> {
                 world.removeTrains((int) currentRow, (int) currentCol);
@@ -413,7 +449,7 @@ public class WorldPanel extends JPanel implements MouseListener,
                 world.setSpeedIndicator((int) currentRow, (int) currentCol);
             }
             case STOP_TIMER -> {
-                world.setStopTimer((int) currentRow, (int) currentCol);
+                world.toggleStopTimer((int) currentRow, (int) currentCol);
             }
             case A_STAR_START -> {
                 solver.setStart((int) currentRow, (int) currentCol);
@@ -421,6 +457,17 @@ public class WorldPanel extends JPanel implements MouseListener,
             }
             case A_STAR_END -> {
                 solver.setEnd((int) currentRow, (int) currentCol);
+                repaint();
+            }
+            case SET_RELATIVITY_REFERENCE -> {
+
+                double xRef = Cell.cellSize * floor((xReal + Cell.cellSize / 2) / Cell.cellSize);
+                double yRef = Cell.cellSize * floor((yReal + Cell.cellSize / 2) / Cell.cellSize);
+                reference = new Reference(new Point2D.Double(xRef, yRef));
+
+                System.out.println("New Reference at (x,y)=(" + xRef + ", " + yRef + ");"
+                        + " row " + currentRow + ", col " + currentCol);
+
                 repaint();
             }
             }
@@ -635,6 +682,19 @@ public class WorldPanel extends JPanel implements MouseListener,
             writer.write("zoom " + zoomLevel + "\n");
             writer.write("x0 " + x0 + "\n");
             writer.write("y0 " + y0 + "\n");
+
+            writer.write("reference");
+            if (isRelativityActive()) {
+                writer.write(" on");
+            } else {
+                writer.write(" off");
+            }
+            if (reference == null) {
+                writer.write(" null");
+            } else {
+                writer.write(" " + reference.getX() + " " + reference.getY());
+            }
+            writer.write("\n");
         } catch (IOException e) {
             System.out.println("WorldPanel: error occured when saving to file.");
         }
@@ -660,6 +720,25 @@ public class WorldPanel extends JPanel implements MouseListener,
         split = text.split(" ");
         if (split[0].equals("y0")) {
             y0 = Double.valueOf(split[1]);
+        }
+
+        text = scanner.nextLine();
+        split = text.split(" ");
+        boolean loadWithRelativityActive = false;
+
+        if (split.length >= 2 && split[0].equals("reference")) {
+            loadWithRelativityActive = (split[1].equals("on"));
+        }
+        if (split.length >= 3 && split[2].equals("null")) {
+            reference = null;
+        } else if (split.length >= 4) {
+            double newX = Double.valueOf(split[2]);
+            double newY = Double.valueOf(split[3]);
+            Point2D.Double newRefCoords = new Point2D.Double(newX, newY);
+            reference = new Reference(newRefCoords);
+            if (loadWithRelativityActive) {
+                reference.start();
+            }
         }
     }
 
@@ -819,5 +898,41 @@ public class WorldPanel extends JPanel implements MouseListener,
 
     private Color computeCellColor(double altitude, int biome) {
         return allColorRamps.get(biome).getValue(altitude);
+    }
+
+    /**
+     * Compute the delay at cell (row, col) when the non-delayed cell is at
+     * (rowRef, colRef)
+     *
+     * @param row
+     * @param col
+     * @param centerRow
+     * @param centerCol
+     * @return
+     */
+    private int computeDelay(int row, int col, int rowRef, int colRef) {
+        if (isRelativityActive()) {
+            int dx = row - rowRef;
+            int dy = col - colRef;
+            return 3 * (Math.abs(dx) + Math.abs(dy));
+        } else {
+            return 0;
+        }
+    }
+
+    protected void toggleRelativity() {
+        if (reference != null) {
+            reference.toggleRelativity();
+            System.out.println("WorldPanel.toggleRelativity()");
+            repaint();
+        }
+    }
+
+    private boolean isRelativityActive() {
+        return reference != null && reference.isActive();
+    }
+
+    public void setLightspeed(double newLightSpeed) {
+        world.setLightspeed(newLightSpeed);
     }
 }
