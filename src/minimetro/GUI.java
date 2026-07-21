@@ -294,6 +294,8 @@ public class GUI extends JFrame implements PropertyChangeListener {
         constraints.gridy = 1;
         buttonPanel.add(lightspeedTextField, constraints);
 
+        createButton("isopleths.png", "toggleIsopleths", 18, 0);
+
         System.out.println("Creating itineraryTextField");
         itineraryTextField = new JTextField("", 3);
         itineraryTextField.setSize(10, 10);
@@ -488,5 +490,10 @@ public class GUI extends JFrame implements PropertyChangeListener {
     public void setLightspeed() {
         double newLightspeed = Double.valueOf(lightspeedTextField.getText());
         panel.setLightspeed(newLightspeed);
+    }
+
+    public void toggleIsopleths() {
+        panel.toggleIsopleths();
+        repaint();
     }
 }

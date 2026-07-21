@@ -1368,7 +1368,7 @@ public class World {
     }
 
     /**
-     * Get the altitude at a specific location.
+     * Get the altitude at a specific row and column.
      * Use the cell already in cells list if it exists, otherwise compute the
      * altitude with the noise generator.
      *
@@ -1381,7 +1381,19 @@ public class World {
         double xCell = col * Cell.cellSize;
         double yCell = (getNbRows() - row - 1) * Cell.cellSize;
 
-        return noiseGenerator.getNoise(xCell, yCell);
+        return this.getAltitude(xCell, yCell);
+
+    }
+
+    /**
+     * Get the altitude at a specific location
+     *
+     * @param x
+     * @param y
+     * @return
+     */
+    protected double getAltitude(double x, double y) {
+        return noiseGenerator.getNoise(x, y);
     }
 
     protected int getBiome(int col, int row) {

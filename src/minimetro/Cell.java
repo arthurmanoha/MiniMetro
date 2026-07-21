@@ -1123,4 +1123,80 @@ public class Cell {
     protected void setLightspeed(double newLightSpeed) {
         this.lightspeed = newLightSpeed;
     }
+
+    protected void paintIsopleths(Graphics g, double x0, double y0, double zoomLevel, double altNW, double altNE, double altSE, double altSW) {
+
+        double levelMin = 0, levelMax = 1;
+        double nbSteps = 10;
+
+        for (int step = 0; step <= nbSteps; step++) {
+            double currentLevel = levelMin + step * (levelMax - levelMin) / (nbSteps + 1);
+
+            paintSingleIsopleth(g, x0, y0, zoomLevel, currentLevel, altNW, altNE, altSE, altSW);
+        }
+    }
+
+    protected void paintSingleIsopleth(Graphics g, double x0, double y0, double zoomLevel, double currentLevel, double altNW, double altNE, double altSE, double altSW) {
+
+        boolean crossesNorth = false, crossesEast = false, crossesSouth = false, crossesWest = false;
+        if ((altNW - currentLevel) * (altNE - currentLevel) < 0) {
+            // One isopleth passes through the northern border.
+            crossesNorth = true;
+        }
+        if ((altNE - currentLevel) * (altSE - currentLevel) < 0) {
+            // One isopleth passes through the eastern border.
+            crossesEast = true;
+        }
+        if ((altSW - currentLevel) * (altSE - currentLevel) < 0) {
+            // One isopleth passes through the southern border.
+            crossesSouth = true;
+        }
+        if ((altSW - currentLevel) * (altNW - currentLevel) < 0) {
+            // One isopleth passes through the western border.
+            crossesWest = true;
+        }
+
+        final int xApp = (int) ((absolutePosition.x - cellSize / 2) * zoomLevel + x0);
+        final int yApp = (int) (g.getClipBounds().height - ((absolutePosition.y + cellSize / 2) * zoomLevel + y0));
+        final int sizeApp = (int) (cellSize * zoomLevel);
+
+        int xAppStart = 0, yAppStart = 0, xAppEnd = 0, yAppEnd = 0;
+        if (crossesNorth) {
+            xAppStart = xApp;
+            yAppStart = yApp - sizeApp / 2;
+            if (crossesEast) {
+                // north and east
+                xAppEnd = xApp + sizeApp / 2;
+                yAppEnd = yApp;
+            } else if (crossesSouth) {
+                // north and south
+                xAppEnd = xApp;
+                yAppEnd = yApp - sizeApp / 2;
+            } else {
+                // north and west
+                xAppEnd = xApp - sizeApp / 2;
+                yAppEnd = yApp;
+            }
+        } else if (crossesEast) {
+            xAppStart = xApp + sizeApp / 2;
+            yAppStart = yApp;
+            if (crossesSouth) {
+                // east and south
+                xAppEnd = xApp;
+                yAppEnd = yApp + sizeApp / 2;
+            } else {
+                // east and west
+                xAppEnd = xApp - sizeApp / 2;
+                yAppEnd = yApp;
+            }
+        } else if (crossesSouth) {
+            xAppStart = xApp;
+            yAppStart = yApp + sizeApp / 2;
+            // south and west
+            xAppEnd = xApp - sizeApp / 2;
+            yAppEnd = yApp;
+        }
+
+        g.drawLine(xAppStart, yAppStart, xAppEnd, yAppEnd);
+    }
 }

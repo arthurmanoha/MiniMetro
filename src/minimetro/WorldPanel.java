@@ -64,6 +64,7 @@ public class WorldPanel extends JPanel implements MouseListener,
 
     private ArrayList<ColorRamp> allColorRamps;
     private boolean mustDisplayTerrain;
+    private boolean mustDisplayIsopleths;
 
     private Color defaultBackgroundColor;
 
@@ -100,6 +101,7 @@ public class WorldPanel extends JPanel implements MouseListener,
         defaultBackgroundColor = Color.gray;
 
         mustDisplayTerrain = true;
+        mustDisplayIsopleths = true;
 
         solver = new AStarSolver(world);
 
@@ -280,6 +282,9 @@ public class WorldPanel extends JPanel implements MouseListener,
             for (Cell c : world.activeCells) {
                 c.outlineCell(g, x0, y0, zoomLevel);
             }
+        }
+        if (mustDisplayIsopleths) {
+            paintIsopleths(g, x0, y0, zoomLevel);
         }
     }
 
@@ -934,5 +939,34 @@ public class WorldPanel extends JPanel implements MouseListener,
 
     public void setLightspeed(double newLightSpeed) {
         world.setLightspeed(newLightSpeed);
+    }
+
+    public void toggleIsopleths() {
+        mustDisplayIsopleths = !mustDisplayIsopleths;
+        if (mustDisplayIsopleths) {
+            System.out.println("Now displaying isopleths.");
+        } else {
+            System.out.println("Stopped showing isopleths.");
+        }
+    }
+
+    private void paintIsopleths(Graphics g, double x0, double y0, double zoomLevel) {
+
+        for (int row = getMinVisibleRow(); row <= getMaxVisibleRow(); row++) {
+            for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
+                // Show isopleths in one cell
+                Cell c = world.getCell(row, col);
+
+                Point2D.Double cellPos = c.getAbsolutePosition();
+                double halfSize = Cell.cellSize / 2;
+
+                double altNW = world.getAltitude(cellPos.x - halfSize, cellPos.y + halfSize);
+                double altNE = world.getAltitude(cellPos.x + halfSize, cellPos.y + halfSize);
+                double altSE = world.getAltitude(cellPos.x + halfSize, cellPos.y - halfSize);
+                double altSW = world.getAltitude(cellPos.x - halfSize, cellPos.y - halfSize);
+
+                c.paintIsopleths(g, x0, y0, zoomLevel, altNW, altNE, altSE, altSW);
+            }
+        }
     }
 }
