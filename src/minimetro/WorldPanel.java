@@ -945,9 +945,15 @@ public class WorldPanel extends JPanel implements MouseListener,
         mustDisplayIsopleths = !mustDisplayIsopleths;
         if (mustDisplayIsopleths) {
             System.out.println("Now displaying isopleths.");
+            computeIsopleths();
         } else {
             System.out.println("Stopped showing isopleths.");
         }
+    }
+
+    protected void computeIsopleths() {
+
+        world.computeIsopleths();
     }
 
     private void paintIsopleths(Graphics g, double x0, double y0, double zoomLevel) {
@@ -956,16 +962,7 @@ public class WorldPanel extends JPanel implements MouseListener,
             for (int col = getMinVisibleCol(); col <= getMaxVisibleCol(); col++) {
                 // Show isopleths in one cell
                 Cell c = world.getCell(row, col);
-
-                Point2D.Double cellPos = c.getAbsolutePosition();
-                double halfSize = Cell.cellSize / 2;
-
-                double altNW = world.getAltitude(cellPos.x - halfSize, cellPos.y + halfSize);
-                double altNE = world.getAltitude(cellPos.x + halfSize, cellPos.y + halfSize);
-                double altSE = world.getAltitude(cellPos.x + halfSize, cellPos.y - halfSize);
-                double altSW = world.getAltitude(cellPos.x - halfSize, cellPos.y - halfSize);
-
-                c.paintIsopleths(g, x0, y0, zoomLevel, altNW, altNE, altSE, altSW);
+                c.paintIsopleths(g, x0, y0, zoomLevel);
             }
         }
     }

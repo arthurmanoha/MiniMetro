@@ -150,10 +150,19 @@ public class World {
                 newCell.altitude = getAltitude(col, row);
                 newCell.biome = getBiome(col, row) % 3;
                 newCell.setColor(null);
-                newCell.absolutePosition = new Point2D.Double(col * Cell.cellSize, (nbRows - row - 1) * Cell.cellSize);
+                Point2D.Double cellPos = new Point2D.Double(col * Cell.cellSize, (nbRows - row - 1) * Cell.cellSize);
+                newCell.absolutePosition = cellPos;
                 cells[row][col] = newCell;
                 newCell.setRow(row);
                 newCell.setCol(col);
+
+                double halfSize = Cell.cellSize / 2;
+
+                double altNW = getAltitude(cellPos.x - halfSize, cellPos.y + halfSize);
+                double altNE = getAltitude(cellPos.x + halfSize, cellPos.y + halfSize);
+                double altSE = getAltitude(cellPos.x + halfSize, cellPos.y - halfSize);
+                double altSW = getAltitude(cellPos.x - halfSize, cellPos.y - halfSize);
+                newCell.setCornerAltitudes(altNW, altNE, altSE, altSW);
             }
         }
         updateListeners();
@@ -1213,6 +1222,7 @@ public class World {
         }
 
         map.load(scanner);
+        computeIsopleths();
         updateListeners();
     }
 
@@ -1483,6 +1493,13 @@ public class World {
     public void setLightspeed(double newLightSpeed) {
         for (Cell c : getAllCells()) {
             c.setLightspeed(newLightSpeed);
+        }
+    }
+
+    public void computeIsopleths() {
+        System.out.println("world computing isopleths");
+        for (Cell c : getAllCells()) {
+            c.computeIsopleth();
         }
     }
 }
