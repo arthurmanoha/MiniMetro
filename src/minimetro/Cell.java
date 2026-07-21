@@ -1161,6 +1161,11 @@ public class Cell {
 
     protected void computeSingleIsopleth(double currentLevel) {
 
+        double xW = absolutePosition.x - cellSize / 2;
+        double xE = absolutePosition.x + cellSize / 2;
+        double yN = absolutePosition.y + cellSize / 2;
+        double yS = absolutePosition.y - cellSize / 2;
+
         boolean crossesNorth = false, crossesEast = false, crossesSouth = false, crossesWest = false;
         if ((altNW - currentLevel) * (altNE - currentLevel) < 0) {
             // One isopleth passes through the northern border.
@@ -1180,39 +1185,47 @@ public class Cell {
         }
 
         if (crossesNorth) {
-            xIsopleth0 = absolutePosition.x;
+
+            // Interpolate the altitude to find the exact point on the segment with the desired altitude
+            // x:   xW          xIso         xE
+            // alt: altNW       cLevel      altNE
+            // (xIso-xW)/(xE-xW) = (cLevel-altNW) / (altNE-altNW)
+            // (xIso-xW) = (xE-xW)*(cLevel-altNW) / (altNE-altNW)
+            // xIso = xW + (xE-xW)*(cLevel-altNW) / (altNE-altNW)
+            //
+            xIsopleth0 = xW + (xE - xW) * (currentLevel - altNW) / (altNE - altNW); //x for north
             yIsopleth0 = absolutePosition.y + cellSize / 2;
             if (crossesEast) {
                 // north and east
                 xIsopleth1 = absolutePosition.x + cellSize / 2;
-                yIsopleth1 = absolutePosition.y;
+                yIsopleth1 = yS + (yN - yS) * (currentLevel - altSE) / (altNE - altSE); // y for east
             } else if (crossesSouth) {
                 // north and south
-                xIsopleth1 = absolutePosition.x;
+                xIsopleth1 = xW + (xE - xW) * (currentLevel - altSW) / (altSE - altSW); // x for south
                 yIsopleth1 = absolutePosition.y - cellSize / 2;
             } else {
                 // north and west
                 xIsopleth1 = absolutePosition.x - cellSize / 2;
-                yIsopleth1 = absolutePosition.y;
+                yIsopleth1 = yS + (yN - yS) * (currentLevel - altSW) / (altNW - altSW); // y for west
             }
         } else if (crossesEast) {
             xIsopleth0 = absolutePosition.x + cellSize / 2;
-            yIsopleth0 = absolutePosition.y;
+            yIsopleth0 = yS + (yN - yS) * (currentLevel - altSE) / (altNE - altSE); // y for east
             if (crossesSouth) {
                 // east and south
-                xIsopleth1 = absolutePosition.x;
+                xIsopleth1 = xW + (xE - xW) * (currentLevel - altSW) / (altSE - altSW); // x for south
                 yIsopleth1 = absolutePosition.y - cellSize / 2;
             } else {
                 // east and west
                 xIsopleth1 = absolutePosition.x - cellSize / 2;
-                yIsopleth1 = absolutePosition.y;
+                yIsopleth1 = yS + (yN - yS) * (currentLevel - altSW) / (altNW - altSW); // y for west
             }
         } else if (crossesSouth) {
-            xIsopleth0 = absolutePosition.x;
+            xIsopleth0 = xW + (xE - xW) * (currentLevel - altSW) / (altSE - altSW); // x for south
             yIsopleth0 = absolutePosition.y - cellSize / 2;
             // south and west
             xIsopleth1 = absolutePosition.x - cellSize / 2;
-            yIsopleth1 = absolutePosition.y;
+            yIsopleth1 = yS + (yN - yS) * (currentLevel - altSW) / (altNW - altSW); // y for west
         }
     }
 

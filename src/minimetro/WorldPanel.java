@@ -101,7 +101,7 @@ public class WorldPanel extends JPanel implements MouseListener,
         defaultBackgroundColor = Color.gray;
 
         mustDisplayTerrain = true;
-        mustDisplayIsopleths = true;
+        mustDisplayIsopleths = false;
 
         solver = new AStarSolver(world);
 
